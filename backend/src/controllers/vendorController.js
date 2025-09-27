@@ -1,8 +1,5 @@
 const database = require('../config/database');
 
-// @desc    Get all vendors
-// @route   GET /api/vendors
-// @access  Private
 const getAllVendors = async (req, res) => {
   try {
     const result = await database.query(
@@ -23,9 +20,6 @@ const getAllVendors = async (req, res) => {
   }
 };
 
-// @desc    Get single vendor
-// @route   GET /api/vendors/:id
-// @access  Private
 const getVendorById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -64,9 +58,6 @@ const getVendorById = async (req, res) => {
   }
 };
 
-// @desc    Create new vendor
-// @route   POST /api/vendors
-// @access  Private (Admin/Manager)
 const createVendor = async (req, res) => {
   try {
     const { name, description } = req.body;
@@ -91,7 +82,7 @@ const createVendor = async (req, res) => {
       vendor: result.rows[0]
     });
   } catch (error) {
-    if (error.code === '23505') { // Unique violation
+    if (error.code === '23505') {
       return res.status(400).json({
         success: false,
         message: 'Vendor with this name already exists'
@@ -106,9 +97,6 @@ const createVendor = async (req, res) => {
   }
 };
 
-// @desc    Update vendor
-// @route   PUT /api/vendors/:id
-// @access  Private (Admin/Manager)
 const updateVendor = async (req, res) => {
   try {
     const { id } = req.params;

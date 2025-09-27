@@ -1,8 +1,6 @@
 const database = require('../config/database');
+const { calculatePricing } = require('../utils/commissionCalculator');
 
-// @desc    Get all products (with optional vendor filter)
-// @route   GET /api/products
-// @access  Private
 const getAllProducts = async (req, res) => {
   try {
     const { vendor_id } = req.query;
@@ -20,14 +18,23 @@ const getAllProducts = async (req, res) => {
       params.push(vendor_id);
     }
     
-    query += ' ORDER BY p.name';
+    query += ' ORDER BY v.name, p.name';
     
     const result = await database.query(query, params);
     
+    // Calculate pricing for each product
+    const productsWithPricing = result.rows.map(product => {
+      const pricing = calculatePricing(product.vendor_price, product.custom_commission);
+      return {
+        ...product,
+        ...pricing
+      };
+    });
+    
     res.json({
       success: true,
-      count: result.rows.length,
-      products: result.rows
+      count: productsWithPricing.length,
+      products: productsWithPricing
     });
   } catch (error) {
     console.error('Get products error:', error);
@@ -38,9 +45,6 @@ const getAllProducts = async (req, res) => {
   }
 };
 
-// @desc    Get single product
-// @route   GET /api/products/:id
-// @access  Private
 const getProductById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -60,9 +64,15 @@ const getProductById = async (req, res) => {
       });
     }
     
+    const product = result.rows[0];
+    const pricing = calculatePricing(product.vendor_price, product.custom_commission);
+    
     res.json({
       success: true,
-      product: result.rows[0]
+      product: {
+        ...product,
+        ...pricing
+      }
     });
   } catch (error) {
     console.error('Get product error:', error);
@@ -73,14 +83,11 @@ const getProductById = async (req, res) => {
   }
 };
 
-// @desc    Create new product
-// @route   POST /api/products
-// @access  Private (Admin/Manager)
 const createProduct = async (req, res) => {
   try {
     const { vendor_id, name, description, vendor_price, custom_commission } = req.body;
     
-    if (!vendor_id || !name || !vendor_price) {
+    if (!vendor_id || !name || vendor_price === undefined) {
       return res.status(400).json({
         success: false,
         message: 'Vendor ID, product name, and vendor price are required'
@@ -94,10 +101,16 @@ const createProduct = async (req, res) => {
       [vendor_id, name, description, vendor_price, custom_commission]
     );
     
+    const product = result.rows[0];
+    const pricing = calculatePricing(product.vendor_price, product.custom_commission);
+    
     res.status(201).json({
       success: true,
       message: 'Product created successfully',
-      product: result.rows[0]
+      product: {
+        ...product,
+        ...pricing
+      }
     });
   } catch (error) {
     console.error('Create product error:', error);
@@ -108,9 +121,6 @@ const createProduct = async (req, res) => {
   }
 };
 
-// @desc    Update product
-// @route   PUT /api/products/:id
-// @access  Private (Admin/Manager)
 const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -135,10 +145,16 @@ const updateProduct = async (req, res) => {
       });
     }
     
+    const product = result.rows[0];
+    const pricing = calculatePricing(product.vendor_price, product.custom_commission);
+    
     res.json({
       success: true,
       message: 'Product updated successfully',
-      product: result.rows[0]
+      product: {
+        ...product,
+        ...pricing
+      }
     });
   } catch (error) {
     console.error('Update product error:', error);

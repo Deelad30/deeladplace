@@ -1,6 +1,6 @@
 const express = require('express');
 const {
-  getAllExpenses,
+  getExpenses,
   createExpense,
   updateExpense,
   deleteExpense
@@ -11,7 +11,7 @@ const router = express.Router();
 
 router.use(authenticateToken);
 
-router.get('/', getAllExpenses);
+router.get('/', getExpenses);
 router.post('/', requireManagerOrAdmin, createExpense);
 router.put('/:id', requireManagerOrAdmin, updateExpense);
 router.delete('/:id', requireManagerOrAdmin, deleteExpense);

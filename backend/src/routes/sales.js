@@ -1,6 +1,6 @@
 const express = require('express');
 const {
-  getAllSales,
+  getSales,
   createSale,
   getSalesSummary
 } = require('../controllers/salesController');
@@ -10,7 +10,7 @@ const router = express.Router();
 
 router.use(authenticateToken);
 
-router.get('/', getAllSales);
+router.get('/', getSales);
 router.post('/', createSale);
 router.get('/summary', getSalesSummary);
 
