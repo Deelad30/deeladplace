@@ -1,17 +1,13 @@
 const express = require('express');
-const {
-  getSales,
-  createSale,
-  getSalesSummary
-} = require('../controllers/salesController');
+const { createSale, getSalesSummary } = require('../controllers/salesController');
 const { authenticateToken } = require('../middleware/auth');
+const { validateSalesData } = require('../middleware/validation');
 
 const router = express.Router();
 
 router.use(authenticateToken);
 
-router.get('/', getSales);
-router.post('/', createSale);
+router.post('/', validateSalesData, createSale);
 router.get('/summary', getSalesSummary);
 
 module.exports = router;

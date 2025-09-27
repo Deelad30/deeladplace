@@ -17,8 +17,7 @@ app.get('/api/health', async (req, res) => {
     res.json({
       status: 'OK',
       database: 'Connected',
-      timestamp: result.rows[0].now,
-      environment: process.env.NODE_ENV || 'development'
+      timestamp: result.rows[0].now
     });
   } catch (error) {
     res.status(500).json({
@@ -35,6 +34,7 @@ const vendorRoutes = require('./src/routes/vendors');
 const productRoutes = require('./src/routes/products');
 const salesRoutes = require('./src/routes/sales');
 const expenseRoutes = require('./src/routes/expenses');
+const inventoryRoutes = require('./src/routes/inventory');
 
 // Use routes
 app.use('/api/auth', authRoutes);
@@ -42,6 +42,7 @@ app.use('/api/vendors', vendorRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/sales', salesRoutes);
 app.use('/api/expenses', expenseRoutes);
+app.use('/api/inventory', inventoryRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
@@ -63,7 +64,6 @@ app.use((error, req, res, next) => {
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Deelad Place API server running on port ${PORT}`);
-  console.log(`📍 Health check: http://localhost:${PORT}/api/health`);
 });
 
 module.exports = app;

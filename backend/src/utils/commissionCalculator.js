@@ -1,28 +1,17 @@
-/**
- * Calculate hub commission based on vendor price and custom commission rules
- * @param {number} vendorPrice - The vendor's base price
- * @param {number|null} customCommission - Custom commission if set
- * @returns {number} The calculated commission
- */
+const constants = require('../config/constants');
+
 const calculateCommission = (vendorPrice, customCommission = null) => {
-  if (customCommission !== null && customCommission !== undefined) {
+  if (customCommission !== null) {
     return customCommission;
   }
   
-  // Default commission rules
-  if (vendorPrice < 10000) {
-    return 500;
+  if (vendorPrice < constants.COMMISSION_RULES.PRICE_THRESHOLD) {
+    return constants.COMMISSION_RULES.DEFAULT_FIXED_COMMISSION;
   } else {
-    return Math.round(vendorPrice * 0.05);
+    return Math.round(vendorPrice * constants.COMMISSION_RULES.DEFAULT_PERCENTAGE_COMMISSION);
   }
 };
 
-/**
- * Calculate customer price including commission
- * @param {number} vendorPrice - The vendor's base price
- * @param {number|null} customCommission - Custom commission if set
- * @returns {Object} Object containing commission and total price
- */
 const calculatePricing = (vendorPrice, customCommission = null) => {
   const commission = calculateCommission(vendorPrice, customCommission);
   const customerPrice = vendorPrice + commission;

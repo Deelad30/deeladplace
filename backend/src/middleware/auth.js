@@ -4,7 +4,7 @@ const database = require('../config/database');
 const authenticateToken = async (req, res, next) => {
   try {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+    const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
       return res.status(401).json({
@@ -15,7 +15,6 @@ const authenticateToken = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    // Verify user still exists in database
     const userResult = await database.query(
       'SELECT id, name, email, role FROM users WHERE id = $1',
       [decoded.id]
@@ -48,18 +47,7 @@ const requireAdmin = (req, res, next) => {
   next();
 };
 
-const requireManagerOrAdmin = (req, res, next) => {
-  if (!['admin', 'manager'].includes(req.user.role)) {
-    return res.status(403).json({
-      success: false,
-      message: 'Manager or admin access required'
-    });
-  }
-  next();
-};
-
 module.exports = {
   authenticateToken,
-  requireAdmin,
-  requireManagerOrAdmin
+  requireAdmin
 };

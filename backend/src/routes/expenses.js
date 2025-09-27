@@ -1,19 +1,13 @@
 const express = require('express');
-const {
-  getExpenses,
-  createExpense,
-  updateExpense,
-  deleteExpense
-} = require('../controllers/expenseController');
-const { authenticateToken, requireManagerOrAdmin } = require('../middleware/auth');
+const { createExpense, getExpenseSummary } = require('../controllers/expenseController');
+const { authenticateToken } = require('../middleware/auth');
+const { validateExpenseData } = require('../middleware/validation');
 
 const router = express.Router();
 
 router.use(authenticateToken);
 
-router.get('/', getExpenses);
-router.post('/', requireManagerOrAdmin, createExpense);
-router.put('/:id', requireManagerOrAdmin, updateExpense);
-router.delete('/:id', requireManagerOrAdmin, deleteExpense);
+router.post('/', validateExpenseData, createExpense);
+router.get('/summary', getExpenseSummary);
 
 module.exports = router;
