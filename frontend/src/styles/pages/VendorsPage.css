@@ -1,0 +1,22 @@
+.vendors-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+}
+
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .header-content .btn {
+    align-self: flex-end;
+  }
+}

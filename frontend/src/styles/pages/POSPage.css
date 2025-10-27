@@ -1,0 +1,36 @@
+.pos-page {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.pos-layout {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 20px;
+  height: calc(100vh - 200px);
+}
+
+.pos-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.pos-main {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  overflow: hidden;
+}
+
+@media (max-width: 1024px) {
+  .pos-layout {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+  
+  .pos-main {
+    order: -1;
+    margin-bottom: 20px;
+  }
+}
