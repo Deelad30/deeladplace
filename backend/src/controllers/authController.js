@@ -29,7 +29,11 @@ const registerUser = async (req, res) => {
     }
 
     // Hash password
-    const salt = await bcrypt.genSalt(10);
+    const saltRounds = process.env.NODE_ENV === 'production'
+    ? parseInt(process.env.BCRYPT_SALT_ROUNDS || '10')
+    : 5; 
+
+    const salt = await bcrypt.genSalt(saltRounds);
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Create user
@@ -116,12 +120,15 @@ const loginUser = async (req, res) => {
       { expiresIn: '30d' }
     );
 
-    // Send login notification email
-    try {
-      await emailService.sendLoginNotification(user, new Date().toLocaleString());
-    } catch (emailError) {
-      console.error('Failed to send login notification:', emailError);
-    }
+    // // Send login notification email
+    // try {
+    //   await emailService.sendLoginNotification(user, new Date().toLocaleString());
+    // } catch (emailError) {
+    //   console.error('Failed to send login notification:', emailError);
+    // }
+
+  emailService.sendLoginNotification(user, new Date().toLocaleString())
+  .catch(err => console.error('Failed to send login email:', err));
 
     res.json({
       success: true,
@@ -231,8 +238,11 @@ const resetPassword = async (req, res) => {
     const user = userResult.rows[0];
 
     // Hash new password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    const saltRounds = process.env.NODE_ENV === 'production'
+    ? parseInt(process.env.BCRYPT_SALT_ROUNDS || '10')
+    : 5; 
+const salt = await bcrypt.genSalt(saltRounds);
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
 
     // Update password and clear reset token
     await database.query(
