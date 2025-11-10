@@ -9,16 +9,27 @@ class AuthService {
     }
   }
 
+
   async login(email, password) {
-    const response = await api.post('/auth/login', { email, password });
-    return response;
+    try {
+      const response = await api.post('/auth/login', { email, password });
+      return response;
+    } catch (error) {
+      console.error('AuthService login error:', error);
+      // Re-throw with more context
+      throw new Error(error.response?.data?.message || 'Login failed');
+    }
   }
 
   async register(name, email, password) {
-    const response = await api.post('/auth/register', { name, email, password });
-    return response;
+    try {
+      const response = await api.post('/auth/register', { name, email, password });
+      return response;
+    } catch (error) {
+      console.error('AuthService register error:', error);
+      throw new Error(error.response?.data?.message || 'Registration failed');
+    }
   }
-
   async forgotPassword(email) {
     const response = await api.post('/auth/forgot-password', { email });
     return response;
@@ -31,7 +42,7 @@ class AuthService {
 
   async getCurrentUser() {
     const response = await api.get('/auth/me');
-    return response;
+    return response; 
   }
 }
 

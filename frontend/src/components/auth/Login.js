@@ -1,124 +1,175 @@
-import React, { useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import LoadingSpinner from '../common/LoadingSpinner';
-import { APP_CONFIG } from '../../utils/constants';
+import React, { useState } from "react";
+import { useAuth } from "../../context/AuthContext";
+import { useNavigate, Link } from "react-router-dom";
+import LoadingSpinner from "../common/LoadingSpinner";
+import { APP_CONFIG } from "../../utils/constants";
 import '../../../src/styles/components/Login.css';
-import { Link } from "react-router-dom";
 
-const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [isSignup, setIsSignup] = useState(false);
-  const [name, setName] = useState('');
-  
-  const { login, signup } = useAuth();
+
+  const { login, signup, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+  const handleInputChange = (setter) => (e) => setter(e.target.value);
 
-    let result;
-    if (isSignup) {
-      result = await signup(name, email, password);
-    } else {
-      result = await login(email, password);
+  const handleSubmit = async (e) => {
+    e.preventDefault(); // Prevent page refresh
+    setLoading(true);
+    setError("");
+
+    try {
+      let result;
+      if (isSignup) {
+        if (!signup) throw new Error("Signup function not available");
+        result = await signup(name, email, password);
+      } else {
+        result = await login(email, password);
+      }
+
+      if (result.success) {
+        navigate("/dashboard");
+      } else {
+        setError(result.message || "Authentication failed");
+      }
+    } catch (err) {
+      console.error("Auth error:", err);
+      setError(err.message || "Something went wrong");
+    } finally {
+      setLoading(false);
     }
-    
-    if (result.success) {
-      navigate('/dashboard');
-    } else {
-      setError(result.message);
-    }
-    
-    setLoading(false);
   };
 
-  return (
-    <div className="login-container">
-      <div className="login-card">
-        <div className="login-header">
-          <h1>{APP_CONFIG.APP_NAME}</h1>
-          <p>{isSignup ? 'Create your account' : 'Sign in to your account'}</p>
-        </div>
-        
-        <form onSubmit={handleSubmit} className="login-form">
-          {error && <div className="error-message">{error}</div>}
-          
-          {isSignup && (
-            <div className="form-group">
-              <label>Full Name</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                disabled={loading}
-                placeholder="Enter your full name"
-              />
-            </div>
-          )}
-          
-          <div className="form-group">
-            <label>Email Address</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={loading}
-              placeholder="Enter your email"
-            />
-          </div>
-          
-          <div className="form-group">
-            <label>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={loading}
-              placeholder={isSignup ? "Create a password" : "Enter your password"}
-              minLength="6"
-            />
-          </div>
+  // Prevent rendering the login form until AuthProvider finishes loading
+  if (authLoading) return <LoadingSpinner />;
 
-          <div className="forgot-password-link">
-            <Link to="/forgot-password">Forgot your password?</Link>
-          </div>
-          
-          <button type="submit" disabled={loading} className="login-btn">
-            {loading ? <LoadingSpinner size="small" /> : (isSignup ? 'Create Account' : 'Sign In')}
-          </button>
-        </form>
-        
-        <div className="auth-switch">
-          <p>
-            {isSignup ? 'Already have an account?' : "Don't have an account?"}
-            <button 
-              type="button" 
-              onClick={() => setIsSignup(!isSignup)}
-              className="switch-btn"
-            >
-              {isSignup ? 'Sign In' : 'Sign Up'}
-            </button>
-          </p>
+  return (
+    <main style={{ paddingTop: "80px" }} className="login__main">
+      {/* Left Text Section */}
+      <div className="login__text">
+        <h1 className="login__text__heading">
+          {isSignup ? "Join Deelad Place 🎉" : "Welcome Back 👋"}
+        </h1>
+        <p className="login__text__sub">
+          {isSignup
+            ? "Create an account to start managing your restaurant, tracking inventory, and seeing your daily profits."
+            : "Log in to manage your restaurant, track inventory, and see your daily profits."}
+        </p>
+
+        <div
+          className="login__text__link pointer"
+          onClick={() => setIsSignup(!isSignup)}
+        >
+          {isSignup ? (
+            <>
+              Already have an account? <span>Sign in</span>
+            </>
+          ) : (
+            <>
+              Don’t have an account? <span>Sign up</span>
+            </>
+          )}
         </div>
-        
-        {!isSignup && (
-          <div className="login-footer">
-            <p>Default credentials: admin@deeladplace.com / admin123</p>
+      </div>
+
+      {/* Login / Signup Form */}
+      <form onSubmit={handleSubmit} className="login__form" autoComplete="off">
+        <h2 className="login__form__heading">
+          {isSignup ? "Create your Deelad Place account" : "Sign in to Deelad Place"}
+        </h2>
+
+        {/* Persistent Error */}
+        {error && (
+          <div className="error-message">
+            {error}
+            <button
+              type="button"
+              onClick={() => setError("")}
+              className="error-close-btn"
+            >
+              ×
+            </button>
           </div>
         )}
-      </div>
-      
-    </div>
+
+        {/* Signup Name */}
+        {isSignup && (
+          <label htmlFor="name" className={`login__input ${error ? "input-error" : ""}`}>
+            <input
+              type="text"
+              id="name"
+              placeholder="Full Name"
+              className="login__input--box"
+              value={name}
+              onChange={handleInputChange(setName)}
+              required
+              disabled={loading}
+            />
+          </label>
+        )}
+
+        {/* Email */}
+        <label htmlFor="email" className={`login__input ${error ? "input-error" : ""}`}>
+          <input
+            type="email"
+            id="email"
+            placeholder="Email Address"
+            className="login__input--box"
+            value={email}
+            onChange={handleInputChange(setEmail)}
+            required
+            disabled={loading}
+          />
+        </label>
+
+        {/* Password */}
+        <label htmlFor="password" className={`login__input ${error ? "input-error" : ""}`}>
+          <input
+            type="password"
+            id="password"
+            placeholder={isSignup ? "Create a Password" : "Password"}
+            className="login__input--box"
+            value={password}
+            onChange={handleInputChange(setPassword)}
+            required
+            disabled={loading}
+            minLength="6"
+          />
+        </label>
+
+        {/* Forgot Password */}
+        {!isSignup && (
+          <div className="login__forgot">
+            Forgot Password?{" "}
+            <Link to={"/forgot-password"}>
+              <span className="login__blue__link">Reset</span>
+            </Link>
+          </div>
+        )}
+
+        {/* Submit Button */}
+        <div className="login__form__bottom">
+          <button type="submit" className="btn btn-shadow" disabled={loading}>
+            {loading ? <LoadingSpinner size="small" /> : (isSignup ? "Create Account" : "Sign In")}
+          </button>
+
+          {!isSignup && (
+            <p style={{ paddingTop: "20px" }} className="login__signup__note">
+              Trouble signing in?{" "}
+              <a href="mailto:deeladplace@gmail.com" className="login__forgot">
+                <span className="login__blue__link">Mail us</span>
+              </a>
+            </p>
+          )}
+        </div>
+      </form>
+    </main>
   );
-};
+}
 
 export default Login;

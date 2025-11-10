@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const database = require('./src/config/database');
+const emailService = require('./src/utils/emailService');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -10,6 +11,21 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+
+// Add this before your other routes
+app.get('/api/test-email', async (req, res) => {
+  try {
+    await emailService.sendWelcomeEmail({
+      name: 'Test User',
+      email: 'deeladplacesoftwork@gmail.com', // Your email
+      role: 'admin'
+    });
+    res.json({ success: true, message: 'Test email sent successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
 
 // Health check endpoint
 app.get('/api/health', async (req, res) => {

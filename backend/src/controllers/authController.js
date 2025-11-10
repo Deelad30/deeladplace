@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const database = require('../config/database');
-const emailService = require('../utils/EmailService');
+const emailService = require('../utils/emailService');
 
 const registerUser = async (req, res) => {
   try {

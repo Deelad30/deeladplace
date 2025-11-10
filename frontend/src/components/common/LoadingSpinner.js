@@ -3,7 +3,7 @@ import '../../../src/styles/components/LoadingSpinner.css';
 
 const LoadingSpinner = ({ size = 'medium' }) => {
   return (
-    <div className={`loading-spinner ${size}`}>
+    <div className={`loading-container ${size}`}>
       <div className="spinner"></div>
     </div>
   );

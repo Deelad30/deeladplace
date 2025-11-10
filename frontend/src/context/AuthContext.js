@@ -45,6 +45,25 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const signup = async (name, email, password) => {
+    try {
+      const response = await authService.register(name, email, password);
+      const { token, user } = response.data;
+      
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      authService.setToken(token);
+      setUser(user);
+      
+      return { success: true };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Registration failed' 
+      };
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -55,6 +74,7 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     login,
+    signup, // Make sure this is included
     logout,
     loading
   };
