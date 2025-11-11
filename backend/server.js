@@ -3,6 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const database = require('./src/config/database');
 const emailService = require('./src/utils/emailService');
+const paystackRoutes = require('./src/routes/paystack');
+const webhookRoutes = require('./src/routes/webhook');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -13,6 +15,8 @@ app.use(cors());
 app.use(express.json());
 
 
+app.use('/api/paystack', paystackRoutes);
+app.use('/api/paystack/webhook', webhookRoutes);
 // Add this before your other routes
 app.get('/api/test-email', async (req, res) => {
   try {

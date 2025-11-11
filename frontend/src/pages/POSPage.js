@@ -3,7 +3,7 @@ import Header from '../components/common/Header';
 import Sidebar from '../components/common/Sidebar';
 import POS from '../components/pos/POS';
 import { AppProvider } from '../context/AppContext';
-import '../../src/styles/pages/POSPage.css';
+import '../../src/styles/components/PricingSection.css';
 
 const POSPage = () => {
   return (

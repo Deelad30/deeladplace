@@ -187,15 +187,19 @@ const forgotPassword = async (req, res) => {
     );
 
     // Send reset email
-    try {
-      await emailService.sendPasswordResetEmail(user, resetToken);
-    } catch (emailError) {
-      console.error('Failed to send reset email:', emailError);
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to send reset email'
-      });
-    }
+    // try {
+    //   await emailService.sendPasswordResetEmail(user, resetToken);
+    // } catch (emailError) {
+    //   console.error('Failed to send reset email:', emailError);
+    //   return res.status(500).json({
+    //     success: false,
+    //     message: 'Failed to send reset email'
+    //   });
+    // }
+
+      emailService.sendPasswordResetEmail(user, new Date().toLocaleString())
+      .catch(err => console.error('Failed to send login email:', err));
+
 
     res.json({
       success: true,
@@ -251,11 +255,15 @@ const salt = await bcrypt.genSalt(saltRounds);
     );
 
     // Send confirmation email
-    try {
-      await emailService.sendPasswordResetConfirmation(user);
-    } catch (emailError) {
-      console.error('Failed to send reset confirmation:', emailError);
-    }
+    // try {
+    //   await emailService.sendPasswordResetConfirmation(user);
+    // } catch (emailError) {
+    //   console.error('Failed to send reset confirmation:', emailError);
+    // }
+
+      emailService.sendPasswordResetConfirmation(user, new Date().toLocaleString())
+      .catch(err => console.error('Failed to send login email:', err));
+
 
     res.json({
       success: true,
