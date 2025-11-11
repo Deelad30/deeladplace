@@ -13,6 +13,7 @@ import InventoryPage from './pages/InventoryPage';
 import ExpensesPage from './pages/ExpensesPage';
 import ReportsPage from './pages/ReportPage';
 import './App.css';
+import Checkout from './pages/Checkout';
 
 function App() {
   return (
@@ -39,6 +40,14 @@ function App() {
               element={
                 <PrivateRoute>
                   <DashboardPage />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/checkout" 
+              element={
+                <PrivateRoute>
+                  <Checkout />
                 </PrivateRoute>
               } 
             />

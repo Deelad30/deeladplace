@@ -1,0 +1,299 @@
+/* Root container */
+.product-overview {
+  position: relative;
+  overflow-y: scroll!important;
+  font-family: "Poppins", sans-serif;
+  color: #222;
+  padding: 5rem 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  z-index: 1;
+  margin-top: 95px;
+}
+
+.icon {
+  color: #d91f22;
+  font-size: 1.3rem;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+
+
+/* Animated gradient background */
+.gradient-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  background-size: 400% 400%;
+  animation: gradientShift 18s ease infinite;
+  z-index: -1;
+  filter: blur(80px);
+  opacity: 0.6;
+  overflow-y: scroll!important;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Fade-in animation for sections */
+.fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 1.2s forwards;
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Intro section */
+.intro {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.intro h1 {
+  font-size: 2.8rem;
+  color: #d91f22;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.intro p {
+  font-size: 1.1rem;
+  color: #444;
+  line-height: 1.8;
+  max-width: 800px;
+  margin: 0.5rem auto;
+}
+
+/* Benefits */
+.how-it-helps {
+  margin: 4rem 0;
+}
+
+.how-it-helps h2 {
+  text-align: center;
+  color: #d91f22;
+  font-size: 2rem;
+  margin-bottom: 2rem;
+}
+
+.how-it-helps ul {
+  list-style: none;
+  max-width: 850px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.how-it-helps li {
+  background: #fff;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  padding: 1rem 1.2rem;
+  font-size: 1.05rem;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease;
+}
+
+.how-it-helps li:hover {
+  transform: translateX(8px);
+}
+
+/* Pricing */
+.pricing-section {
+  padding-top: 4rem;
+  text-align: center;
+}
+
+.pricing-section h2 {
+  font-size: 2rem;
+  margin-bottom: 2.5rem;
+  color: #d91f22;
+}
+
+.pricing-table {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 80%;
+  margin: auto;
+}
+
+.pricing-card {
+  flex: 1 1 320px;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+  padding: 2.5rem;
+  transition: all 0.3s ease;
+}
+
+.pricing-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.pricing-card h3 {
+  color: #d91f22;
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.price {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 1rem 0;
+}
+
+.price span {
+  font-size: 1rem;
+  color: #666;
+}
+
+.pricing-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0 2rem;
+}
+
+.pricing-card li {
+  font-size: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.signup-btn {
+  background: #d91f22;
+  color: #fff;
+  border: none;
+  padding: 0.9rem 2.2rem;
+  border-radius: 40px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.signup-btn:hover {
+  background: #b9171b;
+  transform: scale(1.05);
+}
+
+.enterprise-btn {
+  background: #000;
+}
+
+.enterprise-btn:hover {
+  background: #222;
+}
+
+/* CTA */
+.cta {
+  margin-top: 5rem;
+  text-align: center;
+  background: #fff8f8;
+  border-radius: 20px;
+  padding: 3rem 1rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.cta h2 {
+  color: #d91f22;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.cta p {
+  font-size: 1.1rem;
+  color: #555;
+  margin-bottom: 2rem;
+}
+
+.cta-btn {
+  background: #d91f22;
+  color: white;
+  border: none;
+  padding: 1rem 2.8rem;
+  border-radius: 50px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.cta-btn:hover {
+  background: #b9171b;
+  transform: scale(1.08);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .intro h1 {
+    font-size: 2.2rem;
+  }
+
+  .pricing-table {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .pricing-card {
+    max-width: 360px;
+  }
+
+  .how-it-helps li {
+    font-size: 1rem;
+  }
+
+  .cta h2 {
+    font-size: 1.6rem;
+  }
+}
+
+@media(max-width:1028px){
+  .product-overview{
+    overflow-y: scroll;
+    margin-top: 25px;
+  }
+  .intro p{
+    text-align: left;
+  }
+  .how-it-helps h2 {
+    font-size: 1.5rem;
+  }
+  .how-it-helps li {
+        font-size: 0.8rem;
+  }
+  .pricing-section h2 {
+    font-size: 25px;
+    margin-bottom: 1.5rem;
+  }
+  .pricing-card h3 {
+    color: #d91f22;
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+  }
+  .price {
+    font-size: 1.8rem;
+  }
+  .pricing-card ul {
+    text-align: left;
+  }
+  .pricing-card.pro{
+    width: 100%;
+  }
+  .product-overview.separate{
+    overflow-y: scroll!important;
+    overflow-x: hidden;
+  }
+}
