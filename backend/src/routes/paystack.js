@@ -37,4 +37,23 @@ router.post('/initialize', async (req, res) => {
   }
 });
 
+router.get('/verify/:reference', async (req, res) => {
+  const { reference } = req.params;
+
+  try {
+    const response = await axios.get(`https://api.paystack.co/transaction/verify/${reference}`, {
+      headers: {
+        Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+      },
+    });
+
+    // You can save response.data.data to your DB here for records
+    res.json(response.data.data);
+  } catch (error) {
+    console.error('Error verifying payment:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Payment verification failed' });
+  }
+});
+
+
 module.exports = router;

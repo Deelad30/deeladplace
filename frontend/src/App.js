@@ -10,6 +10,7 @@ import POSPage from './pages/POSPage';
 import VendorsPage from './pages/VendorsPage';
 import ProductsPage from './pages/ProductsPage';
 import InventoryPage from './pages/InventoryPage';
+import PaymentSuccess from './pages/PaymentSuccess';
 import ExpensesPage from './pages/ExpensesPage';
 import ReportsPage from './pages/ReportPage';
 import './App.css';
@@ -42,6 +43,13 @@ function App() {
                   <DashboardPage />
                 </PrivateRoute>
               } 
+            />
+            <Route path="/payment/success" 
+            element={
+            <PrivateRoute>
+            <PaymentSuccess />
+            </PrivateRoute>
+            } 
             />
             <Route 
               path="/checkout" 
