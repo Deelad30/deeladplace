@@ -33,6 +33,8 @@ function Login() {
       }
 
       if (result.success) {
+        console.log(result);
+        
         navigate("/dashboard");
       } else {
         setError(result.message || "Authentication failed");
