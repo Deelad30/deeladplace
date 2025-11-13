@@ -1,47 +1,32 @@
 import { FaRocket } from "react-icons/fa";
+import axios from "axios";
 import { useState } from "react";
-import axios from 'axios';
 import { useNavigate } from "react-router-dom";
 import '../../../src/styles/components/PricingSection.css';
 
 function PricingSection({ user }) {
   const navigate = useNavigate();
-
   const [loadingPlan, setLoadingPlan] = useState(null);
 
-  const handlePayment = async (planType) => {
+  const handleSubscription = async (planType) => {
     setLoadingPlan(planType);
-    const amount = planType === 'pro' ? 10000 : 20000;
-
     try {
-      const response = await axios.post('http://localhost:5000/api/paystack/initialize', {
-        email: user.email,
-        amount,
-        planType,
-        userId: user.id,
-      });
+      const response = await axios.post(
+        "http://localhost:5000/api/paystack/create-subscription",
+        {
+          userId: user.id,
+          planType,
+          customerEmail: user.email,
+        }
+      );
 
-      // Open Paystack inline modal
-      const handler = window.PaystackPop.setup({
-        key: process.env.REACT_APP_PAYSTACK_PUBLIC_KEY, // your public key
-        email: user.email,
-        amount: amount * 100,
-        onClose: function () {
-          alert('Payment window closed.');
-          setLoadingPlan(null);
-        },
-        callback: function (response) {
-          // Handle successful payment here
-         setLoadingPlan(null);
-          navigate(`/payment/success?reference=${response.reference}`);
-        },
-      });
+      console.log("Subscription created:", response.data);
+      alert(`Subscription created for ${planType} plan!`);
 
-      handler.openIframe(); // opens modal
-      setTimeout(() => setLoadingPlan(null), 1000);
-    } catch (error) {
-      console.error('Payment initialization error:', error);
-      alert('Failed to initialize payment.');
+    } catch (err) {
+      console.error("Subscription creation failed:", err.response?.data || err.message);
+      alert("Subscription creation failed");
+    } finally {
       setLoadingPlan(null);
     }
   };
@@ -50,9 +35,26 @@ function PricingSection({ user }) {
     <div className="pricing-section fade-in">
       <h2>Choose Your Plan</h2>
       <div className="pricing-table">
+        {/* TEST Plan */}
+        <div className="pricing-card test">
+          <h3>Test</h3>
+          <p className="price" style={{ color: "#000" }}>₦100<span>/hour</span></p>
+          <ul>
+            <li>✔ Test your subscription flow</li>
+          </ul>
+          <button
+            onClick={() => handleSubscription("test")}
+            className="signup-btn"
+            disabled={loadingPlan === "test"}
+          >
+            {loadingPlan === "test" ? "Processing..." : "Subscribe"}
+          </button>
+        </div>
+
+        {/* PRO Plan */}
         <div className="pricing-card pro">
           <h3>Pro</h3>
-          <p style={{ color: "#000"}} className="price">₦10,000<span>/month</span></p>
+          <p className="price" style={{ color: "#000" }}>₦10,000<span>/month</span></p>
           <ul>
             <li>✔ POS (Sales Sheet)</li>
             <li>✔ Cost Analysis Module</li>
@@ -62,17 +64,18 @@ function PricingSection({ user }) {
             <li>✔ Basic Analytics</li>
           </ul>
           <button
-            onClick={() => handlePayment('pro')}
+            onClick={() => handleSubscription("pro")}
             className="signup-btn"
-            disabled={loadingPlan === 'pro'}
+            disabled={loadingPlan === "pro"}
           >
-            {loadingPlan === 'pro' ? 'Initializing...' : 'Get Started'}
+            {loadingPlan === "pro" ? "Processing..." : "Subscribe"}
           </button>
         </div>
 
+        {/* ENTERPRISE Plan */}
         <div className="pricing-card enterprise">
           <h3>Enterprise</h3>
-          <p style={{ color: "#000"}} className="price">₦20,000<span>/month</span></p>
+          <p className="price" style={{ color: "#000" }}>₦20,000<span>/month</span></p>
           <ul>
             <li><FaRocket className="icon" /> Everything in Pro is included</li>
             <li>✔ Short Interval Control (Stock Flow)</li>
@@ -82,13 +85,13 @@ function PricingSection({ user }) {
             <li>✔ Priority Support & Staff Training</li>
           </ul>
           <button
-            onClick={() => handlePayment('enterprise')}
+            onClick={() => handleSubscription("enterprise")}
             className="signup-btn enterprise-btn"
-            disabled={loadingPlan === 'enterprise'}
+            disabled={loadingPlan === "enterprise"}
           >
-            {loadingPlan === 'enterprise' ? 'Initializing...' : 'Get Started'}
+            {loadingPlan === "enterprise" ? "Processing..." : "Subscribe"}
           </button>
-         </div>
+        </div>
       </div>
     </div>
   );
