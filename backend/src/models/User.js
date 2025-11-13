@@ -3,7 +3,7 @@ const database = require('../config/database');
 class User {
   static async findById(id) {
     const result = await database.query(
-      'SELECT id, name, email, role, plan, subscription_id, created_at FROM users WHERE id = $1',
+      'SELECT id, name, email, role, plan, subscription_code, created_at FROM users WHERE id = $1',
       [id]
     );
     return result.rows[0];
@@ -26,10 +26,10 @@ class User {
     return result.rows[0];
   }
 
-  static async updatePlan(userId, plan, subscriptionId = null) {
+  static async updatePlan(userId, plan, subscriptionCode = null) {
     const result = await database.query(
-      'UPDATE users SET plan = $1, subscription_id = $2 WHERE id = $3 RETURNING id, name, email, plan',
-      [plan, subscriptionId, userId]
+      'UPDATE users SET plan = $1, subscription_code = $2 WHERE id = $3 RETURNING id, name, email, plan',
+      [plan, subscriptionCode, userId]
     );
     return result.rows[0];
   }
