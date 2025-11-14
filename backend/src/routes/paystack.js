@@ -1,23 +1,41 @@
+// routes/paystack.js
+require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
 const crypto = require('crypto');
+const database = require('../config/database');
 const User = require('../models/User');
 const emailService = require('../utils/emailService');
-require('dotenv').config();
-
 const router = express.Router();
 
-// Plan mapping
+const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY;
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
+
+// Map your internal plan types to Paystack plan codes
 const planMap = {
-  test: process.env.PAYSTACK_TEST_PLAN,          // hourly test plan
-  pro: process.env.PAYSTACK_PRO_PLAN,           // monthly pro plan
-  enterprise: process.env.PAYSTACK_ENTERPRISE_PLAN // monthly enterprise plan
+  test: process.env.PAYSTACK_TEST_PLAN,
+  pro: process.env.PAYSTACK_PRO_PLAN,
+  enterprise: process.env.PAYSTACK_ENTERPRISE_PLAN
 };
 
-// Create subscription
+// Helper: safely parse metadata from webhook
+function parseMetadata(raw) {
+  if (!raw) return {};
+  if (typeof raw === 'string') {
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return {};
+    }
+  }
+  return raw;
+}
+
+/**
+ * Create / initialize subscription
+ */
 router.post('/create-subscription', async (req, res) => {
   const { userId, planType, customerEmail } = req.body;
-
   if (!userId || !planType || !customerEmail) {
     return res.status(400).json({ error: 'Missing required parameters' });
   }
@@ -26,107 +44,203 @@ router.post('/create-subscription', async (req, res) => {
   if (!planCode) return res.status(400).json({ error: 'Invalid plan type' });
 
   try {
-    const response = await axios.post(
-      'https://api.paystack.co/subscription',
-      {
-        customer: customerEmail,
-        plan: planCode,
-        start_date: new Date().toISOString(),
-        metadata: { userId, planType }
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
-          'Content-Type': 'application/json'
-        }
-      }
+    const { fetchPaystackPlans } = require("../utils/paystackPlans");
+    const paystackPlans = await fetchPaystackPlans();
+    const planDetails = paystackPlans[planCode];
+
+    if (!planDetails) return res.status(500).json({ error: 'Plan not found on Paystack' });
+
+    const planAmountInKobo = planDetails.amount;
+          console.log("Using PAYSTACK plan price:", planAmountInKobo, "for plan:", planType);
+
+    // Create or fetch Paystack customer
+    const customerResp = await axios.post(
+      'https://api.paystack.co/customer',
+      { email: customerEmail },
+      { headers: { Authorization: `Bearer ${PAYSTACK_SECRET}` } }
     );
 
-    const subscriptionCode = response.data.data.subscription_code;
+    const customer = customerResp.data?.data;
+    const customerCode = customer.customer_code;
 
-    // Update user with subscription info
-    await User.updatePlan(userId, planType, subscriptionCode);
+    // If customer has saved authorizations, create subscription directly
+    if (customer.authorizations && customer.authorizations.length > 0) {
+      const subscriptionResp = await axios.post(
+        'https://api.paystack.co/subscription',
+        { customer: customerCode, plan: planCode, metadata: { userId: String(userId), planType } },
+        { headers: { Authorization: `Bearer ${PAYSTACK_SECRET}` } }
+      );
 
-    res.json({ success: true, subscription: response.data.data });
+      const subscription = subscriptionResp.data.data;
+
+      // Update user in DB
+      await database.query(
+        'UPDATE users SET plan_type = $1, subscription_code = $2 WHERE id = $3',
+        [planType, subscription.subscription_code, userId]
+      );
+
+      await emailService.sendSubscriptionSuccessEmail({ id: userId, email: customerEmail }, planType);
+      return res.json({ success: true, subscription });
+    }
+
+    // Otherwise initialize transaction for first payment
+    const initResp = await axios.post(
+      'https://api.paystack.co/transaction/initialize',
+      {
+        email: customerEmail,
+        amount: planAmountInKobo,
+        plan: planCode,
+        metadata: { userId: String(userId), planType },
+        callback_url: `${CLIENT_URL}/paystack/callback`
+      },
+      { headers: { Authorization: `Bearer ${PAYSTACK_SECRET}` } }
+    );
+
+    const initData = initResp.data.data;
+    return res.json({
+      success: false,
+      message: 'Customer has no saved authorizations. Redirect user to Paystack.',
+      authorization_url: initData.authorization_url,
+      reference: initData.reference,
+      amount_charged: planAmountInKobo
+    });
+
   } catch (err) {
-    console.error('Subscription creation failed:', err.response?.data || err.message);
-    res.status(500).json({ error: 'Subscription creation failed' });
+    console.error("Create subscription error:", err.response?.data || err.message);
+    return res.status(500).json({ error: 'Subscription creation failed' });
   }
 });
 
-router.post('/', express.json({ type: '*/*' }), async (req, res) => {
-  const secret = process.env.PAYSTACK_SECRET_KEY;
+/**
+ * Verify payment by reference
+ */
+router.get('/verify/:reference', async (req, res) => {
+  const { reference } = req.params;
+  try {
+    const verifyResp = await axios.get(
+      `https://api.paystack.co/transaction/verify/${reference}`,
+      { headers: { Authorization: `Bearer ${PAYSTACK_SECRET}` } }
+    );
 
-  // // Verify signature
-  // const hash = crypto.createHmac('sha512', secret)
-  //                    .update(JSON.stringify(req.body))
-  //                    .digest('hex');
+    const data = verifyResp.data?.data;
+    if (!verifyResp.data || !verifyResp.data.status) return res.json({ status: 'error', data: verifyResp.data });
 
-  // if (hash !== req.headers['x-paystack-signature']) {
-  //   console.warn('❌ Invalid webhook signature');
-  //   return res.status(400).send('Invalid signature');
-  // }
-
-  const event = req.body;
-  console.log('📥 Paystack webhook event:', JSON.stringify(event, null, 2));
-
-  const subscriptionCode = event.data.subscription?.subscription_code || null;
-let userId, planType;
-if (['charge.success', 'charge.failed', 'subscription.create'].includes(event.event)) {
-  userId = event.data.metadata?.userId;
-  planType = event.data.metadata?.planType;
-  if (!userId || !planType) {
-    console.warn('⚠️ Webhook missing userId or planType');
-    return res.sendStatus(400);
+    if (data.status === 'success') return res.json({ status: 'success', data });
+    return res.json({ status: 'failed', data });
+  } catch (err) {
+    console.error('Verify error:', err.response?.data || err.message);
+    return res.status(500).json({ status: 'error' });
   }
-}
+});
 
+/**
+ * Paystack webhook
+ */
+// Paystack Webhook Endpoint
+router.post('/webhook', express.json({ type: '*/*' }), async (req, res) => {
+  try {
+    const signature = req.headers['x-paystack-signature'];
+    const body = JSON.stringify(req.body || {});
+    const expectedHash = crypto.createHmac('sha512', PAYSTACK_SECRET).update(body).digest('hex');
 
- try {
-  const existingUser = await User.findById(userId);
-  if (!existingUser) return res.sendStatus(404);
+    if (signature !== expectedHash) {
+      console.warn('Invalid Paystack webhook signature');
+      return res.status(400).send('Invalid signature');
+    }
 
-  switch (event.event) {
-    case 'charge.success':
-      await User.updatePlan(userId, planType, subscriptionCode);
-      console.log(`✅ User ${userId} charged successfully for ${planType} plan`);
-      await emailService.sendSubscriptionSuccessEmail(existingUser, planType);
-      break;
+    const event = req.body;
+    console.log('Webhook event:', event.event);
 
-    case 'charge.failed':
-      console.log(`❌ User ${userId} payment failed for ${planType} plan`);
-      await emailService.sendSubscriptionPaymentFailed(existingUser, planType);
-      break;
+    const metadata = parseMetadata(event.data?.metadata);
+    const userId = metadata?.userId;
+    const planType = metadata?.planType;
 
-    case 'subscription.create':
-      // Only check for duplicates here
-      if (existingUser.subscription_code !== subscriptionCode) {
-        await User.updatePlan(userId, planType, subscriptionCode);
-        console.log(`🟢 Subscription created for user ${userId}`);
-      } else {
-        console.log(`⚠️ Duplicate subscription creation ignored for user ${userId}`);
+    if (!userId) {
+      console.log('Webhook: no user metadata; event:', event.event);
+      return res.sendStatus(200);
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      console.warn('Webhook: user not found for id', userId);
+      return res.sendStatus(200);
+    }
+
+    let subscriptionCode;
+
+    switch (event.event) {
+      case 'charge.success':
+      case 'subscription.create':
+      case 'invoice.create': {
+        // Extract subscription code from Paystack event
+        subscriptionCode = event.data?.subscription?.subscription_code || event.data?.authorization?.authorization_code;
+
+        if (!subscriptionCode) {
+          console.warn('Webhook: no subscription code found in event');
+          break;
+        }
+
+        // Check if user already has a subscription
+        if (user.subscription_code && user.subscription_code !== subscriptionCode) {
+          // Optional: disable old subscription in Paystack
+          try {
+            await axios.post(
+              `https://api.paystack.co/subscription/disable`,
+              { code: user.subscription_code },
+              { headers: { Authorization: `Bearer ${PAYSTACK_SECRET}` } }
+            );
+            console.log(`Disabled old subscription ${user.subscription_code} for user ${userId}`);
+          } catch (err) {
+            console.error('Failed to disable old subscription:', err.response?.data || err.message);
+          }
+        }
+
+        // Update DB with new plan and subscription
+        await User.updatePlan(String(userId), planType, subscriptionCode);
+        console.log(`DB updated with subscription ${subscriptionCode} for user ${userId}`);
+
+        // Send email notification
+        await emailService.sendSubscriptionSuccessEmail(user, planType);
+        console.log(`Subscription success email sent to user ${userId}`);
+        break;
       }
-      break;
 
-    case 'subscription.disable':
-      console.log(`⚠️ Subscription disabled for user ${userId}`);
-      break;
+      case 'charge.failed':
+        await emailService.sendSubscriptionPaymentFailed(user, planType);
+        console.log(`Subscription payment failed email sent to user ${userId}`);
+        break;
 
-    case 'subscription.renewal':
-      console.log(`🔄 Subscription renewed for user ${userId}`);
-      break;
+      case 'subscription.disable':
+        console.log(`Subscription disabled for user ${userId}`);
+        break;
 
-    default:
-      console.log('Unhandled event type:', event.event);
+      case 'subscription.renewal':
+        console.log(`Subscription renewed for user ${userId}`);
+        break;
+
+      default:
+        console.log('Webhook: unhandled event type', event.event);
+    }
+  } catch (err) {
+    console.error('Webhook processing error:', err);
   }
-} catch (err) {
-  console.error('Webhook handling error:', err);
-}
 
-  // Always respond with 200 to prevent Paystack retries
+  // Always respond 200 to avoid retries
   res.sendStatus(200);
 });
 
 
+/**
+ * Fetch all Paystack plans
+ */
+router.get("/plans", async (req, res) => {
+  try {
+    const { fetchPaystackPlans } = require("../utils/paystackPlans");
+    const plans = await fetchPaystackPlans();
+    res.json({ success: true, plans });
+  } catch (err) {
+    res.status(500).json({ success: false, error: "Could not fetch Paystack plans" });
+  }
+});
 
 module.exports = router;

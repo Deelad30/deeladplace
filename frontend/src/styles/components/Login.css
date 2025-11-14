@@ -28,6 +28,21 @@
   color: #ff4d4f;
 }
 
+.password-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  cursor: pointer;
+  user-select: none;
+}
+
 /* Left Text Section */
 .login__text {
   flex: 1 1 400px;
