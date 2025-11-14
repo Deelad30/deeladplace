@@ -26,35 +26,39 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = async (email, password) => {
-    try {
-      const response = await authService.login(email, password);
-      const { token, user } = response.data;
-      
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      authService.setToken(token);
-      setUser(user);
-      
-      return { success: true };
-    } catch (error) {
-      return { 
-        success: false, 
-        message: error.response?.data?.message || 'Login failed' 
-      };
-    }
-  };
+const login = async (email, password) => {
+  try {
+    // 1. Login and receive token
+    const response = await authService.login(email, password);
+    const { token } = response.data;
+
+    // 2. Store token and set axios header
+    localStorage.setItem('token', token);
+    authService.setToken(token);
+
+    // 3. Fetch the latest user from your database
+    const profileRes = await authService.getCurrentUser();
+    console.log(profileRes);
+    
+    const updatedUser = profileRes.data;
+
+    // 4. Save updated user to state + localStorage
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      message: error.message || "Login failed",
+    };
+  }
+};
+
 
   const signup = async (name, email, password) => {
     try {
-      const response = await authService.register(name, email, password);
-      const { token, user } = response.data;
-      
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      authService.setToken(token);
-      setUser(user);
-      
+      const response = await authService.register(name, email, password);      
       return { success: true };
     } catch (error) {
       return { 
