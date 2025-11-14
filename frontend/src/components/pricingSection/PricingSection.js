@@ -1,11 +1,11 @@
+// src/components/PricingSection.jsx
 import { FaRocket } from "react-icons/fa";
 import axios from "axios";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+
 import '../../../src/styles/components/PricingSection.css';
 
 function PricingSection({ user }) {
-  const navigate = useNavigate();
   const [loadingPlan, setLoadingPlan] = useState(null);
 
   const handleSubscription = async (planType) => {
@@ -14,15 +14,30 @@ function PricingSection({ user }) {
       const response = await axios.post(
         "http://localhost:5000/api/paystack/create-subscription",
         {
-          userId: user.id,
+          userId: user.user.id,
           planType,
-          customerEmail: user.email,
+          customerEmail: user.user.email,
         }
       );
 
-      console.log("Subscription created:", response.data);
-      alert(`Subscription created for ${planType} plan!`);
+      const data = response.data;
+      // If Paystack needs the user to pay / add card
+      if (data.success === false && data.authorization_url) {
+        // Redirect to Paystack checkout page
+        window.location.href = data.authorization_url;
+        return;
+      }
 
+      // Subscription created immediately (saved card)
+      if (data.success === true && data.subscription) {
+        alert(`Subscription created for ${planType} plan!`);
+        // Optionally reload user data or update UI
+        return;
+      }
+
+      // Unexpected response
+      console.warn('Unexpected response', data);
+      alert('Unexpected response from server. Check console.');
     } catch (err) {
       console.error("Subscription creation failed:", err.response?.data || err.message);
       alert("Subscription creation failed");
