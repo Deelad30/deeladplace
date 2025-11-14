@@ -12,6 +12,7 @@ import ProductsPage from './pages/ProductsPage';
 import InventoryPage from './pages/InventoryPage';
 import PaymentSuccess from './pages/PaymentSuccess';
 import ExpensesPage from './pages/ExpensesPage';
+import PaystackCallback from './pages/PaystackCallBack';
 import ReportsPage from './pages/ReportPage';
 import './App.css';
 import Checkout from './pages/Checkout';
@@ -48,6 +49,13 @@ function App() {
             element={
             <PrivateRoute>
             <PaymentSuccess />
+            </PrivateRoute>
+            } 
+            />
+            <Route path="/paystack/callback" 
+            element={
+            <PrivateRoute>
+            <PaystackCallback />
             </PrivateRoute>
             } 
             />
