@@ -13,7 +13,7 @@ const Header = () => {
           <h1>{APP_CONFIG.APP_NAME}</h1>
         </div>
         <div className="header-user">
-          <span>Welcome, {user?.name}</span>
+          <span>Welcome, {user?.user?.name}</span>
           <button onClick={logout} className="btn btn-secondary">Logout</button>
         </div>
       </div>
