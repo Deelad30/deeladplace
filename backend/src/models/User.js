@@ -26,13 +26,15 @@ class User {
     return result.rows[0];
   }
 
-  static async updatePlan(userId, plan, subscriptionCode = null) {
-    const result = await database.query(
-      'UPDATE users SET plan = $1, subscription_code = $2 WHERE id = $3 RETURNING id, name, email, plan',
-      [plan, subscriptionCode, userId]
-    );
-    return result.rows[0];
-  }
+static async updatePlan(userId, plan, subscriptionCode = null) {
+  console.log('Updating user:', userId, 'plan:', plan, 'subscription:', subscriptionCode);
+  const result = await database.query(
+    'UPDATE users SET plan = $1, subscription_code = $2 WHERE id = $3 RETURNING id, name, email, plan, subscription_code',
+    [plan, subscriptionCode, userId]
+  );
+  console.log('DB update result:', result.rows[0]);
+  return result.rows[0];
 }
 
+}
 module.exports = User;
