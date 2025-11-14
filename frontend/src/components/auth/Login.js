@@ -6,6 +6,7 @@ import { APP_CONFIG } from "../../utils/constants";
 import '../../../src/styles/components/Login.css';
 
 function Login() {
+  const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -19,33 +20,51 @@ function Login() {
   const handleInputChange = (setter) => (e) => setter(e.target.value);
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Prevent page refresh
-    setLoading(true);
-    setError("");
+  e.preventDefault();
+  setLoading(true);
+  setError("");
 
-    try {
-      let result;
-      if (isSignup) {
-        if (!signup) throw new Error("Signup function not available");
-        result = await signup(name, email, password);
-      } else {
-        result = await login(email, password);
-      }
+  try {
+    let result;
+
+    if (isSignup) {
+      if (!signup) throw new Error("Signup function not available");
+      result = await signup(name, email, password);
 
       if (result.success) {
-        console.log(result);
-        
+        // Switch to login mode
+        setIsSignup(false);
+        setName("");
+        setPassword("");
+        setError("");
+        return; // stop further processing
+      }
+    } else {
+      if (!login) throw new Error("Login function not available");
+      result = await login(email, password);
+    }
+
+    if (result.success) {
+      // After login → check plan
+      const storedUser = JSON.parse(localStorage.getItem("user"));
+      const plan = storedUser?.user?.plan?.toLowerCase();
+
+      if (plan === "enterprise" || plan === "pro") {
         navigate("/dashboard");
       } else {
-        setError(result.message || "Authentication failed");
+        navigate("/checkout");
       }
-    } catch (err) {
-      console.error("Auth error:", err);
-      setError(err.message || "Something went wrong");
-    } finally {
-      setLoading(false);
+    } else {
+      setError(result.message || "Authentication failed");
     }
-  };
+  } catch (err) {
+    console.error("Auth error:", err);
+    setError(err.message || "Something went wrong");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // Prevent rendering the login form until AuthProvider finishes loading
   if (authLoading) return <LoadingSpinner />;
@@ -131,18 +150,29 @@ function Login() {
 
         {/* Password */}
         <label htmlFor="password" className={`login__input ${error ? "input-error" : ""}`}>
-          <input
-            type="password"
-            id="password"
-            placeholder={isSignup ? "Create a Password" : "Password"}
-            className="login__input--box"
-            value={password}
-            onChange={handleInputChange(setPassword)}
-            required
-            disabled={loading}
-            minLength="6"
-          />
-        </label>
+  <div className="password-wrapper">
+    <input
+      type={showPassword ? "text" : "password"}
+      id="password"
+      placeholder={isSignup ? "Create a Password" : "Password"}
+      className="login__input--box"
+      value={password}
+      onChange={handleInputChange(setPassword)}
+      required
+      disabled={loading}
+      minLength="6"
+    />
+
+    {/* Toggle Button */}
+    <span 
+      className="toggle-password pointer" 
+      onClick={() => setShowPassword(!showPassword)}
+    >
+      {showPassword ? "🔓" : "🔒"}
+    </span>
+  </div>
+</label>
+
 
         {/* Forgot Password */}
         {!isSignup && (

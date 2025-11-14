@@ -7,6 +7,8 @@ import "../../../src/styles/components/ResetPassword.css"; // original styling
 
 
 const ResetPassword = () => {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordd, setShowPasswordd] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -116,9 +118,11 @@ const ResetPassword = () => {
           {error && <div className="error-message">{error}</div>}
           {message && <div className="success-message">{message}</div>}
 
+
           <label htmlFor="new-password" className="reset__input">
+<div className="password-wrapper">
             <input
-              type="password"
+              type={showPasswordd ? "text" : "password"}
               id="new-password"
               placeholder="New Password"
               className="reset__input--box"
@@ -128,11 +132,19 @@ const ResetPassword = () => {
               disabled={loading || message}
               minLength="6"
             />
+    <span 
+      className="toggle-password pointer" 
+      onClick={() => setShowPasswordd(!showPasswordd)}
+    >
+      {showPasswordd ? "🔓" : "🔒"}
+    </span>
+ </div>
           </label>
 
-          <label htmlFor="confirm-password" className="reset__input">
+                    <label htmlFor="confirm-password" className="reset__input">
+<div className="password-wrapper">
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               id="confirm-password"
               placeholder="Confirm Password"
               className="reset__input--box"
@@ -142,7 +154,16 @@ const ResetPassword = () => {
               disabled={loading || message}
               minLength="6"
             />
+       {/* Toggle Button */}
+          <span 
+            className="toggle-password pointer" 
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? "🔓" : "🔒"}
+          </span>
+      </div>
           </label>
+
 
           <button type="submit" className="btn btn-shadow" disabled={loading || message}>
             {loading ? <LoadingSpinner size="small" /> : "Reset Password"}

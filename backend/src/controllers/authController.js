@@ -155,19 +155,11 @@ const forgotPassword = async (req, res) => {
     const { email } = req.body;
 
     if (!email) {
-      return res.status(400).json({
-        success: false,
-        message: 'Email is required'
-      });
+      return res.status(400).json({ success: false, message: 'Email is required' });
     }
 
-    const userResult = await database.query(
-      'SELECT * FROM users WHERE email = $1',
-      [email]
-    );
-
+    const userResult = await database.query('SELECT * FROM users WHERE email = $1', [email]);
     if (userResult.rows.length === 0) {
-      // Don't reveal whether email exists
       return res.json({
         success: true,
         message: 'If an account with that email exists, a reset link has been sent'
@@ -176,30 +168,16 @@ const forgotPassword = async (req, res) => {
 
     const user = userResult.rows[0];
 
-    // Generate reset token
     const resetToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
     const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
-    // Store reset token in database
     await database.query(
       'UPDATE users SET reset_token = $1, reset_token_expiry = $2 WHERE id = $3',
-      [resetToken, resetTokenExpiry, user.id]
+      [hashedToken, resetTokenExpiry, user.id]
     );
 
-    // Send reset email
-    // try {
-    //   await emailService.sendPasswordResetEmail(user, resetToken);
-    // } catch (emailError) {
-    //   console.error('Failed to send reset email:', emailError);
-    //   return res.status(500).json({
-    //     success: false,
-    //     message: 'Failed to send reset email'
-    //   });
-    // }
-
-      emailService.sendPasswordResetEmail(user, new Date().toLocaleString())
-      .catch(err => console.error('Failed to send login email:', err));
-
+    await emailService.sendPasswordResetEmail(user, resetToken); // send the plain token
 
     res.json({
       success: true,
@@ -208,45 +186,40 @@ const forgotPassword = async (req, res) => {
 
   } catch (error) {
     console.error('Forgot password error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error during password reset request'
-    });
+    res.status(500).json({ success: false, message: 'Server error during password reset request' });
   }
 };
+
 
 const resetPassword = async (req, res) => {
   try {
     const { token, newPassword } = req.body;
 
     if (!token || !newPassword) {
-      return res.status(400).json({
-        success: false,
-        message: 'Token and new password are required'
-      });
+      return res.status(400).json({ success: false, message: 'Token and new password are required' });
     }
 
-    // Find user with valid reset token
+    // Hash token if it was stored hashed
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
     const userResult = await database.query(
       'SELECT * FROM users WHERE reset_token = $1 AND reset_token_expiry > $2',
-      [token, new Date()]
+      [hashedToken, new Date()]
     );
 
     if (userResult.rows.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid or expired reset token'
-      });
+      return res.status(400).json({ success: false, message: 'Invalid or expired reset token' });
     }
 
     const user = userResult.rows[0];
 
     // Hash new password
     const saltRounds = process.env.NODE_ENV === 'production'
-    ? parseInt(process.env.BCRYPT_SALT_ROUNDS || '10')
-    : 5; 
-const salt = await bcrypt.genSalt(saltRounds);
-    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+      ? parseInt(process.env.BCRYPT_SALT_ROUNDS || '10')
+      : 5;
+
+    const salt = await bcrypt.genSalt(saltRounds);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
 
     // Update password and clear reset token
     await database.query(
@@ -254,35 +227,23 @@ const salt = await bcrypt.genSalt(saltRounds);
       [hashedPassword, user.id]
     );
 
-    // Send confirmation email
-    // try {
-    //   await emailService.sendPasswordResetConfirmation(user);
-    // } catch (emailError) {
-    //   console.error('Failed to send reset confirmation:', emailError);
-    // }
+    // Send confirmation email (non-blocking)
+    emailService
+      .sendPasswordResetConfirmation(user, new Date().toLocaleString())
+      .catch(err => console.error('Failed to send reset confirmation email:', err));
 
-      emailService.sendPasswordResetConfirmation(user, new Date().toLocaleString())
-      .catch(err => console.error('Failed to send login email:', err));
-
-
-    res.json({
-      success: true,
-      message: 'Password reset successfully'
-    });
+    res.json({ success: true, message: 'Password reset successfully' });
 
   } catch (error) {
     console.error('Reset password error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error during password reset'
-    });
+    res.status(500).json({ success: false, message: 'Server error during password reset' });
   }
 };
 
 const getMe = async (req, res) => {
   try {
     const userResult = await database.query(
-      'SELECT id, name, email, role, created_at FROM users WHERE id = $1',
+      'SELECT id, name, email, role, plan, created_at FROM users WHERE id = $1',
       [req.user.id]
     );
 
@@ -298,6 +259,7 @@ const getMe = async (req, res) => {
     });
   }
 };
+
 
 module.exports = {
   registerUser,
