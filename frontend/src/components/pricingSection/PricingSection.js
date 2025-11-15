@@ -50,21 +50,6 @@ function PricingSection({ user }) {
     <div className="pricing-section fade-in">
       <h2>Choose Your Plan</h2>
       <div className="pricing-table">
-        {/* TEST Plan */}
-        <div className="pricing-card test">
-          <h3>Test</h3>
-          <p className="price" style={{ color: "#000" }}>₦100<span>/hour</span></p>
-          <ul>
-            <li>✔ Test your subscription flow</li>
-          </ul>
-          <button
-            onClick={() => handleSubscription("test")}
-            className="signup-btn"
-            disabled={loadingPlan === "test"}
-          >
-            {loadingPlan === "test" ? "Processing..." : "Subscribe"}
-          </button>
-        </div>
 
         {/* PRO Plan */}
         <div className="pricing-card pro">
