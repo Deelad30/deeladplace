@@ -19,7 +19,7 @@ const ProductGrid = ({ products, onAddToCart, disabled }) => {
           <div className="product-info">
             <h4>{product.name}</h4>
             <div className="product-pricing">
-              <span className="price">{formatCurrency(product.customer_price)}</span>
+              <span className="price">{formatCurrency(product.vendor_price)}</span>
               <span className="commission">Commission: {formatCurrency(product.commission)}</span>
             </div>
           </div>
@@ -27,7 +27,7 @@ const ProductGrid = ({ products, onAddToCart, disabled }) => {
             onClick={() => onAddToCart(product)}
             className="add-to-cart-btn"
           >
-            Add to Cart
+            Add Item
           </button>
         </div>
       ))}

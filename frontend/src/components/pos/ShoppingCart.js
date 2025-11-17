@@ -1,13 +1,14 @@
 import React from 'react';
 import { formatCurrency } from '../../utils/formatters';
 
-const ShoppingCart = ({ cart, onUpdateQuantity, onRemoveItem, totals, onProcessSale, processing, disabled }) => {
+const ShoppingCart = ({ cart, onUpdateQuantity, onRemoveItem, totals, onContinue, processing, disabled }) => {
+  
   return (
     <div className="shopping-cart">
-      <h3>Shopping Cart</h3>
+      <h3>Current Order</h3>
       
       {cart.length === 0 ? (
-        <div className="empty-cart">Cart is empty</div>
+        <div className="empty-cart">Order list is empty</div>
       ) : (
         <>
           <div className="cart-items">
@@ -15,7 +16,7 @@ const ShoppingCart = ({ cart, onUpdateQuantity, onRemoveItem, totals, onProcessS
               <div key={item.id} className="cart-item">
                 <div className="item-info">
                   <span className="item-name">{item.name}</span>
-                  <span className="item-price">{formatCurrency(item.customer_price)}</span>
+                  <span className="item-price">{formatCurrency(+item.commission + +item.vendor_price)}</span>
                 </div>
                 <div className="item-controls">
                   <div className="quantity-controls">
@@ -50,11 +51,11 @@ const ShoppingCart = ({ cart, onUpdateQuantity, onRemoveItem, totals, onProcessS
           </div>
 
           <button
-            onClick={onProcessSale}
+            onClick={onContinue}
             disabled={disabled || processing}
             className="process-sale-btn"
           >
-            {processing ? 'Processing...' : 'Complete Sale'}
+            {processing ? 'Processing...' : 'Continue Sale'}
           </button>
         </>
       )}
