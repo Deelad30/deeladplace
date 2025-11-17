@@ -1,5 +1,5 @@
 export const APP_CONFIG = {
-  APP_NAME: 'Deelad Place SaaS',
+  APP_NAME: 'Deelad Softwork',
   COMPANY_NAME: 'Deelad Place',
   VERSION: '1.0.0'
 };
