@@ -14,7 +14,14 @@ const calculateCommission = (vendorPrice, customCommission = null) => {
 
 const calculatePricing = (vendorPrice, customCommission = null) => {
   const commission = calculateCommission(vendorPrice, customCommission);
-  const customerPrice = vendorPrice + commission;
+
+  // Convert to numbers
+  const numericVendorPrice = Number(vendorPrice);
+  const numericCommission = Number(commission);
+
+  const customerPrice = numericVendorPrice + numericCommission;
+  
+  
   
   return {
     commission,
