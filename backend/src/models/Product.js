@@ -22,6 +22,13 @@ class Product {
     );
     return result.rows[0];
   }
+
+    static async findAll() {
+    const result = await database.query(
+      'SELECT * FROM products WHERE is_active = true ORDER BY name'
+    );
+    return result.rows;
+  }
 }
 
 module.exports = Product;

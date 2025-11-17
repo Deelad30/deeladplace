@@ -1,14 +1,49 @@
 const database = require('../config/database');
 
 class Sale {
+  
   static async create(saleData) {
-    const { vendor_id, product_id, quantity, vendor_price, hub_commission, customer_price } = saleData;
-    const result = await database.query(
-      'INSERT INTO sales (vendor_id, product_id, quantity, vendor_price, hub_commission, customer_price) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [vendor_id, product_id, quantity, vendor_price, hub_commission, customer_price]
-    );
-    return result.rows[0];
-  }
+  const {
+    vendor_id,
+    product_id,
+    quantity,
+    vendor_price,
+    hub_commission,
+    customer_price,
+    customer_type,
+    payment_type,
+    payment_breakdown
+  } = saleData;
+
+  const result = await database.query(
+    `INSERT INTO sales (
+      vendor_id, 
+      product_id, 
+      quantity, 
+      vendor_price, 
+      hub_commission, 
+      customer_price,
+      customer_type,
+      payment_type,
+      payment_breakdown
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+    RETURNING *`,
+    [
+      vendor_id,
+      product_id,
+      quantity,
+      vendor_price,
+      hub_commission,
+      customer_price,
+      customer_type,
+      payment_type,
+      JSON.stringify(saleData.payment_breakdown) 
+    ]
+  );
+
+  return result.rows[0];
+}
+
 
   static async findByDateRange(startDate, endDate) {
     const result = await database.query(
