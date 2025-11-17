@@ -36,6 +36,28 @@ const getProductsByVendor = async (req, res) => {
   }
 };
 
+const getAllProducts = async (req, res) => {
+  try {
+    const products = await Product.findAll();
+
+    const productsWithPricing = products.map(product => {
+      const pricing = calculatePricing(product.vendor_price, product.custom_commission);
+      return { ...product, ...pricing };
+    });
+
+    res.json({
+      success: true,
+      count: productsWithPricing.length,
+      products: productsWithPricing
+    });
+  } catch (error) {
+    console.error('Get all products error:', error);
+    res.status(500).json({ success: false, message: 'Error fetching all products' });
+  }
+};
+
+
 module.exports = {
-  getProductsByVendor
+  getProductsByVendor,
+  getAllProducts
 };

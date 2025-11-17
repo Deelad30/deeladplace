@@ -4,7 +4,15 @@ const { calculatePricing } = require('../utils/commissionCalculator');
 
 const createSale = async (req, res) => {
   try {
-    const { vendor_id, product_id, quantity = 1 } = req.body;
+    const {
+  vendor_id,
+  product_id,
+  quantity = 1,
+  customer_type,
+  payment_type,
+  payment_breakdown
+} = req.body;
+
 
     const product = await Product.findById(product_id);
     if (!product) {
@@ -16,15 +24,18 @@ const createSale = async (req, res) => {
 
     const pricing = calculatePricing(product.vendor_price, product.custom_commission);
     const totalCustomerPrice = pricing.customerPrice * quantity;
-
+   
     const sale = await Sale.create({
-      vendor_id,
-      product_id,
-      quantity,
-      vendor_price: product.vendor_price,
-      hub_commission: pricing.commission * quantity,
-      customer_price: totalCustomerPrice
-    });
+  vendor_id,
+  product_id,
+  quantity,
+  vendor_price: product.vendor_price,
+  hub_commission: pricing.commission * quantity,
+  customer_price: totalCustomerPrice,
+  customer_type,
+  payment_type,
+  payment_breakdown
+});
 
     res.status(201).json({
       success: true,
