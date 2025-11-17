@@ -1,0 +1,61 @@
+/* Row container: title + actions on one line */
+.quick-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0;
+  margin: 0;
+}
+
+/* Inline Title */
+.qa-title-inline {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  color: #1a1a1a;
+  white-space: nowrap;
+  margin-top: 25px;
+}
+
+/* Inline actions row */
+.qa-inline {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 25px;
+}
+
+/* Small buttons */
+.qa-btn-sm {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1.5px solid var(--accent);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.22s ease;
+}
+
+.qa-btn-sm:hover {
+  background: rgba(0, 0, 0, 0.03);
+  transform: translateY(-2px);
+}
+
+.qa-btn-sm:active {
+  transform: scale(0.96);
+}
+
+/* Small Icon */
+.qa-icon-sm {
+  color: var(--accent);
+  font-size: 1rem;
+}
+
+/* Label */
+.qa-label-sm {
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: #333;
+}
