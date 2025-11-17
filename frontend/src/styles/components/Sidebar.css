@@ -1,9 +1,14 @@
+/* ---------- Modern Sidebar ---------- */
 .sidebar {
   width: 250px;
-  background: white;
-  border-right: 1px solid #e5e5e5;
-  height: calc(100vh - 80px);
+  height: 100vh;
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
   position: fixed;
+  top: 0;
+  left: 0;
+  padding-top: 80px; /* adjust if you have a top navbar */
+  transition: width 0.3s ease;
 }
 
 .sidebar-nav ul {
@@ -15,26 +20,73 @@
 .sidebar-nav li a {
   display: flex;
   align-items: center;
-  padding: 1rem 1.5rem;
+  padding: 1rem 1.7rem;
   text-decoration: none;
-  color: #333;
+  color: #374151;
   border-left: 3px solid transparent;
+  font-size: 0.95rem;
+  font-weight: 500;
   transition: all 0.3s ease;
 }
 
+/* Hover */
 .sidebar-nav li a:hover {
-  background: #f8f9fa;
-  border-left-color: #22c55e;
+  background: #f5fef7;
+  border-left-color: #e2c6c6;
+  color: #000;
 }
 
+/* Active */
 .sidebar-nav li a.active {
-  background: #f0fdf4;
-  border-left-color: #22c55e;
-  color: #22c55e;
+  background: #f5fef7;
+  border-left-color: #d91f22;
+  color: #000;
   font-weight: 600;
 }
 
+/* Icon Styling */
 .sidebar-nav .icon {
-  margin-right: 0.75rem;
-  font-size: 1.1rem;
+  margin-right: 0.85rem;
+  font-size: 1.2rem;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Icon Micro-Animation */
+.animated-icon:hover {
+  transform: translateX(4px) scale(1.05);
+  opacity: 0.9;
+}
+
+/* ---------- Responsive Sidebar ---------- */
+
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 220px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 70px;
+  }
+
+  .sidebar-nav li a {
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .sidebar-nav .label {
+    display: none;
+  }
+
+  .sidebar-nav .icon {
+    margin: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    position: fixed;
+    width: 60px;
+  }
 }

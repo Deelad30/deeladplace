@@ -1,4 +1,5 @@
 import React from 'react';
+import './VendorSelector.css';
 
 const VendorSelector = ({ vendors, selectedVendor, onVendorSelect }) => {
   return (

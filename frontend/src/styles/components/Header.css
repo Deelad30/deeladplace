@@ -1,25 +1,146 @@
-.header {
-  background: white;
-  border-bottom: 1px solid #e5e5e5;
-  padding: 0;
+/* ---------- HEADER WRAPPER ---------- */
+.app-header {
+  width: 100%;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
-.header-content {
+/* ---------- INNER CONTENT ---------- */
+.header-inner {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  padding: 1rem 2rem;
-  margin: 0 auto;
+  padding: 0.9rem 1.8rem;
+  height: 70px;
 }
 
+/* ---------- BRAND ---------- */
 .header-brand h1 {
-  color: #22c55e;
+  font-size: 1.4rem;
+  color: #d91f22;
+  font-weight: 700;
   margin: 0;
-  font-size: 1.5rem;
+  letter-spacing: -0.5px;
 }
 
-.header-user {
+/* ---------- USER SECTION ---------- */
+.user-section {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 1rem;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 8px;
+  background: #f9fafb;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.user-info:hover {
+  background: #f3f4f6;
+}
+
+.username {
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+/* User Avatar */
+.user-avatar {
+  font-size: 1.6rem;
+  color: #d91f22;
+}
+
+/* Chevron */
+.icon-chevron {
+  font-size: 0.8rem;
+  color: gray;
+}
+
+/* ---------- DROPDOWN MENU ---------- */
+.dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: 58px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  width: 150px;
+  padding: 0.5rem 0;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  animation: fadeIn 0.2s ease;
+  z-index: 50;
+}
+
+.dropdown-menu button {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #dc2626;
+  font-size: 0.95rem;
+  transition: background 0.2s ease;
+}
+
+.dropdown-menu button:hover {
+  background: #fef2f2;
+}
+
+/* Dropdown Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- MOBILE TOGGLE ---------- */
+.mobile-toggle {
+  display: none;
+  font-size: 1.3rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #374151;
+}
+
+/* ---------- RESPONSIVE BEHAVIOR ---------- */
+
+/* Tablets + Phones */
+@media (max-width: 768px) {
+  .mobile-toggle {
+    display: block;
+  }
+
+  .header-brand h1 {
+    font-size: 1.2rem;
+  }
+
+  .username {
+    display: none;
+  }
+}
+
+/* Small Phones */
+@media (max-width: 480px) {
+  .header-inner {
+    padding: 0.7rem 1.2rem;
+  }
+
+  .user-info {
+    padding: 0.35rem 0.6rem;
+  }
+
+  .user-avatar {
+    font-size: 1.4rem;
+  }
 }

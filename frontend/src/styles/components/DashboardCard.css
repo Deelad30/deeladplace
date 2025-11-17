@@ -1,9 +1,15 @@
 .dashboard-card {
-  background: white;
-  border-radius: 8px;
-  padding: 1.5rem;
-  border-left: 4px solid #22c55e;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.8rem 1.5rem;
+  border-left: 5px solid #22c55e;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.1);
 }
 
 .card-content {
@@ -14,15 +20,15 @@
 
 .card-text h3 {
   margin: 0 0 0.5rem 0;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: #6b7280;
   font-weight: 600;
 }
 
 .value {
-  font-size: 1.75rem;
+  font-size: 1.85rem;
   font-weight: 700;
-  color: #1f2937;
+  color: #111827;
   margin-bottom: 0.25rem;
 }
 
@@ -32,12 +38,12 @@
 }
 
 .card-icon {
-  width: 50px;
-  height: 50px;
-  border-radius: 8px;
+  width: 55px;
+  height: 55px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   color: white;
 }

@@ -1,0 +1,58 @@
+.print-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 4000;
+}
+
+.print-box {
+  width: 280px; /* 58mm thermal width */
+  background: white;
+  padding: 18px;
+  border-radius: 10px;
+  font-family: monospace;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.print-close, .print-btn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 8px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.print-close {
+  background: #ddd;
+}
+
+.print-btn {
+  background: #3bb54a;
+  color: white;
+}
+
+@media print {
+  body * {
+    visibility: hidden; /* hide everything */
+  }
+
+  #receipt-print-area, 
+  #receipt-print-area * {
+    visibility: visible; /* only show receipt */
+  }
+
+  #receipt-print-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 260px; /* thermal printer width */
+    font-family: monospace;
+    padding: 10px;
+    font-size: 12px;
+  }
+}
+
