@@ -11,7 +11,6 @@ const SaleOptionsModal = ({ visible, onClose, onFinish, totals }) => {
   });
   const [notification, setNotification] = useState(null); // { message: '', type: 'error'|'success' }
 
-  if (!visible) return null;
 
   const showNotification = (message, type = "error") => {
     setNotification({ message, type });
@@ -96,7 +95,7 @@ const handleFinish = () => {
         </div>
       )}
 
-      <div className="modal-overlay">
+      <div className={`modal-overlay modal-fade ${visible ? "show" : "hide"}`}>
         <div className="modal-box">
           <h3>Complete Sale</h3>
 
