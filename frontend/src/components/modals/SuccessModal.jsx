@@ -2,10 +2,9 @@ import React from "react";
 import "./SuccessModal.css";
 
 const SuccessModal = ({ visible, onClose, onPrint }) => {
-  if (!visible) return null;
 
   return (
-    <div className="modal-overlay">
+    <div className={`modal-overlay modal-fade ${visible ? "show" : "hide"}`}>
       <div className="modal-box">
         <div className="success-circle">
           <div className="success-check"></div>
