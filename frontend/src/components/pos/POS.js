@@ -6,11 +6,13 @@ import { vendorService } from '../../services/vendorService';
 import { productService } from '../../services/productService';
 import { salesService } from '../../services/salesService';
 import { useApp } from '../../context/AppContext';
-import { jsPDF } from "jspdf";
 import SuccessModal from '../modals/SuccessModal';
 import SaleOptionsModal from '../modals/SaleOptionsModal';
 import PrintModal from '../modals/PrintModal';
 import '../../../src/styles/components/POS.css';
+
+const currency = (n) =>
+  typeof n === 'number' ? `₦${n.toLocaleString(undefined)}` : `₦${Number(n || 0).toLocaleString()}`;
 
 const POS = () => {
   const { setVendors: setAppVendors, setProducts: setAppProducts } = useApp();
@@ -20,7 +22,7 @@ const POS = () => {
   const [selectedVendor, setSelectedVendor] = useState(null);
   const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
-  const [lastSale, setLastSale] = useState([]);
+  const [lastSale, setLastSale] = useState(null); // now an object when a sale completes
   const [loading, setLoading] = useState(false);
   const [saleComplete, setSaleComplete] = useState(false);
   const [showSaleOptions, setShowSaleOptions] = useState(false);
@@ -120,86 +122,232 @@ const POS = () => {
     ));
   };
 
-  const calculateCartTotals = () => {
-    const subtotal = cart.reduce((sum, item) => sum + item.vendor_price * item.quantity, 0);
-    const commission = cart.reduce((sum, item) => sum + item.commission * item.quantity, 0);
+  const calculateCartTotals = (items = cart) => {
+    const subtotal = items.reduce((sum, item) => sum + (Number(item.vendor_price) || 0) * item.quantity, 0);
+    const commission = items.reduce((sum, item) => sum + (Number(item.commission) || 0) * item.quantity, 0);
     const total = subtotal + commission;
     return { subtotal, commission, total };
   };
 
-  const calculateLastSaleTotals = () => {
-    const subtotal = lastSale.reduce((sum, item) => sum + item.vendor_price * item.quantity, 0);
-    const commission = lastSale.reduce((sum, item) => sum + item.commission * item.quantity, 0);
-    const total = subtotal + commission;
-    return { subtotal, commission, total };
-  };
+  // Sale processing
+  const finishSale = async (options) => {
+    setShowSaleOptions(false);
+    setLoading(true);
 
-
-// Sale processing
-const finishSale = async (options) => {
-  setShowSaleOptions(false);
-  setLoading(true);
-
-  try {
-    for (const item of cart) {
-      // Make sure paymentBreakdown is numbers
+    try {
+      // Build payment breakdown normalised
       const paymentBreakdown =
         options.payment_type === "multiple" && Array.isArray(options.payment_breakdown)
           ? options.payment_breakdown.map(p => ({
               method: p.method,
               amount: Number(p.amount),
             }))
-          : [];
+          : options.payment_type === "single"
+            ? [{ method: options.payment_method || "cash", amount: Number(options.amount || 0) }]
+            : [];
 
-      await salesService.createSale({
-        vendor_id: item.vendor_id || selectedVendor,
-        product_id: item.id,
-        quantity: item.quantity,
-        customer_type: options.customer_type,
-        payment_type: options.payment_type,
-        payment_breakdown: paymentBreakdown
-      });
+      // Create sales in backend (existing logic) - we keep doing per item for existing API.
+      for (const item of cart) {
+        await salesService.createSale({
+          vendor_id: item.vendor_id || selectedVendor,
+          product_id: item.id,
+          quantity: item.quantity,
+          customer_type: options.customer_type,
+          payment_type: options.payment_type,
+          payment_breakdown: paymentBreakdown
+        });
+      }
+
+      // Prepare lastSale object for printing
+      const saleObj = {
+        items: cart.map(i => ({ ...i })), // copy items
+        payment: {
+          type: options.payment_type,
+          breakdown: paymentBreakdown,
+          customer_type: options.customer_type
+        },
+        totals: calculateCartTotals(cart),
+        date: new Date().toISOString()
+      };
+
+      setLastSale(saleObj);
+      setCart([]);
+      setSaleComplete(true);
+    } catch (err) {
+      console.error('Error finishing sale:', err);
+      alert('Error finishing sale');
+    } finally {
+      setLoading(false);
     }
-
-    setLastSale(cart);
-    setCart([]);
-    setSaleComplete(true);
-
-  } catch (err) {
-    console.error('Error finishing sale:', err);
-    alert('Error finishing sale');
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-  // Receipt PDF
-  const generateReceiptPDF = () => {
-    if (!lastSale.length) return;
-
-    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: [80, 200] });
-    let y = 10;
-    doc.setFont("monospace");
-    doc.setFontSize(10);
-    doc.text("Deelad Softwork", 10, y); y += 6;
-    doc.text(new Date().toLocaleString(), 10, y); y += 6;
-    doc.text("-----------------------------", 10, y); y += 6;
-
-    lastSale.forEach(item => {
-      doc.text(`${item.name}`, 10, y); y += 5;
-      doc.text(`Qty: ${item.quantity} | ₦${item.vendor_price}`, 10, y); y += 5;
-    });
-
-    doc.text("-----------------------------", 10, y); y += 5;
-    const totals = calculateLastSaleTotals();
-    doc.text(`Subtotal: ₦${totals.subtotal}`, 10, y); y += 5;
-    doc.text(`Commission: ₦${totals.commission}`, 10, y); y += 5;
-    doc.text(`Total: ₦${totals.total}`, 10, y); y += 5;
-    doc.text("-----------------------------", 10, y); y += 5;
-    doc.text("Thank you!", 10, y);
-    doc.save("receipt.pdf");
   };
+
+  // Print: open a new window with receipt HTML + CSS optimized for 80mm and call print()
+  const openPrintWindow = (sale = lastSale) => {
+    if (!sale || !sale.items || sale.items.length === 0) return;
+
+    const win = window.open('', 'PRINT', 'height=800,width=400');
+    const saleDate = new Date(sale.date || Date.now());
+    const formattedDate = saleDate.toLocaleString();
+
+    const itemsHtml = sale.items.map(item => {
+      const name = item.name || 'Item';
+      console.log(item);
+      
+      const vendorName = item.vendor_name || item.vendor || 'Vendor';
+      const qty = item.quantity || 1;
+      const price = Number(item.customerPrice || 0);
+      const lineTotal = (price * qty);
+      // item line (name on first line, vendor on second, qty & price on right)
+      return `
+        <div class="line-item">
+          <div class="item-left">
+            <div class="item-name">${escapeHtml(name)}</div>
+            <div class="item-vendor"> </div>
+          </div>
+          <div class="item-right">
+            <div class="item-qty">x${qty}</div>
+            <div class="item-price">${currency(lineTotal)}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    const paymentHtml = (sale.payment && Array.isArray(sale.payment.breakdown) && sale.payment.breakdown.length)
+      ? sale.payment.breakdown.map(p => `<div class="pay-row"><div class="pay-method">${escapeHtml(capitalize(p.method))}</div><div class="pay-amt">${currency(p.amount)}</div></div>`).join('')
+      : `<div class="pay-row"><div class="pay-method">${escapeHtml(capitalize(sale.payment?.type || 'Cash'))}</div><div class="pay-amt">${currency(sale.totals.total)}</div></div>`;
+
+    // Build HTML
+    const html = `
+      <html>
+        <head>
+          <title>Receipt</title>
+          <meta charset="utf-8" />
+         <style>
+  @page {
+    size: 80mm 100%;
+    margin: 0;
+  }
+
+  html, body {
+    width: 80mm;
+    margin: 0;
+    padding: 0;
+    font-family: "monospace", "Courier New", monospace;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    overflow: visible !important;
+  }
+
+  .receipt {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 4mm 3mm;
+  }
+
+  .center { text-align:center; }
+  .logo-placeholder {
+    width: 60px;
+    height: 60px;
+    border-radius: 6px;
+    border: 1px dashed #999;
+    display: inline-block;
+    margin-bottom: 6px;
+    line-height: 60px;
+    font-size: 10px;
+    color: #666;
+  }
+  h2.store {
+    font-size: 12px;
+    margin: 4px 0;
+  }
+  .meta { font-size: 9px; margin-bottom: 6px; }
+  .sep { border-top: 1px dashed #444; margin: 4px 0; }
+
+  .line-item {
+    display:flex;
+    justify-content:space-between;
+    font-size: 10px;
+    margin-bottom: 4px;
+    white-space: nowrap;
+  }
+
+  .item-left { text-align:left; max-width: 54mm; }
+  .item-right { text-align:right; min-width: 20mm; }
+  .item-name { font-weight: 600; }
+  .item-vendor { font-size: 9px; color: #444; }
+
+  .totals { font-size: 10px; margin-top:6px; }
+  .totals .row { display:flex; justify-content:space-between; margin:2px 0; }
+
+  .payment { margin-top:8px; font-size: 10px; }
+  .pay-row { display:flex; justify-content:space-between; margin:2px 0; }
+
+  .thankyou { margin-top:10px; text-align:center; font-size:10px; }
+  .small { font-size:9px; color:#333; }
+</style>
+
+        </head>
+        <body>
+          <div class="receipt">
+            <div class="center">
+              <div class="logo-placeholder">LOGO</div>
+              <h2 class="store">Deelad Softwork</h2>
+              <div class="meta">${formattedDate}</div>
+              <div class="meta"><span style="font-weight:700">Customer Type:</span> ${escapeHtml(capitalize(sale.payment?.customer_type || 'Walk-in'))}</div>
+            </div>
+
+            <div class="sep"></div>
+
+            ${itemsHtml}
+
+            <div class="sep"></div>
+
+            <div class="totals">
+
+              <div class="row" style="font-weight:700;"><div>TOTAL</div><div>${currency(sale.totals.total)}</div></div>
+            </div>
+
+            <div class="sep"></div>
+
+            <div class="payment">
+              <div style="font-weight:700; margin-bottom:4px;">PAYMENT</div>
+              ${paymentHtml}
+            </div>
+
+            <div class="sep"></div>
+
+            <div class="thankyou">
+              <div>Thank you for shopping!</div>
+              <div class="small">Powered by Deelad Softwork</div>
+            </div>
+
+          </div>
+        </body>
+      </html>
+    `;
+
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+
+    // Give the new window a tiny moment to render before printing
+    win.focus();
+    // print dialog will show
+    win.print();
+
+    // Optionally close after print. Some browsers block closing windows opened by script after print.
+    // win.close();
+  };
+
+  // Helpers
+  function escapeHtml(str) {
+    if (typeof str !== 'string') return str;
+    return str.replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+  }
+  function capitalize(s) {
+    if (!s) return s;
+    return String(s).charAt(0).toUpperCase() + String(s).slice(1);
+  }
 
   return (
     <div className="pos-container">
@@ -213,38 +361,36 @@ const finishSale = async (options) => {
       </div>
 
       {/* Search Input */}
-<div className="search-wrapper">
-  <input
-    type="text"
-    placeholder="Search products..."
-    value={searchTerm}
-    onChange={handleSearchChange}
-    onFocus={() => setShowDropdown(searchResults.length > 0)}
-    onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-    className="search-input"
-  />
-  {showDropdown && searchResults.length > 0 && (
-    <ul className="search-dropdown">
-      {searchResults.map((product) => (
-        <li
-          key={product.id}
-          onMouseDown={(e) => {
-            // Use onMouseDown instead of onClick to avoid blur before click
-            e.preventDefault(); // prevent input blur
-            addToCart({ ...product, quantity: 1 }); // ensure quantity key exists
-            setSearchTerm("");
-            setSearchResults([]);
-            setShowDropdown(false);
-          }}
-          style={{ cursor: "pointer", padding: "5px 10px" }}
-        >
-          <strong>{product.name}</strong> ({product.vendor_name || "Vendor"}) - ₦{product.vendor_price.toLocaleString()}
-        </li>
-      ))}
-    </ul>
-  )}
-</div>
-
+      <div className="search-wrapper">
+        <input
+          type="text"
+          placeholder="Search products..."
+          value={searchTerm}
+          onChange={handleSearchChange}
+          onFocus={() => setShowDropdown(searchResults.length > 0)}
+          onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+          className="search-input"
+        />
+        {showDropdown && searchResults.length > 0 && (
+          <ul className="search-dropdown">
+            {searchResults.map((product) => (
+              <li
+                key={product.id}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  addToCart({ ...product, quantity: 1 });
+                  setSearchTerm("");
+                  setSearchResults([]);
+                  setShowDropdown(false);
+                }}
+                style={{ cursor: "pointer", padding: "5px 10px" }}
+              >
+                <strong>{product.name}</strong> ({product.vendor_name || "Vendor"}) - ₦{Number(product.vendor_price || 0).toLocaleString()}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       <div className="pos-content">
         <div className="products-section">
@@ -271,25 +417,28 @@ const finishSale = async (options) => {
             onClose={() => setSaleComplete(false)}
             onPrint={() => {
               setSaleComplete(false);
-              generateReceiptPDF();
+              // Trigger print dialog and preview using the saved lastSale
+              openPrintWindow(lastSale);
             }}
           />
 
+          {/* If you still want a preview modal inside the app, you can leave PrintModal.
+              We won't rely on it for printing; instead we use openPrintWindow to call print() */}
           <PrintModal visible={showPrint} onClose={() => setShowPrint(false)}>
             <div id="receipt-print-area">
               <h3>Deelad Softwork</h3>
               <p>{new Date().toLocaleString()}</p>
               <hr />
-              {lastSale.map(item => (
+              {lastSale?.items?.map(item => (
                 <div key={item.id} style={{ marginBottom: "8px", textAlign: "left" }}>
-                  <div>{item.name}</div>
-                  <div>Qty: {item.quantity} | ₦{item.vendor_price}</div>
+                  <div>{item.name} ({item.vendor_name || item.vendor || 'Vendor'})</div>
+                  <div>Qty: {item.quantity} | ₦{Number(item.vendor_price).toLocaleString()}</div>
                 </div>
-              ))}
+              )) || <p>No last sale</p>}
               <hr />
-              <p>Subtotal: ₦{calculateLastSaleTotals().subtotal}</p>
-              <p>Commission: ₦{calculateLastSaleTotals().commission}</p>
-              <p>Total: ₦{calculateLastSaleTotals().total}</p>
+              <p>Subtotal: ₦{calculateCartTotals(lastSale?.items || []).subtotal}</p>
+              <p>Commission: ₦{calculateCartTotals(lastSale?.items || []).commission}</p>
+              <p>Total: ₦{calculateCartTotals(lastSale?.items || []).total}</p>
               <hr />
               <p>Thank you!</p>
             </div>
