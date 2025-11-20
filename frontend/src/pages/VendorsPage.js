@@ -11,9 +11,6 @@ const VendorsPage = () => {
       <div className="page-content">
         <Sidebar />
         <main className="main-content">
-          <div className="content-header">
-            <h1>Vendor Management</h1>
-          </div>
           <VendorList />
         </main>
       </div>
