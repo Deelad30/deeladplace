@@ -15,7 +15,7 @@ const SuccessModal = ({ visible, onClose, onPrint }) => {
 
         <div className="modal-actions">
           <button className="primary-btn" onClick={onPrint}>
-            Download Receipt
+            Print Receipt
           </button>
 
           <button className="secondary-btn" onClick={onClose}>
