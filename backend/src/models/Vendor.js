@@ -12,10 +12,10 @@ class Vendor {
   }
 
   static async create(vendorData) {
-    const { name, description } = vendorData;
+    const { name, description, is_active } = vendorData;
     const result = await database.query(
-      'INSERT INTO vendors (name, description) VALUES ($1, $2) RETURNING *',
-      [name, description]
+       'INSERT INTO vendors (name, description, is_active) VALUES ($1, $2, $3) RETURNING *',
+    [name, description, is_active]
     );
     return result.rows[0];
   }
@@ -28,6 +28,15 @@ class Vendor {
     );
     return result.rows[0];
   }
+
+    static async delete(id) {
+    const result = await database.query(
+      'DELETE FROM vendors WHERE id = $1 RETURNING *',
+      [id]
+    );
+    return result.rows[0];
+  }
+
 }
 
 module.exports = Vendor;
