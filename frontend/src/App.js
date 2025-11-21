@@ -6,9 +6,11 @@ import Login from './components/auth/Login';
 import ForgotPassword from './components/auth/ForgotPassword';
 import ResetPassword from './components/auth/ResetPassword';
 import DashboardPage from './pages/DashboardPage';
+import { Toaster } from 'react-hot-toast';
 import POSPage from './pages/POSPage';
 import VendorsPage from './pages/VendorsPage';
 import ProductsPage from './pages/ProductsPage';
+import ProductsDashboard from './pages/ProductsDashboard';
 import InventoryPage from './pages/InventoryPage';
 import PaymentSuccess from './pages/PaymentSuccess';
 import ExpensesPage from './pages/ExpensesPage';
@@ -22,6 +24,7 @@ function App() {
     <AuthProvider>
       <Router>
         <div className="App">
+          <Toaster position="top-right" />
           <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
@@ -87,7 +90,7 @@ function App() {
               path="/products" 
               element={
                 <PrivateRoute>
-                  <ProductsPage />
+                  <ProductsDashboard />
                 </PrivateRoute>
               } 
             />
