@@ -50,6 +50,8 @@ const POS = () => {
       const response = await productService.getAllProducts();
       setProducts(response.data.products);
       setAppProducts(response.data.products);
+      console.log(products);
+      
     } catch (err) {
       console.error('Error fetching all products:', err);
     }
@@ -190,9 +192,7 @@ const POS = () => {
     const formattedDate = saleDate.toLocaleString();
 
     const itemsHtml = sale.items.map(item => {
-      const name = item.name || 'Item';
-      console.log(item);
-      
+      const name = item.name || 'Item';      
       const vendorName = item.vendor_name || item.vendor || 'Vendor';
       const qty = item.quantity || 1;
       const price = Number(item.customerPrice || 0);
