@@ -8,7 +8,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: "Montserrat", "Figtree";
+  font-family: "Montserrat", "Figtree", sans-serif;
 }
 
 body {
@@ -22,6 +22,230 @@ body {
   margin: 0 auto;
   padding: 0 20px;
 }
+.dashboard-container {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.dashboard-tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.tile {
+  flex: 1 1 200px;        /* responsive width */
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
+  text-align: center;
+  color: #fff;
+}
+
+.tile:hover {
+  transform: translateY(-5px);
+}
+
+.tile h4 {
+  margin: 0;
+  font-size: 17px;
+  color: #fff;
+  font-weight: 700;
+}
+
+.tile p {
+  margin: 8px 0 0 0;
+  font-size: 24px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px,1fr));
+  gap: 20px;
+  
+}
+
+.product-card {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.product-card h3 {
+  margin: 0 0 10px 0;
+  font-size: 18px;
+}
+
+.product-card p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #555;
+}
+
+.card-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.card-actions button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.card-actions button:first-child {
+  background-color: #4f46e5;
+  color: white;
+}
+
+.card-actions button:first-child:hover {
+  background-color: #4338ca;
+}
+
+.card-actions button:last-child {
+  background-color: #ef4444;
+  color: white;
+}
+
+.card-actions button:last-child:hover {
+  background-color: #b91c1c;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  width: 400px;
+  max-width: 90%;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  font-size: 20px;
+}
+
+.modal-content form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-content input {
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.modal-content button {
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.modal-content button[type="submit"] {
+  background-color: #4f46e5;
+  color: white;
+}
+
+.modal-content button[type="submit"]:hover {
+  background-color: #4338ca;
+}
+
+.modal-content button[type="button"] {
+  background-color: #ccc;
+}
+
+.modal-content button[type="button"]:hover {
+  background-color: #aaa;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.pagination button {
+  padding: 8px 12px;
+  border: none;
+  background-color: #eee;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.pagination button:hover {
+  background-color: #ddd;
+}
+
+.pagination button.active {
+  background-color: #4f46e5;
+  color: white;
+}
+
+canvas {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+@media (max-width: 768px) {
+  .dashboard-tiles {
+    flex-direction: column;
+  }
+
+  .product-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-content {
+    width: 90%;
+  }
+}
+
+
+
 .main-content{
       width: 65%!important;
     margin: auto!important;

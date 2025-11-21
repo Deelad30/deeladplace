@@ -82,7 +82,7 @@
   background: #fff;
   transition: all 0.2s ease-in-out;
   outline: none;
-  margin-bottom: 8px;
+  margin-top: 25px;
 }
 
 .modal-content select:focus {
