@@ -67,11 +67,16 @@ body {
   color: #fff;
 }
 
+.search-input-1 {
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  min-width: 250px;
+}
+
 .product-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px,1fr));
   gap: 20px;
-  
 }
 
 .product-card {
@@ -97,7 +102,7 @@ body {
 
 .product-card p {
   margin: 4px 0;
-  font-size: 14px;
+  font-size: 15px;
   color: #555;
 }
 
@@ -180,7 +185,7 @@ body {
 }
 
 .modal-content button[type="submit"] {
-  background-color: #4f46e5;
+  background-color: #d91f22;
   color: white;
 }
 
