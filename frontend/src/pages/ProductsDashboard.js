@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { productService } from '../services/productService';
 import DashboardTiles from '../components/products/DashboardTiles';
 import ProductCharts from '../components/products/ProductCharts';
-import ProductGrid from '../components/products/ProductGrid';
+import ProductMainGrid from '../components/products/ProductMainGrid';
 import { toast } from "react-hot-toast";
 import ConfirmModal from '../components/common/ConfirmModal';
 import ProductFormModal from '../components/products/ProductFormModal';
@@ -13,6 +13,7 @@ import ProductList from '../components/products/ProductList';
 import '../../src/styles/pages/ProductsPage.css';
 
 const ProductsDashboard = () => {
+  const [searchQuery, setSearchQuery] = useState("");
   const [deleteProduct, setDeleteProduct] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [vendors, setVendors] = useState([]);
@@ -22,6 +23,15 @@ const ProductsDashboard = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+
+  const filteredVendors = vendors.map(vendor => ({
+    ...vendor,
+    products: vendor.products.filter(p =>
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.category?.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+  })).filter(v => v.products.length > 0);
+
 
   const fetchSummary = async () => {
     const res = await productService.getDashboardSummary();
@@ -118,12 +128,22 @@ const confirmDelete = async () => {
             {/* Header */}
       <div style={{ marginTop:"35px", marginLeft:"20px" }} className="vendor-top-container">
         <h2 className='vendor-top'>Products Dashboard</h2>
+        
            <button className="create-btn" onClick={() => setModalOpen(true)}>Add a Product</button>
       </div>
     <div className="dashboard-container">
       <DashboardTiles summary={summary} />
-      <ProductGrid
-        vendors={vendors}
+         <input
+      type="text"
+      placeholder="Search products..."
+      value={searchQuery}
+      onChange={(e) => setSearchQuery(e.target.value)}
+      className="search-input-1"
+      style={{ padding: "8px 12px", marginRight: "15px", fontSize: "15px" }}
+    />
+
+      <ProductMainGrid
+        vendors={filteredVendors}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
