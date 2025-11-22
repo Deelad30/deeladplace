@@ -45,7 +45,34 @@ const getLowStockAlerts = async (req, res) => {
   }
 };
 
+
+const getAllStockLevels = async (req, res) => {
+  try {
+    const data = await Inventory.getAllStockLevels();
+    res.json({ success: true, data });
+  } catch (err) {
+    console.error('Get all stock levels error:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch stock levels' });
+  }
+};
+
+const getMovementsByDate = async (req, res) => {
+  try {
+    const { date } = req.params;
+    const movements = await Inventory.getMovementsByDate(date);
+    res.json({ success: true, data: movements });
+  } catch (err) {
+    console.error('Get movements by date error:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch movements' });
+  }
+};
+
+
+
+
 module.exports = {
   createInventoryMovement,
-  getLowStockAlerts
+  getLowStockAlerts,  
+  getAllStockLevels,
+  getMovementsByDate
 };

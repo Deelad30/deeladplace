@@ -56,10 +56,12 @@ const productRoutes = require('./src/routes/products');
 const salesRoutes = require('./src/routes/sales');
 const expenseRoutes = require('./src/routes/expenses');
 const inventoryRoutes = require('./src/routes/inventory');
+const rawMaterialRoutes = require('./src/routes/rawMaterials');
 
 // Use routes
 app.use('/api/auth', authRoutes);
 app.use('/api/vendors', vendorRoutes);
+app.use('/api/raw-materials', rawMaterialRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/sales', salesRoutes);
 app.use('/api/expenses', expenseRoutes);
