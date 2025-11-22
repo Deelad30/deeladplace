@@ -1,0 +1,119 @@
+/* VarianceReport.css */
+
+.variance-report-container {
+  max-width: 1000px;
+  margin: 30px auto;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.positive { color: green; font-weight: bold; }
+.negative { color: red; font-weight: bold; }
+.neutral { color: #555; }
+
+.download-btn {
+  padding: 8px 16px;
+  background-color: #d91f22!important;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.download-btn:hover {
+  background-color: #f49c69;
+}
+
+
+.variance-report-container h2 {
+  margin-bottom: 20px;
+  color: #333;
+  font-size: 1.8rem;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.controls input[type="date"] {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  transition: border 0.2s;
+}
+
+.controls input[type="date"]:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+.controls button {
+  padding: 8px 16px;
+  background-color: #007bff;
+  border: none;
+  color: white;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.controls button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.controls button:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  background-color: #fafafa;
+}
+
+thead {
+  background-color: #f1f3f5;
+}
+
+thead th {
+  text-align: left;
+  padding: 12px 10px;
+  font-weight: 600;
+  color: #555;
+}
+
+tbody td {
+  padding: 10px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+tbody tr:hover {
+  background-color: #e6f0ff;
+  transition: background-color 0.2s;
+}
+
+td {
+  vertical-align: middle;
+}
+
+td.variance-positive {
+  color: green;
+  font-weight: 600;
+}
+
+td.variance-negative {
+  color: red;
+  font-weight: 600;
+}

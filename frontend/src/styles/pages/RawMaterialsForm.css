@@ -1,0 +1,84 @@
+.raw-materials-container {
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.raw-materials-form {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.raw-materials-form input {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  flex: 1;
+  min-width: 150px;
+  transition: all 0.2s ease;
+}
+
+.raw-materials-form input:focus {
+  border-color: #1f2937;
+  outline: none;
+}
+
+.raw-materials-form button {
+  padding: 10px 20px;
+  background-color: #1f2937;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.raw-materials-form button:hover {
+  background-color: #111827;
+}
+
+.raw-materials-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.raw-materials-table th,
+.raw-materials-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}
+
+.raw-materials-table th {
+  background: #f9fafb;
+}
+
+.edit-btn {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  margin-right: 5px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.edit-btn:hover {
+  background-color: #2563eb;
+}
+
+.delete-btn {
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.delete-btn:hover {
+  background-color: #b91c1c;
+}
