@@ -126,7 +126,7 @@ const confirmDelete = async () => {
     <Sidebar />
     <main  className="main-content">
             {/* Header */}
-      <div style={{ marginTop:"35px", marginLeft:"20px" }} className="vendor-top-container">
+      <div style={{ marginTop:"28px", marginLeft:"20px" }} className="vendor-top-container">
         <h2 className='vendor-top'>Products Dashboard</h2>
         
            <button className="create-btn" onClick={() => setModalOpen(true)}>Add a Product</button>
