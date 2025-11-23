@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react"; 
 import { expenseService } from "../../services/expenseService";
 import toast from "react-hot-toast";
 import "../../styles/components/expenses/ExpenseList.css";
 import ConfirmationModal from "../common/ConfirmationModal";
 
 const ExpenseList = ({ refreshFlag, onEditExpense }) => {
-  const [categoryFilter, setCategoryFilter] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [dateFilter, setDateFilter] = useState({ from: '', to: '' });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState({ from: "", to: "" });
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -25,7 +25,7 @@ const ExpenseList = ({ refreshFlag, onEditExpense }) => {
       }
     } catch (error) {
       toast.error("Failed to load expenses");
-      console.log("Error fetching expenses:", error);
+      console.error("Error fetching expenses:", error);
     } finally {
       setLoading(false);
     }
@@ -39,13 +39,20 @@ const ExpenseList = ({ refreshFlag, onEditExpense }) => {
     setCurrentPage(1);
   }, [searchQuery, categoryFilter, dateFilter]);
 
-  const filteredExpenses = expenses.filter(exp => {
-    return (
-      (!categoryFilter || exp.category === categoryFilter) &&
-      (!searchQuery || exp.description.toLowerCase().includes(searchQuery.toLowerCase()) || (exp.supplier || '').toLowerCase().includes(searchQuery.toLowerCase())) &&
-      (!dateFilter.from || new Date(exp.expense_date) >= new Date(dateFilter.from)) &&
-      (!dateFilter.to || new Date(exp.expense_date) <= new Date(dateFilter.to))
-    );
+  const filteredExpenses = expenses.filter((exp) => {
+    const expDate = new Date(exp.expense_date);
+    const fromDate = dateFilter.from ? new Date(dateFilter.from) : null;
+    const toDate = dateFilter.to ? new Date(dateFilter.to) : null;
+
+    const matchesCategory = !categoryFilter || exp.category === categoryFilter;
+    const matchesSearch =
+      !searchQuery ||
+      exp.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (exp.supplier || "").toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFrom = !fromDate || expDate >= fromDate;
+    const matchesTo = !toDate || expDate <= toDate;
+
+    return matchesCategory && matchesSearch && matchesFrom && matchesTo;
   });
 
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -61,11 +68,11 @@ const ExpenseList = ({ refreshFlag, onEditExpense }) => {
   const handleDeleteConfirmed = async () => {
     try {
       await expenseService.deleteExpense(expenseToDelete.id);
-      toast.success('Expense deleted successfully');
+      toast.success("Expense deleted successfully");
       fetchExpenses();
     } catch (error) {
-      console.error('Delete error:', error);
-      toast.error('Failed to delete expense');
+      console.error("Delete error:", error);
+      toast.error("Failed to delete expense");
     } finally {
       setDeleteModalOpen(false);
       setExpenseToDelete(null);
@@ -98,7 +105,7 @@ const ExpenseList = ({ refreshFlag, onEditExpense }) => {
   };
 
   if (loading) return <div className="expenses-loading">Loading expenses...</div>;
-  if (expenses.length === 0) return <div className="no-expenses">No expenses recorded yet.</div>;
+  if (!expenses.length) return <div className="no-expenses">No expenses recorded yet.</div>;
 
   return (
     <div className="expense-list-container">
@@ -123,12 +130,12 @@ const ExpenseList = ({ refreshFlag, onEditExpense }) => {
         <input
           type="date"
           value={dateFilter.from}
-          onChange={(e) => setDateFilter(prev => ({ ...prev, from: e.target.value }))}
+          onChange={(e) => setDateFilter((prev) => ({ ...prev, from: e.target.value }))}
         />
         <input
           type="date"
           value={dateFilter.to}
-          onChange={(e) => setDateFilter(prev => ({ ...prev, to: e.target.value }))}
+          onChange={(e) => setDateFilter((prev) => ({ ...prev, to: e.target.value }))}
         />
       </div>
 
@@ -192,14 +199,14 @@ const ExpenseList = ({ refreshFlag, onEditExpense }) => {
       {totalPages > 1 && (
         <div className="pagination">
           <button
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
           >
             Prev
           </button>
           {renderPageNumbers()}
           <button
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
             disabled={currentPage === totalPages}
           >
             Next
