@@ -41,9 +41,47 @@ const getExpenseSummary = async (req, res) => {
       message: 'Error fetching expense summary'
     });
   }
+
 };
 
-module.exports = {
-  createExpense,
-  getExpenseSummary
+  const getAllExpenses = async (req, res) => {
+  try {
+    const expenses = await Expense.findAll();
+
+    res.json({
+      success: true,
+      expenses
+    });
+
+  } catch (error) {
+    console.error('Get all expenses error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching expenses'
+    });
+  }
 };
+
+const updateExpense = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updatedExpense = await Expense.update(id, req.body);
+    res.json({ success: true, expense: updatedExpense });
+  } catch (error) {
+    console.error('Update expense error:', error);
+    res.status(500).json({ success: false, message: 'Failed to update expense' });
+  }
+};
+
+const deleteExpense = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await Expense.delete(id);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete expense error:', error);
+    res.status(500).json({ success: false, message: 'Failed to delete expense' });
+  }
+};
+
+module.exports = { createExpense, getExpenseSummary, updateExpense, deleteExpense, getAllExpenses };

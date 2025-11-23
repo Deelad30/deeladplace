@@ -27,6 +27,35 @@ class Expense {
     `);
     return result.rows;
   }
+
+  static async findAll() {
+  const result = await database.query(`
+    SELECT * FROM expenses 
+    ORDER BY expense_date DESC
+  `);
+
+  return result.rows;
+}
+
+static async update(id, expenseData) {
+  const { description, amount, category, supplier, expense_date } = expenseData;
+  const result = await database.query(
+    `UPDATE expenses
+     SET description=$1, amount=$2, category=$3, supplier=$4, expense_date=$5
+     WHERE id=$6
+     RETURNING *`,
+    [description, amount, category, supplier, expense_date, id]
+  );
+  return result.rows[0];
+}
+
+static async delete(id) {
+  await database.query(`DELETE FROM expenses WHERE id=$1`, [id]);
+  return true;
+}
+
+
+
 }
 
 module.exports = Expense;
