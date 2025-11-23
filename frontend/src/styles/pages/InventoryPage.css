@@ -59,3 +59,11 @@
 .inventory-content {
   margin-top: 15px;
 }
+
+
+h1{
+      margin-bottom: 20px;
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #1a1a1a;
+}

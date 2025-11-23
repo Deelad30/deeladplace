@@ -1,0 +1,148 @@
+.expense-list-container {
+  margin-top: 30px;
+}
+
+.list-title {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 18px;
+}
+
+.expenses-loading,
+.no-expenses {
+  text-align: center;
+  font-size: 16px;
+  color: #555;
+  padding: 20px 0;
+}
+
+/* ---------------------- */
+/* TABLE VIEW (DESKTOP)   */
+/* ---------------------- */
+.expense-table-wrapper {
+
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  margin-bottom: 25px;
+}
+
+.expense-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.expense-table th,
+.expense-table td {
+  padding: 14px 18px;
+  text-align: left;
+  font-size: 15px;
+}
+
+.expense-table th {
+  background: #f5f5f5;
+  font-weight: 600;
+}
+
+.expense-table tr:nth-child(even) {
+  background: #fafafa;
+}
+
+.expense-table tr:hover {
+  background: #eef2ff;
+  transition: 0.2s ease;
+}
+
+.expense-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* Add to ExpenseList.css */
+.pagination {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.pagination .page-btn {
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  background: white;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.pagination .page-btn.active {
+  background-color: #4d70ff;
+  color: white;
+  border-color: #4d70ff;
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.expense-filters input,
+.expense-filters select {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+
+/* ---------------------- */
+/* CARD VIEW (MOBILE)     */
+/* ---------------------- */
+.expense-card-list {
+  display: none; /* hidden on desktop */
+}
+
+.expense-card {
+  background: #ffffff;
+  padding: 18px;
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+  margin-bottom: 15px;
+}
+
+.card-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.card-label {
+  font-weight: 600;
+  color: #333;
+}
+
+/* ---------------------- */
+/* RESPONSIVE SWITCH      */
+/* ---------------------- */
+@media (max-width: 768px) {
+  .expense-table-wrapper {
+    display: none; /* hide table on mobile */
+  }
+
+  .expense-card-list {
+    display: block; /* show cards on mobile */
+  }
+
+  .expense-card {
+    padding: 16px;
+  }
+
+  .card-row {
+    flex-direction: column;
+  }
+
+  .card-label {
+    margin-bottom: 4px;
+  }
+}
