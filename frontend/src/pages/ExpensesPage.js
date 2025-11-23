@@ -75,7 +75,7 @@ const handleEditExpense = (expense) => {
           {/* ExpenseForm as modal */}
           {showForm && (
             <div className="modal-overlay">
-              <div style={{ width:"60%!important"}} className="modal-content">
+              <div style={{ width:"60%!important"}} className="modal-content-this">
                 <button className="close-btn" onClick={handleCloseForm}>
                   ✕
                 </button>

@@ -38,6 +38,17 @@
   color: #fff;
 }
 
+.modal-content-this {
+  background: #fff;
+  padding: 25px;
+  border-radius: 12px;
+  max-width: 800px;
+  width:35%;
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  animation: slideDown 0.3s ease-out;
+}
+
 /* Tab content wrapper */
 .tab-content {
   background: #fff;
