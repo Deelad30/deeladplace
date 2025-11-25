@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import VendorSelector from './VendorSelector';
 import ProductGrid from './ProductGrid';
 import ShoppingCart from './ShoppingCart';
@@ -33,56 +33,38 @@ const POS = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
 
-  // Fetch all vendors
-  const fetchVendors = async () => {
-    try {
-      const response = await vendorService.getAllVendors();
-      setVendors(response.data.vendors);
-      setAppVendors(response.data.vendors);
-    } catch (err) {
-      console.error('Error fetching vendors:', err);
-    }
-  };
+  const fetchVendors = useCallback(async () => {
+  const response = await vendorService.getAllVendors();
+  setVendors(response.data.vendors);
+  setAppVendors(response.data.vendors);
+}, [setAppVendors]);
 
-  // Fetch all products
-  const fetchAllProducts = async () => {
-    try {
-      const response = await productService.getAllProducts();
-      setProducts(response.data.products);
-      setAppProducts(response.data.products);
-      console.log(products);
-      
-    } catch (err) {
-      console.error('Error fetching all products:', err);
-    }
-  };
+const fetchAllProducts = useCallback(async () => {
+  const response = await productService.getAllProducts();
+  setProducts(response.data.products);
+  setAppProducts(response.data.products);
+}, [setAppProducts]);
 
-  // Fetch products by vendor
-  const fetchProductsByVendor = async (vendorId) => {
-    try {
-      const response = await productService.getProductsByVendor(vendorId);
-      setProducts(response.data.products);
-      setAppProducts(response.data.products);
-    } catch (err) {
-      console.error('Error fetching products by vendor:', err);
-    }
-  };
+const fetchProductsByVendor = useCallback(async (vendorId) => {
+  const response = await productService.getProductsByVendor(vendorId);
+  setProducts(response.data.products);
+  setAppProducts(response.data.products);
+}, [setAppProducts]);
 
   // On component mount
-  useEffect(() => {
-    fetchVendors();
+useEffect(() => {
+  fetchVendors();
+  fetchAllProducts();
+}, [fetchVendors, fetchAllProducts]); 
+
+// When selected vendor changes
+useEffect(() => {
+  if (selectedVendor) {
+    fetchProductsByVendor(selectedVendor);
+  } else {
     fetchAllProducts();
-  }, []);
-
-  // When selected vendor changes
-  useEffect(() => {
-    if (selectedVendor) {
-      fetchProductsByVendor(selectedVendor);
-    } else {
-      fetchAllProducts();
-    }
-  }, [selectedVendor]);
-
+  }
+}, [selectedVendor, fetchProductsByVendor, fetchAllProducts]);
   // Search handler
   const handleSearchChange = (e) => {
     const term = e.target.value;

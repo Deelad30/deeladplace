@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { vendorService } from '../../services/vendorService';
 import Modal from '../common/Modal';
 import Toast from '../common/Toast';
@@ -30,29 +30,30 @@ const VendorList = () => {
   const [toast, setToast] = useState(null);
 
   // Fetch vendors
-  const fetchVendors = async () => {
-    try {
-      setLoading(true);
-      const response = await vendorService.getAllVendors();
-      if (response.data.success) {
-        const sortedVendors = response.data.vendors.sort((a, b) => a.id - b.id);
-        setVendors(sortedVendors);
-        setFilteredVendors(sortedVendors);
-        animateCounters(sortedVendors);
-      } else {
-        setError('Failed to fetch vendors');
-      }
-    } catch (err) {
-      console.error(err);
-      setError('Error fetching vendors');
-    } finally {
-      setLoading(false);
+const fetchVendors = useCallback(async () => {
+  try {
+    setLoading(true);
+    const response = await vendorService.getAllVendors();
+    if (response.data.success) {
+      const sortedVendors = response.data.vendors.sort((a, b) => a.id - b.id);
+      setVendors(sortedVendors);
+      setFilteredVendors(sortedVendors);
+      animateCounters(sortedVendors);
+    } else {
+      setError('Failed to fetch vendors');
     }
-  };
+  } catch (err) {
+    console.error(err);
+    setError('Error fetching vendors');
+  } finally {
+    setLoading(false);
+  }
+}, []); // include any state setters if needed
+
 
   useEffect(() => {
     fetchVendors();
-  }, []);
+  }, [fetchVendors]);
 
   // Toast auto-dismiss
   useEffect(() => {

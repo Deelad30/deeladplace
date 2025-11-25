@@ -25,7 +25,7 @@ const Dashboard = () => {
   const fetchSalesSummary = async () => {
     try {
       const response = await salesService.getSalesSummary();
-      const rawData = response.data.summary; // Array of daily summaries
+      const rawData = response.summary; // Array of daily summaries
       console.log(response);
       
 
