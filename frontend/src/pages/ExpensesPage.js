@@ -3,7 +3,6 @@ import Header from '../components/common/Header';
 import Sidebar from '../components/common/Sidebar';
 import ExpenseForm from '../components/expenses/ExpenseForm';
 import ExpenseList from '../components/expenses/ExpenseList';
-import ExpenseReport from '../components/expenses/Expensereport';
 import '../../src/styles/pages/ExpensesPage.css';
 
 const ExpensesPage = () => {
@@ -58,18 +57,12 @@ const handleEditExpense = (expense) => {
             >
               All Expenses
             </button>
-            <button
-              className={`tab-btn ${activeTab === 'report' ? 'active' : ''}`}
-              onClick={() => setActiveTab('report')}
-            >
-              Expense Report
-            </button>
           </div>
 
           {/* Tab Content */}
           <div className="tab-content">
               {activeTab === 'list' && <ExpenseList refreshFlag={refreshFlag} onEditExpense={handleEditExpense} />}
-              {activeTab === 'report' && <ExpenseReport refreshFlag={refreshFlag} />}
+             
           </div>
 
           {/* ExpenseForm as modal */}

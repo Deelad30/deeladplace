@@ -322,6 +322,56 @@
   font-weight: 600;
 }
 
+/* Container for tabs */
+.report-tabs {
+  display: flex;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+/* Pill button style */
+.report-tab-btn {
+  padding: 10px 20px;
+  background: #f0f0f5;
+  border: 1px solid #ccc;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 15px;
+  transition: all 0.25s ease;
+}
+
+/* Hover effect */
+.report-tab-btn:hover {
+  background: #e8e8ee;
+}
+
+/* Active tab style */
+.report-tab-btn.active {
+  background: #dc3545;
+  color: white;
+  border-color: #fff;
+  font-weight: bold;
+}
+
+/* Content box */
+.report-content {
+  margin-top: 25px;
+}
+
+/* Coming soon placeholder */
+.coming-soon-box {
+  padding: 40px;
+  background: #fafafa;
+  border: 1px dashed #bbb;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.coming-soon-box h2 {
+  margin-bottom: 10px;
+}
+
+
 /* Sales Report Specific */
 .sales-by-vendor {
   display: grid;

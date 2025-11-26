@@ -53,7 +53,6 @@ const ExpenseReport = ({ refreshFlag }) => {
         console.error("Vendor fetch error:", error);
       }
     };
-
     loadVendors();
   }, []);
 
@@ -61,7 +60,7 @@ const ExpenseReport = ({ refreshFlag }) => {
     fetchExpenses();
   }, [refreshFlag]);
 
-  // FILTERING (Category + Vendor + Date Range)
+  // Filtering (Category + Vendor + Date Range)
   const filteredExpenses = expenses.filter(exp => {
     const expDate = new Date(exp.expense_date);
     const fromDate = dateFilter.from ? new Date(dateFilter.from) : null;
@@ -75,6 +74,13 @@ const ExpenseReport = ({ refreshFlag }) => {
     return matchesCategory && matchesVendor && matchesFrom && matchesTo;
   });
 
+  // Trigger toast when no records found after filtering
+  useEffect(() => {
+    if (!loading && !filteredExpenses.length) {
+      toast.error("No expenses found for selected filters");
+    }
+  }, [filteredExpenses, loading]);
+
   // Summary calculation (only filtered expenses)
   const summary = filteredExpenses.reduce((acc, exp) => {
     const existing = acc.find(item => item.category === exp.category);
@@ -86,15 +92,11 @@ const ExpenseReport = ({ refreshFlag }) => {
     return acc;
   }, []);
 
-  // Total expenses for filtered list
   const totalExpenses = filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-
   const maxAmount = Math.max(...summary.map(item => item.total_amount), 0);
+  const COLORS = ["#4d70ff", "#ff7676", "#ffb74d", "#66bb6a", "#9575cd", "#26c6da"];
 
   if (loading) return <div className="report-loading">Loading report...</div>;
-  if (!summary.length) return <div className="no-report">No expenses to generate report.</div>;
-
-  const COLORS = ["#4d70ff", "#ff7676", "#ffb74d", "#66bb6a", "#9575cd", "#26c6da"];
 
   return (
     <div className="expense-report-container">
@@ -123,7 +125,6 @@ const ExpenseReport = ({ refreshFlag }) => {
           onChange={e => setDateFilter(prev => ({ ...prev, to: e.target.value }))}
         />
 
-        {/* VENDOR FILTER */}
         <select
           value={vendorFilter}
           onChange={(e) => setVendorFilter(e.target.value)}
@@ -140,76 +141,86 @@ const ExpenseReport = ({ refreshFlag }) => {
         <h3>Total Expenses: ₦{totalExpenses.toLocaleString()}</h3>
       </div>
 
-      {/* Summary cards */}
-      <div className="summary-card-wrapper">
-        {summary.map((item, index) => (
-          <div
-            key={index}
-            className="summary-card"
-            style={{
-              border:
-                item.total_amount === maxAmount ? "2px solid #ff7676" : "1px solid #ccc"
-            }}
-          >
-            <h3>{item.category}</h3>
-            <p>₦{Number(item.total_amount).toLocaleString()}</p>
-          </div>
-        ))}
-      </div>
+      {/* Summary Cards */}
+      {filteredExpenses.length ? (
+        <div className="summary-card-wrapper">
+          {summary.map((item, index) => (
+            <div
+              key={index}
+              className="summary-card"
+              style={{
+                border: item.total_amount === maxAmount ? "2px solid #ff7676" : "1px solid #ccc"
+              }}
+            >
+              <h3>{item.category}</h3>
+              <p>₦{Number(item.total_amount).toLocaleString()}</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="no-report">No expenses to display</div>
+      )}
 
+      {/* Charts */}
       <div className="chart-section">
-        {/* PIE CHART */}
-        <div className="chart-card">
-          <h3 className="chart-title">Expense Breakdown</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={summary}
-                dataKey="total_amount"
-                nameKey="category"
-                cx="50%"
-                cy="50%"
-                outerRadius={100}
-                fill="#8884d8"
-                label
-              >
-                {summary.map((entry, index) => (
-                  <Cell
-                    key={index}
-                    fill={COLORS[index % COLORS.length]}
-                    stroke={entry.total_amount === maxAmount ? "#ff7676" : ""}
-                    strokeWidth={entry.total_amount === maxAmount ? 4 : 0}
-                  />
-                ))}
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+        {filteredExpenses.length ? (
+          <>
+            {/* PIE CHART */}
+            <div className="chart-card">
+              <h3 className="chart-title">Expense Breakdown</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={summary}
+                    dataKey="total_amount"
+                    nameKey="category"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    fill="#8884d8"
+                    label
+                  >
+                    {summary.map((entry, index) => (
+                      <Cell
+                        key={index}
+                        fill={COLORS[index % COLORS.length]}
+                        stroke={entry.total_amount === maxAmount ? "#ff7676" : ""}
+                        strokeWidth={entry.total_amount === maxAmount ? 4 : 0}
+                      />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
 
-        {/* BAR CHART */}
-        <div className="chart-card">
-          <h3 className="chart-title">Category Comparison</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={summary}>
-              <XAxis dataKey="category" />
-              <YAxis />
-              <Tooltip />
-              <Bar
-                dataKey="total_amount"
-                fill="#4d70ff"
-                radius={[6, 6, 0, 0]}
-                label={{ position: "top" }}
-              >
-                {summary.map((entry, index) => (
-                  <Cell
-                    key={index}
-                    fill={entry.total_amount === maxAmount ? "#ff7676" : "#4d70ff"}
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+            {/* BAR CHART */}
+            <div className="chart-card">
+              <h3 className="chart-title">Category Comparison</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={summary}>
+                  <XAxis dataKey="category" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar
+                    dataKey="total_amount"
+                    fill="#4d70ff"
+                    radius={[6, 6, 0, 0]}
+                    label={{ position: "top" }}
+                  >
+                    {summary.map((entry, index) => (
+                      <Cell
+                        key={index}
+                        fill={entry.total_amount === maxAmount ? "#ff7676" : "#4d70ff"}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </>
+        ) : (
+          <p style={{ textAlign: "center", padding: "2rem" }}>No data available for charts</p>
+        )}
       </div>
     </div>
   );

@@ -57,7 +57,7 @@ const SalesReport = () => {
   };
 
   fetchVendors();
-  }, []);
+  }, [filters]);
 
   const onApplyFilters = (newFilters) => {
     setFilters(newFilters);
@@ -66,7 +66,10 @@ const SalesReport = () => {
   };
 
   return (
-    <div className="reports-container">
+    <div style={{ marginTop:"-50px" }} className="reports-container">
+          <div className="expense-report-container">
+      <h2 className="report-title">Sales Report</h2>
+      </div>
       <Toaster position="top-right" />
       <div className="reports-inner">
         <FiltersBar onApply={onApplyFilters} vendors={vendors} current={filters} />
