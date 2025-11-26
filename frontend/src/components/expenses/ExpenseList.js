@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react"; 
 import { expenseService } from "../../services/expenseService";
 import toast from "react-hot-toast";
+import { vendorService } from "../../services/vendorService";
 import "../../styles/components/expenses/ExpenseList.css";
 import ConfirmationModal from "../common/ConfirmationModal";
 
@@ -9,6 +10,8 @@ const ExpenseList = ({ refreshFlag, onEditExpense }) => {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [dateFilter, setDateFilter] = useState({ from: "", to: "" });
   const [expenses, setExpenses] = useState([]);
+  const [vendorFilter, setVendorFilter] = useState("");
+  const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [expenseToDelete, setExpenseToDelete] = useState(null);
@@ -32,6 +35,23 @@ const ExpenseList = ({ refreshFlag, onEditExpense }) => {
   };
 
   useEffect(() => {
+  const loadVendors = async () => {
+    try {
+      const res = await vendorService.getAllVendors();
+      if (res.data.success) {
+        setVendors(res.data.vendors);
+      }
+    } catch (error) {
+      toast.error("Failed to load vendors");
+      console.error("Vendor fetch error:", error);
+    }
+  };
+
+  loadVendors();
+}, []);
+
+
+  useEffect(() => {
     fetchExpenses();
   }, [refreshFlag]);
 
@@ -45,6 +65,7 @@ const ExpenseList = ({ refreshFlag, onEditExpense }) => {
     const toDate = dateFilter.to ? new Date(dateFilter.to) : null;
 
     const matchesCategory = !categoryFilter || exp.category === categoryFilter;
+    const matchesVendor = !vendorFilter || exp.vendor_id == vendorFilter;
     const matchesSearch =
       !searchQuery ||
       exp.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -52,7 +73,7 @@ const ExpenseList = ({ refreshFlag, onEditExpense }) => {
     const matchesFrom = !fromDate || expDate >= fromDate;
     const matchesTo = !toDate || expDate <= toDate;
 
-    return matchesCategory && matchesSearch && matchesFrom && matchesTo;
+    return matchesVendor && matchesCategory && matchesSearch && matchesFrom && matchesTo;
   });
 
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -137,6 +158,15 @@ const ExpenseList = ({ refreshFlag, onEditExpense }) => {
           value={dateFilter.to}
           onChange={(e) => setDateFilter((prev) => ({ ...prev, to: e.target.value }))}
         />
+        <select
+  value={vendorFilter}
+  onChange={(e) => setVendorFilter(e.target.value)}
+>
+  <option value="">All Vendors</option>
+  {vendors.map(v => (
+    <option key={v.id} value={v.id}>{v.name}</option>
+  ))}
+</select>
       </div>
 
       <div className="expense-table-wrapper">
@@ -147,6 +177,7 @@ const ExpenseList = ({ refreshFlag, onEditExpense }) => {
               <th>Amount</th>
               <th>Category</th>
               <th>Supplier</th>
+              <th>Vendor</th>
               <th>Date</th>
               <th>Actions</th>
             </tr>
@@ -158,6 +189,7 @@ const ExpenseList = ({ refreshFlag, onEditExpense }) => {
                 <td>₦{Number(exp.amount).toLocaleString()}</td>
                 <td>{exp.category}</td>
                 <td>{exp.supplier || "-"}</td>
+                <td>{exp.vendor_name || "-"}</td>
                 <td>{new Date(exp.expense_date).toLocaleDateString()}</td>
                 <td>
                   <button className="edit-btn" onClick={() => handleEdit(exp)}>Edit</button>

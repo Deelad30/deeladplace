@@ -1,41 +1,55 @@
 import React, { useState, useEffect } from "react";
+import { vendorService } from "../../services/vendorService";
 import { expenseService } from "../../services/expenseService";
 import toast from "react-hot-toast";
 import "../../styles/components/expenses/ExpenseForm.css";
 
 const ExpenseForm = ({ onClose, onSuccess, editExpense  }) => {
-  console.log(editExpense);
-  
+  const [vendors, setVendors] = useState([]);
   const [formData, setFormData] = useState({
-    description: "",
-    amount: "",
-    category: "",
-    supplier: "",
-    expense_date: "",
-  });
+  description: "",
+  amount: "",
+  supplier: "",
+  category: "",
+  vendor_id: "",
+  expense_date: "",
+});
 
     useEffect(() => {
-    if (editExpense) {
-      setFormData({
-        description: editExpense.description,
-        amount: editExpense.amount,
-        category: editExpense.category,
-        supplier: editExpense.supplier,
-        expense_date: editExpense.expense_date
-          ? editExpense.expense_date.slice(0, 10)
-          : "",
-      });
-    } else {
+if (editExpense) {
+  setFormData({
+    description: editExpense.description,
+    amount: editExpense.amount,
+    category: editExpense.category,
+    supplier: editExpense.supplier || "",
+    vendor_id: editExpense.vendor_id,
+    expense_date: editExpense.expense_date.slice(0, 10)
+  });
+ }    else {
       // Clear form if no editExpense
       setFormData({
         description: "",
         amount: "",
         category: "",
+        vendor_id: "",
         supplier: "",
         expense_date: "",
       });
     }
   }, [editExpense]);
+
+  useEffect(() => {
+  const loadVendors = async () => {
+    try {
+      const res = await vendorService.getAllVendors();
+      setVendors(res.data.vendors);
+    } catch (err) {
+      toast.error("Failed to load vendors");
+    }
+  };
+
+  loadVendors();
+}, []);
   
   const handleChange = (e) => {
     setFormData({
@@ -88,6 +102,20 @@ const handleSubmit = async (e) => {
             value={formData.description}
             onChange={handleChange}
           />
+        </div>
+
+        <div className="form-group">
+          <label>Vendor *</label>
+          <select
+            name="vendor_id"
+            value={formData.vendor_id}
+            onChange={handleChange}
+          >
+            <option value="">Select Vendor</option>
+            {vendors.map(v => (
+              <option key={v.id} value={v.id}>{v.name}</option>
+            ))}
+          </select>
         </div>
 
         <div className="form-row">

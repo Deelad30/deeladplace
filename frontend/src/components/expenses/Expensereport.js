@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { expenseService } from "../../services/expenseService";
+import { vendorService } from "../../services/vendorService";
 import toast from "react-hot-toast";
 import {
   PieChart, Pie, Cell,
@@ -9,10 +10,13 @@ import "../../styles/components/expenses/ExpenseReport.css";
 
 const ExpenseReport = ({ refreshFlag }) => {
   const [expenses, setExpenses] = useState([]);
+  const [vendors, setVendors] = useState([]);
+  const [vendorFilter, setVendorFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [categoryFilter, setCategoryFilter] = useState("");
   const [dateFilter, setDateFilter] = useState({ from: "", to: "" });
 
+  // Fetch all expenses
   const fetchExpenses = async () => {
     setLoading(true);
     try {
@@ -36,23 +40,42 @@ const ExpenseReport = ({ refreshFlag }) => {
     }
   };
 
+  // Fetch vendors
+  useEffect(() => {
+    const loadVendors = async () => {
+      try {
+        const res = await vendorService.getAllVendors();
+        if (res.data.success) {
+          setVendors(res.data.vendors);
+        }
+      } catch (error) {
+        toast.error("Failed to load vendors");
+        console.error("Vendor fetch error:", error);
+      }
+    };
+
+    loadVendors();
+  }, []);
+
   useEffect(() => {
     fetchExpenses();
   }, [refreshFlag]);
 
+  // FILTERING (Category + Vendor + Date Range)
   const filteredExpenses = expenses.filter(exp => {
     const expDate = new Date(exp.expense_date);
     const fromDate = dateFilter.from ? new Date(dateFilter.from) : null;
     const toDate = dateFilter.to ? new Date(dateFilter.to) : null;
 
-    return (
-      (!categoryFilter || exp.category === categoryFilter) &&
-      (!fromDate || expDate >= fromDate) &&
-      (!toDate || expDate <= toDate)
-    );
+    const matchesCategory = !categoryFilter || exp.category === categoryFilter;
+    const matchesVendor = !vendorFilter || exp.vendor_id == vendorFilter;
+    const matchesFrom = !fromDate || expDate >= fromDate;
+    const matchesTo = !toDate || expDate <= toDate;
+
+    return matchesCategory && matchesVendor && matchesFrom && matchesTo;
   });
 
-  // Aggregate totals by category
+  // Summary calculation (only filtered expenses)
   const summary = filteredExpenses.reduce((acc, exp) => {
     const existing = acc.find(item => item.category === exp.category);
     if (existing) {
@@ -63,10 +86,9 @@ const ExpenseReport = ({ refreshFlag }) => {
     return acc;
   }, []);
 
-  // Total of all filtered expenses
+  // Total expenses for filtered list
   const totalExpenses = filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0);
 
-  // Find the largest category for highlighting
   const maxAmount = Math.max(...summary.map(item => item.total_amount), 0);
 
   if (loading) return <div className="report-loading">Loading report...</div>;
@@ -100,6 +122,17 @@ const ExpenseReport = ({ refreshFlag }) => {
           value={dateFilter.to}
           onChange={e => setDateFilter(prev => ({ ...prev, to: e.target.value }))}
         />
+
+        {/* VENDOR FILTER */}
+        <select
+          value={vendorFilter}
+          onChange={(e) => setVendorFilter(e.target.value)}
+        >
+          <option value="">All Vendors</option>
+          {vendors.map(v => (
+            <option key={v.id} value={v.id}>{v.name}</option>
+          ))}
+        </select>
       </div>
 
       {/* Total Expenses */}
