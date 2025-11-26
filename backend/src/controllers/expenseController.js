@@ -2,30 +2,24 @@ const Expense = require('../models/Expense');
 
 const createExpense = async (req, res) => {
   try {
-    const { description, amount, category, supplier, expense_date } = req.body;
+    const { description, amount, category, supplier, vendor_id, expense_date } = req.body;
 
     const expense = await Expense.create({
       description,
       amount,
       category,
       supplier,
+      vendor_id,
       expense_date: expense_date || new Date()
     });
 
-    res.status(201).json({
-      success: true,
-      message: 'Expense recorded successfully',
-      expense
-    });
-
+    res.status(201).json({ success: true, expense });
   } catch (error) {
     console.error('Create expense error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error recording expense'
-    });
+    res.status(500).json({ success: false, message: "Error creating expense" });
   }
 };
+
 
 const getExpenseSummary = async (req, res) => {
   try {
