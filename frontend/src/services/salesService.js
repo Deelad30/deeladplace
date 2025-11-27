@@ -7,18 +7,15 @@ class SalesService {
     return response.data;
   }
 
-  async getSalesSummary() {
-    const response = await api.get('/sales/summary');
-    console.log(response);
-    
-    return response.data;
-  }
+async getSalesSummary(params = {}) {
+  const response = await api.get('/sales/summary', { params });
+  return response.data;
+}
 
-  async getOverview() {
-    const response = await api.get('/sales/overview');
-    return response.data;
-  }
-
+async getOverview(params = {}) {
+  const response = await api.get('/sales/overview', { params });
+  return response.data;
+}
   async getTopProducts(params = {}) {
     const response = await api.get('/sales/top-products', { params });
     return response.data;

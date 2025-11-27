@@ -1,76 +1,109 @@
 // src/components/reports/SalesReport.js
 import React, { useEffect, useState } from 'react';
 import { salesService } from '../../services/salesService';
+import { vendorService } from '../../services/vendorService';
+import { toast, Toaster } from 'react-hot-toast';
+
 import KPISection from './components/KPISection';
 import RevenueChart from './components/RevenueChart';
-import { vendorService } from '../../services/vendorService';
 import CommissionChart from './components/CommissionChart';
 import TopProductsChart from './components/TopProductsChart';
 import PaymentBreakdownChart from './components/PaymentBreakdownChart';
 import SalesTable from './components/SalesTable';
 import FiltersBar from './components/FiltersBar';
 import LoadingState from './components/LoadingState';
-import { toast, Toaster } from 'react-hot-toast';
+
 import '../../components/reports/styles/sales-report.css';
 
 const SalesReport = () => {
-  const [overview, setOverview] = useState(null);
-  const [summary, setSummary] = useState([]); // daily summary
+  const [overview, setOverview] = useState({});
+  const [summary, setSummary] = useState([]);
   const [topProducts, setTopProducts] = useState([]);
   const [paymentSummary, setPaymentSummary] = useState({});
   const [filters, setFilters] = useState({ start: null, end: null, vendor_id: null, payment_type: null });
   const [loading, setLoading] = useState(true);
   const [vendors, setVendors] = useState([]);
 
-  const fetchAll = async (localFilters = {}) => {
-    setLoading(true);
-    try {
-      const [overviewRes, summaryRes, topRes, paymentRes] = await Promise.all([
-        salesService.getOverview(),
-        salesService.getSalesSummary(),
-        salesService.getTopProducts({ start: localFilters.start, end: localFilters.end, limit: 8 }),
-        salesService.getPaymentSummary({ start: localFilters.start, end: localFilters.end }),
-      ]);
-
-      setOverview(overviewRes.overview || overviewRes);
-      setSummary(summaryRes.summary || []);
-      setTopProducts(topRes.top_products || []);
-      setPaymentSummary(paymentRes.payment_summary || {});
-    } catch (err) {
-      console.error(err);
-      toast.error('Failed to load analytics. Try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Fetch vendors once
   useEffect(() => {
-    fetchAll(filters);
-   
-      const fetchVendors = async () => {
-    try {
-      const res = await vendorService.getAllVendors();
-      if (res.data?.vendors) setVendors(res.data.vendors);
-    } catch (err) {
-      console.error('Failed to load vendors', err);
+    const fetchVendors = async () => {
+      try {
+        const res = await vendorService.getAllVendors();
+        if (res.data?.vendors) setVendors(res.data.vendors);
+      } catch (err) {
+        console.error('Failed to load vendors', err);
+      }
+    };
+    fetchVendors();
+  }, []);
+
+  // Fetch sales data
+const fetchAll = async (localFilters = {}) => {
+  setLoading(true);
+  try {
+    const params = {};
+
+    if (localFilters.startDate) {
+      params.start = localFilters.startDate;
     }
+
+    if (localFilters.endDate) {
+      params.end = localFilters.endDate;
+    }
+
+    if (localFilters.vendor_id) params.vendor_id = localFilters.vendor_id;
+    if (localFilters.payment_type) params.payment_type = localFilters.payment_type;
+
+    const [overviewRes, summaryRes, topRes, paymentRes] = await Promise.all([
+      salesService.getOverview(params),
+      salesService.getSalesSummary(params),
+      salesService.getTopProducts({ ...params, limit: 8 }),
+      salesService.getPaymentSummary(params)
+    ]);
+
+    setOverview(overviewRes.overview || overviewRes);
+    setSummary(summaryRes.summary || []);
+    setTopProducts(topRes.top_products || []);
+    setPaymentSummary(paymentRes.payment_summary || {});
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+
+// Apply filters from FiltersBar
+// In SalesReport.js
+const onApplyFilters = (newFilters) => {
+  // Map start/end to startDate/endDate for backend
+  const formattedFilters = {
+    ...newFilters,
+    startDate: newFilters.start || null,
+    endDate: newFilters.end || null,
   };
 
-  fetchVendors();
-  }, [filters]);
+  setFilters(formattedFilters);
+  toast('Filters applied', { icon: '⚡' });
+  fetchAll(formattedFilters);
+};
 
-  const onApplyFilters = (newFilters) => {
-    setFilters(newFilters);
-    toast('Filters applied', { icon: '⚡' });
-    fetchAll(newFilters);
-  };
+
+
+  // Fetch data on mount
+  useEffect(() => {
+    fetchAll();
+  }, []);
 
   return (
-    <div style={{ marginTop:"-50px" }} className="reports-container">
-          <div className="expense-report-container">
-      <h2 className="report-title">Sales Report</h2>
+    <div style={{ marginTop: "-50px" }} className="reports-container">
+      <div className="expense-report-container">
+        <h2 className="report-title">Sales Report</h2>
       </div>
+
       <Toaster position="top-right" />
+
       <div className="reports-inner">
         <FiltersBar onApply={onApplyFilters} vendors={vendors} current={filters} />
 
@@ -105,9 +138,6 @@ const SalesReport = () => {
             </div>
 
             <div className="table-card" style={{ marginTop: 12 }}>
-              {/* CSV Export */}
-     
-
               <div className="table-header">
                 <h3 style={{ fontWeight: 700 }}>Sales Report</h3>
                 <div style={{ color: 'var(--color-muted)', fontSize: 13 }}>Complete listing with filters</div>
