@@ -95,7 +95,8 @@ class Sale {
       SELECT 
         DATE(sale_date) AS date,
         SUM(customer_price)::numeric AS total_revenue,
-        SUM(hub_commission)::numeric AS total_commission
+        SUM(hub_commission)::numeric AS total_commission,
+        COUNT(*) AS transactions 
       FROM sales
       ${whereSql}
       GROUP BY date

@@ -32,7 +32,7 @@ const Dashboard = () => {
       // Extract today and this month summary
       const today = rawData.find(d => new Date(d.date).toDateString() === new Date().toDateString()) || {};
       const this_month = rawData.reduce((acc, d) => {
-        acc.transaction_count = (acc.transaction_count || 0) + Number(d.transaction_count);
+        acc.transactions = (acc.transactions || 0) + Number(d.transactions);
         acc.total_revenue = (acc.total_revenue || 0) + Number(d.total_revenue);
         acc.total_commission = (acc.total_commission || 0) + Number(d.total_commission);
         return acc;
@@ -46,7 +46,7 @@ const Dashboard = () => {
           date: new Date(d.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
           revenue: Number(d.total_revenue),
           commission: Number(d.total_commission),
-          transactions: Number(d.transaction_count)
+          transactions: Number(d.transactions)
         }))
         .sort((a, b) => new Date(a.date) - new Date(b.date));
 
@@ -81,7 +81,7 @@ const Dashboard = () => {
         <DashboardCard
           title="This Month Revenue"
           value={summary.this_month.total_revenue || 0}
-          subtitle={`${summary.this_month.transaction_count || 0} transactions`}
+          subtitle={`${summary.this_month.transactions || 0} transactions`}
           icon={faChartLine}
           color="#f59e0b"
         />

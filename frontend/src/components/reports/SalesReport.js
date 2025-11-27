@@ -65,6 +65,8 @@ const fetchAll = async (localFilters = {}) => {
     setSummary(summaryRes.summary || []);
     setTopProducts(topRes.top_products || []);
     setPaymentSummary(paymentRes.payment_summary || {});
+    console.log(topProducts);
+    
   } catch (err) {
     console.error(err);
   } finally {

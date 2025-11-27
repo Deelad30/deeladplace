@@ -18,7 +18,7 @@ const TopProductsChart = ({ data = [] }) => {
   const normalized = (data || []).map((d, index) => ({
     name: d.product_name || `#${d.product_id}`,
     abbreviated: abbreviateName(d.product_name || `#${d.product_id}`),
-    value: Number(d.metric || d.total_sales || d.metric),
+    value: Number(d.total_revenue),
     color: COLORS[index % COLORS.length]
   }));
 
