@@ -3,6 +3,9 @@ const Sale = require('../models/Sale');
 const Product = require('../models/Product');
 const { calculatePricing } = require('../utils/commissionCalculator');
 
+// ------------------------------------------------------
+// CREATE SALE
+// ------------------------------------------------------
 const createSale = async (req, res) => {
   try {
     const {
@@ -15,11 +18,9 @@ const createSale = async (req, res) => {
     } = req.body;
 
     const product = await Product.findById(product_id);
+
     if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: 'Product not found'
-      });
+      return res.status(404).json({ success: false, message: "Product not found" });
     }
 
     const pricing = calculatePricing(product.vendor_price, product.custom_commission);
@@ -37,79 +38,118 @@ const createSale = async (req, res) => {
       payment_breakdown
     });
 
-    res.status(201).json({
-      success: true,
-      message: 'Sale recorded successfully',
-      sale
-    });
+    res.status(201).json({ success: true, message: "Sale recorded successfully", sale });
 
   } catch (error) {
-    console.error('Create sale error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error recording sale'
-    });
+    console.error("Create sale error:", error);
+    res.status(500).json({ success: false, message: "Error recording sale" });
   }
 };
 
+// ------------------------------------------------------
+// DAILY SUMMARY (FILTERED)
+// ------------------------------------------------------
 const getSalesSummary = async (req, res) => {
   try {
-    const summary = await Sale.getDailySummary(30);
-    res.json({
-      success: true,
-      summary
+    const { start = null, end = null, vendor_id = null } = req.query;
+
+    const summary = await Sale.getDailySummary({
+      startDate: start,
+      endDate: end,
+      vendor_id
     });
+
+    res.json({ success: true, summary });
+
   } catch (error) {
-    console.error('Get sales summary error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching sales summary'
-    });
+    console.error("Get sales summary error:", error);
+    res.status(500).json({ success: false, message: "Error fetching sales summary" });
   }
 };
 
-// --------- New controllers ---------
-
+// ------------------------------------------------------
+// OVERVIEW (FILTERED + FIXED)
+// ------------------------------------------------------
 const getOverview = async (req, res) => {
   try {
-    const overviewRaw = await Sale.getOverview();
-    // normalize numbers
+    const { start = null, end = null, vendor_id = null } = req.query;
+
+    const data = await Sale.getOverview({
+      startDate: start,
+      endDate: end,
+      vendor_id
+    });
+
     const overview = {
-      today_revenue: Number(overviewRaw.today_revenue) || 0,
-      month_revenue: Number(overviewRaw.month_revenue) || 0,
-      total_transactions_30d: Number(overviewRaw.total_transactions_30d) || 0,
-      average_order_value_30d: Number(overviewRaw.average_order_value_30d) || 0,
-      total_commission_30d: Number(overviewRaw.total_commission_30d) || 0
+      total_revenue: Number(data.total_revenue) || 0,
+      total_commission: Number(data.total_commission) || 0,
+      total_transactions: Number(data.total_transactions) || 0,
+      average_order_value: Number(data.average_order_value) || 0
     };
+
     res.json({ success: true, overview });
+
   } catch (error) {
-    console.error('Get overview error:', error);
-    res.status(500).json({ success: false, message: 'Error fetching overview' });
+    console.error("Get overview error:", error);
+    res.status(500).json({ success: false, message: "Error fetching overview" });
   }
 };
 
+// ------------------------------------------------------
+// TOP PRODUCTS
+// ------------------------------------------------------
 const getTopProducts = async (req, res) => {
   try {
-    const { start, end, limit = 10, by = 'revenue' } = req.query;
-    const rows = await Sale.getTopProducts({ startDate: start || null, endDate: end || null, limit: Number(limit), by });
+    const {
+      start = null,
+      end = null,
+      vendor_id = null,
+      limit = 10
+    } = req.query;
+
+    const rows = await Sale.getTopProducts({
+      startDate: start,
+      endDate: end,
+      vendor_id,
+      limit: Number(limit)
+    });
+
     res.json({ success: true, top_products: rows });
+
   } catch (error) {
-    console.error('Get top products error:', error);
-    res.status(500).json({ success: false, message: 'Error fetching top products' });
+    console.error("Get top products error:", error);
+    res.status(500).json({ success: false, message: "Error fetching top products" });
   }
 };
 
+// ------------------------------------------------------
+// PAYMENT SUMMARY
+// ------------------------------------------------------
 const getPaymentSummary = async (req, res) => {
   try {
-    const { start, end } = req.query;
-    const summary = await Sale.getPaymentSummary({ startDate: start || null, endDate: end || null });
+    const {
+      start = null,
+      end = null,
+      vendor_id = null
+    } = req.query;
+
+    const summary = await Sale.getPaymentSummary({
+      startDate: start,
+      endDate: end,
+      vendor_id
+    });
+
     res.json({ success: true, payment_summary: summary });
+
   } catch (error) {
-    console.error('Get payment summary error:', error);
-    res.status(500).json({ success: false, message: 'Error fetching payment summary' });
+    console.error("Get payment summary error:", error);
+    res.status(500).json({ success: false, message: "Error fetching payment summary" });
   }
 };
 
+// ------------------------------------------------------
+// PAGINATED SALES
+// ------------------------------------------------------
 const getSalesPaginated = async (req, res) => {
   try {
     const {
@@ -125,28 +165,45 @@ const getSalesPaginated = async (req, res) => {
     const result = await Sale.getPaginatedSales({
       page: Number(page),
       limit: Number(limit),
-      startDate: start || null,
-      endDate: end || null,
-      vendor_id: vendor_id || null,
-      product_id: product_id || null,
-      payment_type: payment_type || null
+      startDate: start,
+      endDate: end,
+      vendor_id,
+      product_id,
+      payment_type
     });
 
     res.json({ success: true, ...result });
+
   } catch (error) {
-    console.error('Get paginated sales error:', error);
-    res.status(500).json({ success: false, message: 'Error fetching sales' });
+    console.error("Get paginated sales error:", error);
+    res.status(500).json({ success: false, message: "Error fetching sales" });
   }
 };
 
+// ------------------------------------------------------
+// VENDOR SUMMARY
+// ------------------------------------------------------
 const getVendorsSummary = async (req, res) => {
   try {
-    const { start = null, end = null, limit = 50 } = req.query;
-    const rows = await Sale.getVendorsSummary({ startDate: start || null, endDate: end || null, limit: Number(limit) });
+    const {
+      start = null,
+      end = null,
+      vendor_id = null,
+      limit = 50
+    } = req.query;
+
+    const rows = await Sale.getVendorsSummary({
+      startDate: start,
+      endDate: end,
+      vendor_id,
+      limit: Number(limit)
+    });
+
     res.json({ success: true, vendors: rows });
+
   } catch (error) {
-    console.error('Get vendors summary error:', error);
-    res.status(500).json({ success: false, message: 'Error fetching vendor summaries' });
+    console.error("Get vendors summary error:", error);
+    res.status(500).json({ success: false, message: "Error fetching vendor summaries" });
   }
 };
 
