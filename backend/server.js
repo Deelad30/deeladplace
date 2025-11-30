@@ -4,11 +4,16 @@ const cors = require('cors');
 const database = require('./src/config/database');
 const emailService = require('./src/utils/emailService');
 const paystackRoutes = require('./src/routes/paystack');
+const auth = require('./src/middleware/auth.middleware');
+const { requireTenant } = require('./src/middleware/tenant.middleware');
 const webhookRoutes = require('./src/routes/webhook');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+app.post('/api/debug-token', auth, requireTenant, (req, res) => {
+  res.json({ user: req.user });
+});
 
 // Middleware
 app.use(cors());
@@ -50,22 +55,52 @@ app.get('/api/health', async (req, res) => {
 });
 
 // Import routes
-const authRoutes = require('./src/routes/auth');
+// const authRoutes = require('./src/routes/auth');
 const vendorRoutes = require('./src/routes/vendors');
 const productRoutes = require('./src/routes/products');
 const salesRoutes = require('./src/routes/sales');
 const expenseRoutes = require('./src/routes/expenses');
-const inventoryRoutes = require('./src/routes/inventory');
+// const inventoryRoutes = require('./src/routes/inventory');
 const rawMaterialRoutes = require('./src/routes/rawMaterials');
+const authRoutes = require('./src/routes/auth.routes');
+const inviteRoutes = require('./src/routes/invite.routes');
+const materialRoutes = require('./src/routes/material.routes');
+const recipeRoutes = require('./src/routes/recipe.routes');
+const purchaseRoutes = require('./src/routes/purchase.routes');
+const costingRoutes = require('./src/routes/costing.routes');
+const packagingRoutes = require('./src/routes/packaging.routes');
+const packagingMapRoutes = require('./src/routes/packagingMap.routes');
+const labourRoutes = require('./src/routes//labour.routes');
+const opexRoutes = require('./src/routes/opex.routes');
+const sicRoutes = require('./src/routes/sic.routes');
+const invRoutes = require('./src/routes/inventory.routes');
+const posRoutes = require('./src/routes/pos.routes');
+const standardRoutes = require('./src/routes/standard.routes');
+
 
 // Use routes
 app.use('/api/auth', authRoutes);
+app.use('/api/opex', opexRoutes);
 app.use('/api/vendors', vendorRoutes);
+app.use('/api/labour', labourRoutes);
+app.use('/api/packaging', packagingRoutes);
 app.use('/api/raw-materials', rawMaterialRoutes);
+app.use('/api/packaging-map', packagingMapRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/sales', salesRoutes);
 app.use('/api/expenses', expenseRoutes);
-app.use('/api/inventory', inventoryRoutes);
+// app.use('/api/inventory', inventoryRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/invite', inviteRoutes);
+app.use('/api/materials', materialRoutes);
+app.use('/api/recipes', recipeRoutes);
+app.use('/api/purchases', purchaseRoutes);
+app.use('/api/costing', costingRoutes);
+app.use('/api/sic', sicRoutes);
+app.use('/api/inventory', invRoutes);
+app.use('/api/pos', posRoutes);
+app.use('/api/standard', standardRoutes);
+
 
 // 404 handler
 app.use('*', (req, res) => {
