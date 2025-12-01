@@ -4,16 +4,11 @@ const cors = require('cors');
 const database = require('./src/config/database');
 const emailService = require('./src/utils/emailService');
 const paystackRoutes = require('./src/routes/paystack');
-const auth = require('./src/middleware/auth.middleware');
-const { requireTenant } = require('./src/middleware/tenant.middleware');
 const webhookRoutes = require('./src/routes/webhook');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.post('/api/debug-token', auth, requireTenant, (req, res) => {
-  res.json({ user: req.user });
-});
 
 // Middleware
 app.use(cors());
@@ -76,9 +71,11 @@ const sicRoutes = require('./src/routes/sic.routes');
 const invRoutes = require('./src/routes/inventory.routes');
 const posRoutes = require('./src/routes/pos.routes');
 const standardRoutes = require('./src/routes/standard.routes');
+const reportsRoutes = require('./src/routes/reports.routes');
 
 
 // Use routes
+app.use('/api/reports', reportsRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/opex', opexRoutes);
 app.use('/api/vendors', vendorRoutes);

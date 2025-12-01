@@ -43,6 +43,40 @@ const GET_LATEST_STANDARD = `
   ORDER BY id DESC LIMIT 1
 `;
 
+const GET_EXPECTED_MATERIAL_USAGE = `
+    SELECT 
+        r.material_id,
+        rm.name AS material_name,
+        SUM(r.recipe_qty * sp.computed_sales_qty) AS expected_usage
+    FROM recipes r
+    JOIN sic_products sp ON sp.product_id = r.product_id
+    JOIN raw_materials rm ON rm.id = r.material_id
+    WHERE r.tenant_id = $1
+      AND sp.date BETWEEN $2 AND $3
+    GROUP BY r.material_id, rm.name;
+  `;
+
+
+const GET_ACTUAL_MATERIAL_USAGE =  `
+    SELECT 
+        material_id,
+        SUM(issues_qty + waste_qty) AS actual_usage
+    FROM sic_raw_materials
+    WHERE tenant_id = $1
+      AND date BETWEEN $2 AND $3
+    GROUP BY material_id;
+  `;
+
+const GET_MATERIAL_UNIT_COST =  `
+    SELECT purchase_price, purchase_qty
+    FROM material_purchases
+    WHERE material_id = $1 AND tenant_id = $2
+    ORDER BY created_at DESC
+    LIMIT 1;
+  `;
+
+  
+
 
 module.exports = {
   GET_LATEST_PURCHASE,
@@ -51,5 +85,8 @@ module.exports = {
   GET_LABOUR,
   GET_OPEX,
   GET_PACKAGING_FOR_PRODUCT,
-  GET_LATEST_STANDARD
+  GET_LATEST_STANDARD,
+  GET_EXPECTED_MATERIAL_USAGE,
+  GET_ACTUAL_MATERIAL_USAGE,
+  GET_MATERIAL_UNIT_COST  
 };
