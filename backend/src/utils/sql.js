@@ -74,8 +74,26 @@ const GET_MATERIAL_UNIT_COST =  `
     ORDER BY created_at DESC
     LIMIT 1;
   `;
+ 
+const GET_PRODUCT_SALES_QTY = `
+  SELECT product_id, SUM(computed_sales_qty) AS qty
+  FROM sic_products
+  WHERE tenant_id = $1
+    AND date BETWEEN $2 AND $3
+  GROUP BY product_id;
+`;
 
-  
+const GET_POS_ACTUAL_SALES = `
+  SELECT psi.product_id, SUM(psi.qty * psi.selling_price) AS actual_sales
+  FROM pos_sale_items psi
+  JOIN pos_sales ps ON psi.sale_id = ps.id
+  WHERE ps.tenant_id = $1
+    AND ps.date BETWEEN $2 AND $3
+  GROUP BY psi.product_id;
+`;
+
+
+
 
 
 module.exports = {
@@ -88,5 +106,7 @@ module.exports = {
   GET_LATEST_STANDARD,
   GET_EXPECTED_MATERIAL_USAGE,
   GET_ACTUAL_MATERIAL_USAGE,
-  GET_MATERIAL_UNIT_COST  
+  GET_MATERIAL_UNIT_COST,
+  GET_PRODUCT_SALES_QTY,
+  GET_POS_ACTUAL_SALES   
 };
