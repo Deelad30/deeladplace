@@ -1,0 +1,9 @@
+/* body { font-family: Inter, system-ui, sans-serif; margin:0; padding:0; background:#f6f8fa; color:#111; }
+.app-layout { display:flex; min-height:100vh; }
+.sidebar { width:220px; background:#0f1724; color:#fff; padding:18px; }
+.main { flex:1; padding:20px; }
+.table { width:100%; border-collapse:collapse; }
+.table th, .table td { padding:8px 10px; border-bottom:1px solid #eee; text-align:left; }
+.btn { padding:8px 12px; background:#0b5fff; color:#fff; border-radius:6px; border:none; cursor:pointer; }
+.form { display:flex; flex-direction:column; gap:10px; }
+.input { padding:8px 10px; border-radius:6px; border:1px solid #ddd; } */

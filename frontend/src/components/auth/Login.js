@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import LoadingSpinner from "../common/LoadingSpinner";
-import { APP_CONFIG } from "../../utils/constants";
 import '../../../src/styles/components/Login.css';
 
 function Login() {
   const [showPassword, setShowPassword] = useState(false);
+  const [businessName, setBusinessName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -29,7 +29,8 @@ function Login() {
 
     if (isSignup) {
       if (!signup) throw new Error("Signup function not available");
-      result = await signup(name, email, password);
+      result = await signup(name, businessName, email, password);
+
 
       if (result.success) {
         // Switch to login mode
@@ -47,7 +48,9 @@ function Login() {
     if (result.success) {
       // After login → check plan
       const storedUser = JSON.parse(localStorage.getItem("user"));
-      const plan = storedUser?.user?.plan?.toLowerCase();
+      const plan = storedUser?.plan?.toLowerCase();
+      console.log(plan);
+      
 
       if (plan === "enterprise" || plan === "pro") {
         navigate("/dashboard");
@@ -133,6 +136,21 @@ function Login() {
             />
           </label>
         )}
+
+        {isSignup && (
+            <label htmlFor="businessName" className={`login__input ${error ? "input-error" : ""}`}>
+              <input
+                type="text"
+                id="businessName"
+                placeholder="Business / Restaurant Name"
+                className="login__input--box"
+                value={businessName}
+                onChange={handleInputChange(setBusinessName)}
+                required
+                disabled={loading}
+              />
+            </label>
+          )}
 
         {/* Email */}
         <label htmlFor="email" className={`login__input ${error ? "input-error" : ""}`}>

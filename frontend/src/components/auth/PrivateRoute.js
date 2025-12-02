@@ -9,9 +9,15 @@ const PrivateRoute = ({ children }) => {
 
   if (loading) return <LoadingSpinner />;
 
-  // Prevent redirect loop: if already on /login, just render children
+  // Not logged in → redirect to login
   if (!user && location.pathname !== '/login') {
     return <Navigate to="/login" replace />;
+  }
+
+  // Logged in but plan is not "pro" or "enterprise" → redirect to checkout
+  const allowedPlans = ['pro', 'enterprise'];
+  if (user && !allowedPlans.includes(user.plan?.toLowerCase()) && location.pathname !== '/checkout') {
+    return <Navigate to="/checkout" replace />;
   }
 
   return children;

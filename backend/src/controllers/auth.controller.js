@@ -77,10 +77,13 @@ async function login(req, res) {
   if (!email || !password) return res.status(400).json({ error: 'Missing credentials' });
 
   try {
-    const result = await db.query(
-      'SELECT id, email, password_hash, name, tenant_id, role_id FROM users WHERE email = $1',
-      [email]
-    );
+   const result = await db.query(
+  `SELECT id, email, password_hash, name, tenant_id, role_id,
+          plan_type, subscription_code
+   FROM users
+   WHERE email = $1`,
+  [email]
+);
 
     const user = result.rows[0];
     if (!user) return res.status(400).json({ error: 'Invalid credentials' });
@@ -98,16 +101,19 @@ async function login(req, res) {
     emailService.sendLoginNotification(user, new Date().toLocaleString())
       .catch(err => console.error('Failed to send login notification:', err));
 
-    res.json({
-      token,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        tenant_id: user.tenant_id,
-        role_id: user.role_id
-      }
-    });
+ res.json({
+  token,
+  user: {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    tenant_id: user.tenant_id,
+    role_id: user.role_id,
+    plan: user.plan_type,
+    subscription_code: user.subscription_code
+  }
+});
+
 
   } catch (err) {
     console.error(err);
@@ -131,6 +137,10 @@ const forgotPassword = async (req, res) => {
       'SELECT id, email, name FROM users WHERE email = $1',
       [email]
     );
+
+    console.log(userResult);
+  
+    
 
     if (userResult.rows.length === 0) {
       return res.json({

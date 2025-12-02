@@ -128,6 +128,66 @@ class EmailService {
     }
   }
 
+  async sendInviteEmail(data) {
+  try {
+    const mailOptions = {
+      from: `"Deelad Place" <${process.env.SMTP_FROM}>`,
+      to: data.email,
+      subject: "You've been invited to Deelad Place",
+      html: `
+        <div style="font-family: Arial; max-width:600px; margin:auto;">
+          <h2 style="color:#22c55e;">You've been invited!</h2>
+          <p>${data.inviterName} (${data.inviterEmail}) has invited you to join their Deelad Place team.</p>
+          <p>Please click the link below to create your account:</p>
+          <a href="${data.inviteLink}" 
+             style="background:#22c55e; color:white; padding:10px 20px; 
+                    text-decoration:none; border-radius:5px;">
+             Accept Invitation
+          </a>
+          <br><br>
+          <p>If you were not expecting this, please ignore this message.</p>
+        </div>
+      `,
+    };
+
+    const result = await this.transporter.sendMail(mailOptions);
+    console.log(`📨 Invite email sent to: ${data.email}`);
+    return result;
+  } catch (error) {
+    console.error('❌ Failed to send invite email:', error.message);
+  }
+}
+
+async sendInviteAcceptedEmail(data) {
+  try {
+    const mailOptions = {
+      from: `"Deelad Place" <${process.env.SMTP_FROM}>`,
+      to: data.email,
+      subject: "Welcome to Deelad Place!",
+      html: `
+        <div style="font-family: Arial; max-width:600px; margin:auto;">
+          <h2 style="color:#22c55e;">Welcome!</h2>
+          <p>Hello ${data.name || data.email},</p>
+          <p>Your account has been successfully activated under tenant ID: <strong>${data.tenantId}</strong>.</p>
+          <p>You can now log in and start using the system:</p>
+          <a href="${process.env.CLIENT_URL}/login" 
+             style="background:#22c55e; color:white; padding:10px 20px; 
+                    text-decoration:none; border-radius:5px;">
+             Login Now
+          </a>
+        </div>
+      `,
+    };
+
+    const result = await this.transporter.sendMail(mailOptions);
+    console.log(`📨 Invite acceptance email sent to: ${data.email}`);
+    return result;
+  } catch (error) {
+    console.error('❌ Failed to send invite acceptance email:', error.message);
+  }
+}
+
+
   async sendSubscriptionPaymentFailed(user, planType) {
   try {
     const mailOptions = {

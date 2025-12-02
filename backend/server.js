@@ -76,7 +76,6 @@ const reportsRoutes = require('./src/routes/reports.routes');
 
 // Use routes
 app.use('/api/reports', reportsRoutes);
-app.use('/api/auth', authRoutes);
 app.use('/api/opex', opexRoutes);
 app.use('/api/vendors', vendorRoutes);
 app.use('/api/labour', labourRoutes);

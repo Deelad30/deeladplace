@@ -14,9 +14,9 @@ function PricingSection({ user }) {
       const response = await axios.post(
         "http://localhost:5000/api/paystack/create-subscription",
         {
-          userId: user.user.id,
+          userId: user.id,
           planType,
-          customerEmail: user.user.email,
+          customerEmail: user.email,
         }
       );
 
