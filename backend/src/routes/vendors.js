@@ -1,15 +1,15 @@
 const express = require('express');
 const { getAllVendors, getVendorById, createVendor,  updateVendor, deleteVendor  } = require('../controllers/vendorController');
-const { authenticateToken } = require('../middleware/auth');
+
+const auth = require('../middleware/auth.middleware');
 
 const router = express.Router();
 
-router.use(authenticateToken);
 
-router.get('/', getAllVendors);
-router.get('/:id', getVendorById);
-router.post('/', createVendor);
-router.put('/:id', updateVendor);  
-router.delete('/:id', deleteVendor); 
+router.get('/', auth, getAllVendors);
+router.get('/:id', auth, getVendorById);
+router.post('/', auth, createVendor);
+router.put('/:id', auth, updateVendor);  
+router.delete('/:id', auth, deleteVendor); 
 
 module.exports = router;

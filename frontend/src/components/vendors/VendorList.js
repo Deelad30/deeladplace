@@ -256,18 +256,22 @@ const confirmDeleteVendor = async () => {
           </tr>
         </thead>
         <tbody>
-          {paginatedVendors.map(vendor => (
-            <tr key={vendor.id}>
-              <td style={{ fontWeight:"500" }}>{vendor.id}</td>
-              <td style={{ fontWeight:"600" }}>{vendor.name}</td>
-              <td style={{ fontWeight:"500" }}>{vendor.description}</td>
-              <td className="active-cell">{vendor.is_active ? <span className="active-dot"></span> : ''}</td>
-              <td>
-                <button className="edit-btn" onClick={() => handleEdit(vendor)}>Edit</button>
-                <button className="delete-btn" onClick={() => handleDelete(vendor)}>Delete</button>
-              </td>
-            </tr>
-          ))}
+{paginatedVendors.map((vendor, index) => (
+  <tr key={vendor.id}>
+    <td style={{ fontWeight: "500" }}>
+      {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
+    </td>
+    <td style={{ fontWeight: "600" }}>{vendor.name}</td>
+    <td style={{ fontWeight: "500" }}>{vendor.description}</td>
+    <td className="active-cell">
+      {vendor.is_active ? <span className="active-dot"></span> : ''}
+    </td>
+    <td>
+      <button className="edit-btn" onClick={() => handleEdit(vendor)}>Edit</button>
+      <button className="delete-btn" onClick={() => handleDelete(vendor)}>Delete</button>
+    </td>
+  </tr>
+))}
         </tbody>
       </table>
 

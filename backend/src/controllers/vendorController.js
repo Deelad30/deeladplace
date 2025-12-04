@@ -7,7 +7,6 @@ exports.getAllVendors = async (req, res) => {
       return res.status(400).json({ success: false, message: "Missing tenant ID" });
     }
 
-    // Scoped by tenant (assuming your model supports it)
     const vendors = await Vendor.findAll({ tenantId });
 
     res.json({
