@@ -1,0 +1,169 @@
+/* Invite Users Page — 2025 SaaS UI */
+
+.invite-container {
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
+}
+
+.invite-header h2 {
+  font-size: 22px;
+  margin: 0;
+  font-weight: 700;
+}
+
+.invite-sub {
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+/* Card */
+.invite-card {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(20, 24, 40, 0.06);
+  margin-top: 18px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.input-field {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  font-size: 14px;
+}
+
+.input-field:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.invite-btn-wrapper {
+  display: flex;
+  align-items: flex-end;
+}
+
+.invite-btn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.invite-btn:hover {
+  background: #1e4fc5;
+}
+
+.invite-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Table */
+.invite-table-wrapper {
+  margin-top: 32px;
+}
+
+.invite-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(20, 24, 40, 0.06);
+}
+
+.invite-table th {
+  text-align: left;
+  padding: 14px;
+  background: #f9fafb;
+  font-weight: 600;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.invite-table td {
+  padding: 14px;
+  font-size: 14px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 20px;
+  color: #9ca3af;
+}
+
+/* Role badge */
+.role-badge {
+  font-weight: 600;
+  text-transform: capitalize;
+  background: #eef2ff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  color: #4338ca;
+  display: inline-block;
+}
+
+/* Action buttons */
+.table-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.table-btn {
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.table-btn.secondary {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.table-btn.danger {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.table-btn:hover {
+  opacity: 0.85;
+}
+
+.invite-container{
+  
+    width: 90%;
+    margin: auto;
+    max-width: 1161px;
+}
+
+
+/* Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}

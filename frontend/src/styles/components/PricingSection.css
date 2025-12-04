@@ -119,28 +119,24 @@
   color: #d91f22;
 }
 
+
 .pricing-table {
   display: flex;
   gap: 2rem;
+  flex-wrap: nowrap; /* prevent wrapping */
   justify-content: center;
-  flex-wrap: wrap;
-  width: 80%;
-  margin: auto;
 }
 
 .pricing-card {
-  flex: 1 1 320px;
-  background: #fff;
+  flex: 1 1 calc(33.333% - 1.33rem); /* 3 cards per row, adjust for gap */
+  min-width: 0; /* prevent overflowing */
+   background: #fff;
   border-radius: 20px;
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
   padding: 2.5rem;
   transition: all 0.3s ease;
 }
 
-.pricing-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-}
 
 .pricing-card h3 {
   color: #d91f22;

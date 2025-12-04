@@ -246,8 +246,6 @@ async sendInviteAcceptedEmail(data) {
     throw error;
   }
 }
-
-
   async sendPasswordResetConfirmation(user) {
     try {
       const mailOptions = {

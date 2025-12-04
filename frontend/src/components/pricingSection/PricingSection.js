@@ -53,15 +53,15 @@ function PricingSection({ user }) {
 
         {/* PRO Plan */}
         <div className="pricing-card pro">
-          <h3>Pro</h3>
+          <h3>Basic</h3>
           <p className="price" style={{ color: "#000" }}>₦10,000<span>/month</span></p>
           <ul>
             <li>✔ POS (Sales Sheet)</li>
             <li>✔ Cost Analysis Module</li>
             <li>✔ Profit Reconciliation</li>
             <li>✔ Expense Management</li>
-            <li>✔ Cloud Backup</li>
             <li>✔ Basic Analytics</li>
+            <li>✔ Add One Vendor to your store</li>
           </ul>
           <button
             onClick={() => handleSubscription("pro")}
@@ -74,15 +74,16 @@ function PricingSection({ user }) {
 
         {/* ENTERPRISE Plan */}
         <div className="pricing-card enterprise">
-          <h3>Enterprise</h3>
+          <h3>Pro</h3>
           <p className="price" style={{ color: "#000" }}>₦20,000<span>/month</span></p>
           <ul>
-            <li><FaRocket className="icon" /> Everything in Pro is included</li>
+        
             <li>✔ Short Interval Control (Stock Flow)</li>
-            <li>✔ Check Sheet (Loss & Discrepancy Tracking)</li>
+
             <li>✔ Multi-Store / Multi-Vendor Access</li>
             <li>✔ Custom Reports & Dashboards</li>
             <li>✔ Priority Support & Staff Training</li>
+
           </ul>
           <button
             onClick={() => handleSubscription("enterprise")}
@@ -92,6 +93,26 @@ function PricingSection({ user }) {
             {loadingPlan === "enterprise" ? "Processing..." : "Subscribe"}
           </button>
         </div>
+
+         <div className="pricing-card enterprise">
+          <h3>ENTERPRISE</h3>
+          <p className="price" style={{ color: "#000" }}>Custom<span>.</span></p>
+          <ul>
+            <li><FaRocket className="icon" /> Everything in Pro is included</li>
+            <li>✔ API Access</li>
+            <li>✔ Create Unlimited Vendors</li>
+            <li>✔ Custom endpoints</li>
+            <li>✔ Custom Reports & Dashboards</li>
+            <li>✔ Priority Support At All Times</li>
+          </ul>
+          <button
+            className="signup-btn enterprise-btn"
+          >
+            Contact Our Sales Team
+          </button>
+        </div>
+
+
       </div>
     </div>
   );
