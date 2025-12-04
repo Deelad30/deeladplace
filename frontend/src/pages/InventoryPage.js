@@ -3,7 +3,7 @@ import Header from '../components/common/Header';
 import Sidebar from '../components/common/Sidebar';
 
 import RawMaterialsForm from "../components/inventory/RawMaterialsForm";
-
+import MaterialPurchase from '../components/inventory/MaterialPurchase';
 import SICSForm from '../components/inventory/SICSForm';
 import StockLevels from '../components/inventory/StockLevels';
 import VarianceReport from '../components/inventory/VarianceReport';
@@ -17,6 +17,8 @@ const InventoryPage = () => {
     switch (activeTab) {
       case 'raw-materials':
         return <RawMaterialsForm />;
+      case 'material-purchase':
+        return <MaterialPurchase />;
       case 'sics-form':
         return <SICSForm />;
       case 'stock-levels':
@@ -48,7 +50,12 @@ const InventoryPage = () => {
             >
               Raw Materials
             </button>
-
+            <button
+              className={`tab-button ${activeTab === 'material-purchase' ? 'active' : ''}`}
+              onClick={() => setActiveTab('material-purchase')}   
+            >
+              Material Purchase
+            </button>
             <button
               className={`tab-button ${activeTab === 'sics-form' ? 'active' : ''}`}
               onClick={() => setActiveTab('sics-form')}
