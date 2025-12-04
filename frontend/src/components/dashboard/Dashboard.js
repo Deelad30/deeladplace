@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import DashboardCard from "../common/DashboardCard";
-import { salesService } from "../../services/salesService";
+import { salesReport } from "../../api/reports"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDollarSign, faStore, faChartLine, faBriefcase } from "@fortawesome/free-solid-svg-icons";
 import { formatCurrency } from "../../utils/formatters";
@@ -22,76 +22,120 @@ const Dashboard = () => {
     fetchSalesSummary();
   }, []);
 
-  const fetchSalesSummary = async () => {
-    try {
-      const response = await salesService.getSalesSummary();
-      const rawData = response.summary; // Array of daily summaries
-      console.log(response);
-      
+const fetchSalesSummary = async () => {
+  try {
+    const { data } = await salesReport(); // ← NEW ENDPOINT
 
-      // Extract today and this month summary
-      const today = rawData.find(d => new Date(d.date).toDateString() === new Date().toDateString()) || {};
-      const this_month = rawData.reduce((acc, d) => {
-        acc.transactions = (acc.transactions || 0) + Number(d.transactions);
-        acc.total_revenue = (acc.total_revenue || 0) + Number(d.total_revenue);
-        acc.total_commission = (acc.total_commission || 0) + Number(d.total_commission);
+    console.log(data);
+    
+
+    const items = data.items; // all sales rows
+
+    // Group by date
+    const grouped = {};
+
+    items.forEach(sale => {
+      const dateKey = new Date(sale.created_at).toISOString().split("T")[0];
+
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = {
+          date: dateKey,
+          revenue: 0,
+          commission: 0,
+          transactions: 0
+        };
+      }
+
+      grouped[dateKey].revenue += Number(sale.revenue);
+      grouped[dateKey].commission += Number(sale.commission);
+      grouped[dateKey].transactions += 1;
+    });
+
+    const dailyArray = Object.values(grouped).sort(
+      (a, b) => new Date(a.date) - new Date(b.date)
+    );
+
+    setDailyData(
+      dailyArray.map(d => ({
+        date: new Date(d.date).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric"
+        }),
+        revenue: d.revenue,
+        commission: d.commission,
+        transactions: d.transactions
+      }))
+    );
+
+    // Compute today + month summary
+    const todayKey = new Date().toISOString().split("T")[0];
+
+    const today = grouped[todayKey] || {
+      revenue: 0,
+      commission: 0,
+      transactions: 0
+    };
+
+    const this_month = dailyArray.reduce(
+      (acc, d) => {
+        acc.revenue += d.revenue;
+        acc.commission += d.commission;
+        acc.transactions += d.transactions;
         return acc;
-      }, {});
+      },
+      { revenue: 0, commission: 0, transactions: 0 }
+    );
 
-      setSummary({ today, this_month });
+    setSummary({
+      today,
+      this_month
+    });
 
-      // Sort dailyData by date ascending
-      const sortedData = rawData
-        .map(d => ({
-          date: new Date(d.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-          revenue: Number(d.total_revenue),
-          commission: Number(d.total_commission),
-          transactions: Number(d.transactions)
-        }))
-        .sort((a, b) => new Date(a.date) - new Date(b.date));
+  } catch (error) {
+    console.error("Dashboard summary error:", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
-      setDailyData(sortedData);
-
-    } catch (error) {
-      console.error("Error fetching sales summary:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (loading) return <div>Loading dashboard...</div>;
 
   return (
     <div className="dashboard">
       <div className="dashboard-grid">
-        <DashboardCard
-          title="Today's Revenue"
-          value={summary.today.total_revenue || 0}
-          subtitle={`${summary.today.transaction_count || 0} transactions`}
-          icon={faDollarSign}
-          color="#22c55e"
-        />
-        <DashboardCard
-          title="Today's Commission"
-          value={summary.today.total_commission || 0}
-          subtitle="Hub earnings"
-          icon={faStore}
-          color="#3b82f6"
-        />
-        <DashboardCard
-          title="This Month Revenue"
-          value={summary.this_month.total_revenue || 0}
-          subtitle={`${summary.this_month.transactions || 0} transactions`}
-          icon={faChartLine}
-          color="#f59e0b"
-        />
-        <DashboardCard
-          title="This Month Commission"
-          value={summary.this_month.total_commission || 0}
-          subtitle="Hub earnings"
-          icon={faBriefcase}
-          color="#ef4444"
-        />
+      <DashboardCard
+  title="Today's Revenue"
+  value={summary.today.revenue}
+  subtitle={`${summary.today.transactions} transactions`}
+  icon={faDollarSign}
+  color="#22c55e"
+/>
+
+<DashboardCard
+  title="Today's Commission"
+  value={summary.today.commission}
+  subtitle="Hub earnings"
+  icon={faStore}
+  color="#3b82f6"
+/>
+
+<DashboardCard
+  title="This Month Revenue"
+  value={summary.this_month.revenue}
+  subtitle={`${summary.this_month.transactions} transactions`}
+  icon={faChartLine}
+  color="#f59e0b"
+/>
+
+<DashboardCard
+  title="This Month Commission"
+  value={summary.this_month.commission}
+  subtitle="Hub earnings"
+  icon={faBriefcase}
+  color="#ef4444"
+/>
+
       </div>
 
       {/* Line Chart: Revenue & Commission over 30 days */}
