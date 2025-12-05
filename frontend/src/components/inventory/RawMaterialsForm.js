@@ -1,137 +1,255 @@
 import React, { useEffect, useState } from 'react';
-import { rawMaterialsService } from '../../services/rawMaterialsService';
-import '../../styles/pages/RawMaterialsForm.css';
-import { toast } from "react-hot-toast";
-import ConfirmationModal from '../common/ConfirmationModal';
+import PageHeader from '../common/PageHeader';
+import Modals from '../common/Modals';
+import Table from '../common/Table';
+import { getMaterials, createMaterial, updateMaterial, deleteMaterial } from '../../api/materials';
+import toast from 'react-hot-toast';
+import '../../styles/pages/RawMaterialsPage.css'
 
-const RawMaterialsForm = () => {
-  const [modalOpen, setModalOpen] = useState(false);
-  const [deleteId, setDeleteId] = useState(null);
+export default function RawMaterialsPage() {
+  const [loading, setLoading] = useState(true);
   const [materials, setMaterials] = useState([]);
-  const [formData, setFormData] = useState({ name: '', unit: '', current_cost: '' });
+  const [openModal, setOpenModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [form, setForm] = useState({ name: '', measurement_unit: '' });
 
-  // Load materials on mount
+  // Search and pagination
+  const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
+
+  async function loadMaterials() {
+    setLoading(true);
+    try {
+      const res = await getMaterials();
+      setMaterials(res.data.items);
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to load materials.');
+    }
+    setLoading(false);
+  }
+
   useEffect(() => {
-    fetchMaterials();
+    loadMaterials();
   }, []);
 
-  const fetchMaterials = async () => {
-    const data = await rawMaterialsService.getAll();
-    setMaterials(data);
-  };
+  async function handleSave() {
+    if (!form.name.trim() || !form.measurement_unit.trim()) {
+      toast.error('Please fill in all fields.');
+      return;
+    }
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
     try {
       if (editingId) {
-        await rawMaterialsService.update(editingId, formData);
-          toast.success('Raw material updated successfully!');
+        await updateMaterial(editingId, form);
+        toast.success('Material updated.');
         setEditingId(null);
       } else {
-        await rawMaterialsService.create(formData);
-          toast.success('Raw material added successfully!');
+        await createMaterial(form);
+        toast.success('Material added.');
       }
-      setFormData({ name: '', unit: '', current_cost: '' });
-      fetchMaterials();
+      setForm({ name: '', measurement_unit: '' });
+      setOpenModal(false);
+      loadMaterials();
     } catch (err) {
-      toast.error('Failed to save raw material.');
-      console.error(err);
+      toast.error('Error saving material.');
     }
-  };
-
-  const handleEdit = (material) => {
-    setEditingId(material.id);
-    setFormData({
-      name: material.name,
-      unit: material.unit,
-      current_cost: material.current_cost,
-    });
-  };
-
-  const confirmDelete = (id) => {
-  setDeleteId(id);
-  setModalOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-  try {
-    await rawMaterialsService.delete(deleteId);
-    toast.success('Raw material deleted!');
-    fetchMaterials();
-  } catch (err) {
-    console.error(err);
-    toast.error('Failed to delete material.');
-  } finally {
-    setModalOpen(false);
-    setDeleteId(null);
   }
-};
 
+  function handleEdit(material) {
+    setEditingId(material.id);
+    setForm({
+      name: material.name,
+      measurement_unit: material.measurement_unit
+    });
+    setOpenModal(true);
+  }
+
+  async function handleDelete(id) {
+    if (!window.confirm("Are you sure you want to delete this material?")) return;
+    try {
+      await deleteMaterial(id);
+      toast.success('Material deleted.');
+      loadMaterials();
+    } catch (err) {
+      toast.error('Failed to delete material.');
+    }
+  }
+
+  const columns = [
+    { key: 'name', label: 'Name' },
+    { key: 'measurement_unit', label: 'Unit' },
+    { key: 'stock_balance', label: 'Stock' },
+    { key: 'avg_cost', label: 'Avg Cost' },
+    { key: 'actions', label: 'Actions' }
+  ];
+
+  // Filter materials by search
+  const filteredMaterials = materials.filter(m =>
+    m.name.toLowerCase().includes(search.toLowerCase()) ||
+    m.measurement_unit.toLowerCase().includes(search.toLowerCase())
+  );
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredMaterials.length / ITEMS_PER_PAGE);
+  const start = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginated = filteredMaterials.slice(start, start + ITEMS_PER_PAGE);
+
+const tableData = paginated.map(mat => ({
+  ...mat,
+  stock_balance: mat.stock_balance != null ? Number(mat.stock_balance).toFixed(2) : '0.00',
+  avg_cost: mat.avg_cost != null ? Number(mat.avg_cost).toFixed(2) : '0.00',
+  actions: (
+    <>
+      <button
+        onClick={() => handleEdit(mat)}
+        style={{
+          marginRight: 5,
+          padding: '5px 10px',
+          backgroundColor: '#4caf50',
+          color: '#fff',
+          border: 'none',
+          borderRadius: 3,
+          cursor: 'pointer'
+        }}
+      >
+        Edit
+      </button>
+      <button
+        onClick={() => handleDelete(mat.id)}
+        style={{
+          padding: '5px 10px',
+          backgroundColor: '#f44336',
+          color: '#fff',
+          border: 'none',
+          borderRadius: 3,
+          cursor: 'pointer'
+        }}
+      >
+        Delete
+      </button>
+    </>
+  )
+}));
 
   return (
-    <><ConfirmationModal
-      isOpen={modalOpen}
-      onConfirm={handleDeleteConfirm}
-      onCancel={() => setModalOpen(false)}
-      message="Are you sure you want to delete this material?" /><div className="raw-materials-container">
-        <h2>{editingId ? 'Edit Raw Material' : 'Add Raw Material'}</h2>
-        <form className="raw-materials-form" onSubmit={handleSubmit}>
-          <input
-            type="text"
-            name="name"
-            placeholder="Material Name"
-            value={formData.name}
-            onChange={handleChange}
-            required />
-          <input
-            type="text"
-            name="unit"
-            placeholder="Unit (kg, m, liters)"
-            value={formData.unit}
-            onChange={handleChange}
-            required />
-          <input
-            type="number"
-            name="current_cost"
-            placeholder="Cost per unit"
-            value={formData.current_cost}
-            onChange={handleChange}
-            required />
-          <button type="submit">{editingId ? 'Update' : 'Add'}</button>
-        </form>
+    <div className="page-container">
+      <PageHeader
+        title="Raw Materials"
+        actionLabel="Add Material"
+        onAction={() => {
+          setOpenModal(true);
+          setEditingId(null);
+          setForm({ name: '', measurement_unit: '' });
+        }}
+      />
 
-        <h3>Raw Materials List</h3>
-        <table className="raw-materials-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Unit</th>
-              <th>Cost</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {materials.map((mat) => (
-              <tr key={mat.id}>
-                <td>{mat.name}</td>
-                <td>{mat.unit}</td>
-                <td>{mat.current_cost}</td>
-                <td>
-                  <button className="edit-btn" onClick={() => handleEdit(mat)}>Edit</button>
-                  <button className="delete-btn" onClick={() => confirmDelete(mat.id)}>Delete</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div></>
-    
+      {/* Search filter */}
+      <input
+        type="text"
+        placeholder="Search materials..."
+        value={search}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setCurrentPage(1);
+        }}
+        style={{
+          width: 250,
+          marginBottom: 15,
+          padding: 8,
+          borderRadius: 5,
+          border: '1px solid #ccc'
+        }}
+      />
+
+      {loading ? (
+        <div className="loading">Loading...</div>
+      ) : (
+        <>
+          <Table columns={columns} data={tableData}
+          onEdit={handleEdit} onDelete={handleDelete}
+          />
+
+          {/* Pagination only if more than ITEMS_PER_PAGE */}
+          {filteredMaterials.length > ITEMS_PER_PAGE && (
+            <div style={{ marginTop: 20, display: 'flex', gap: 10, alignItems: 'center' }}>
+              {currentPage > 1 && (
+                <button
+                  onClick={() => setCurrentPage(prev => prev - 1)}
+                  style={{
+                    padding: '6px 12px',
+                    backgroundColor: '#1976d2',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 4,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Previous
+                </button>
+              )}
+
+              <span>Page {currentPage} of {totalPages}</span>
+
+              {currentPage < totalPages && (
+                <button
+                  onClick={() => setCurrentPage(prev => prev + 1)}
+                  style={{
+                    padding: '6px 12px',
+                    backgroundColor: '#1976d2',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 4,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Next
+                </button>
+              )}
+            </div>
+          )}
+        </>
+      )}
+
+      <Modals
+        open={openModal}
+        title={editingId ? 'Edit Material' : 'New Material'}
+        onClose={() => setOpenModal(false)}
+      >
+        <div className="form-group">
+          <label>Name</label>
+          <input
+            value={form.name}
+            onChange={e => setForm({ ...form, name: e.target.value })}
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Measurement Unit</label>
+          <input
+            value={form.measurement_unit}
+            onChange={e => setForm({ ...form, measurement_unit: e.target.value })}
+          />
+        </div>
+
+        <button
+          className="primary-btn full"
+          onClick={handleSave}
+          style={{
+            marginTop: 10,
+            padding: '8px 15px',
+            backgroundColor: '#1976d2',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 4,
+            cursor: 'pointer'
+          }}
+        >
+          {editingId ? 'Update' : 'Save'}
+        </button>
+      </Modals>
+    </div>
   );
-};
-
-export default RawMaterialsForm;
+}

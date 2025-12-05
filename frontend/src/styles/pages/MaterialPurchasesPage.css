@@ -1,0 +1,25 @@
+.page-container {
+  padding: 24px;
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+select, input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+select:focus,
+input:focus {
+  outline: none;
+  border-color: #0055ff;
+}

@@ -1,3 +1,4 @@
 import api from './axios';
-export const listMaterialPurchases = () => api.get('/purchases/material');
-export const createMaterialPurchase = (body) => api.post('/purchases/material', body);
+
+export const getPurchases = () => api.get('/purchases');
+export const createPurchase = (body) => api.post('/purchases', body);
