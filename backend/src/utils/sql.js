@@ -92,11 +92,64 @@ const GET_POS_ACTUAL_SALES = `
   GROUP BY psi.product_id;
 `;
 
+const LIST_ITEMS = `    SELECT 
+      m.id,
+      m.name,
+      m.measurement_unit,
+      COALESCE(
+        (SELECT SUM(CASE WHEN movement_type='in' THEN qty ELSE 0 END) 
+           - SUM(CASE WHEN movement_type='out' THEN qty ELSE 0 END)
+         FROM stock_movements
+         WHERE item_type='material'
+         AND item_id=m.id
+         AND tenant_id=$1),0
+      ) AS stock_balance,
+      COALESCE(
+        (SELECT AVG(purchase_price / purchase_qty)
+         FROM material_purchases
+         WHERE material_id=m.id
+         AND tenant_id=$1),0
+      ) AS avg_cost
+    FROM raw_materials m
+    WHERE m.tenant_id=$1
+    ORDER BY m.id DESC
+`;
 
+const CREATE_MATERIAL= `
+INSERT INTO raw_materials (tenant_id, name, measurement_unit)
+    VALUES ($1,$2,$3)
+    RETURNING *
+`;
 
+const UPDATE_MATERIAL = `UPDATE raw_materials
+    SET name=$2, measurement_unit=$3
+    WHERE id=$1 AND tenant_id=$4
+    RETURNING *
+`;
+
+const DELETE_MATERIAL = `
+    DELETE FROM raw_materials
+    WHERE id=$1 AND tenant_id=$2
+`
+const LIST_PURCHASES = `SELECT p.*, m.name AS material_name
+    FROM material_purchases p
+    JOIN raw_materials m ON m.id=p.material_id
+    WHERE p.tenant_id=$1
+    ORDER BY p.id DESC
+`
+const CREATE_PURCHASE = `INSERT INTO material_purchases 
+    (tenant_id, material_id, purchase_price, purchase_qty, vendor_id, purchase_date, measurement_unit)
+    VALUES ($1,$2,$3,$4,$5,$6,$7)
+    RETURNING *`
 
 
 module.exports = {
+  UPDATE_MATERIAL,
+  DELETE_MATERIAL,
+  LIST_PURCHASES,
+  CREATE_PURCHASE,
+  LIST_ITEMS,
+  CREATE_MATERIAL,
   GET_LATEST_PURCHASE,
   GET_RECIPE_MATERIALS,
   GET_PACKAGING,

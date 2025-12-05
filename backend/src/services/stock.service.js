@@ -55,4 +55,20 @@ async function upsertStockBalance(tenantId, itemType, itemId, deltaQty, costPerU
   }
 }
 
-module.exports = { upsertStockBalance };
+async function recordStockMovement({
+  tenantId,
+  itemId,
+  qty,
+  costPerUnit,
+  movementType = 'in'
+}) {
+  return db.query(`
+    INSERT INTO stock_movements
+      (tenant_id,item_type,item_id,movement_type,qty,cost_per_unit)
+    VALUES
+      ($1,'material',$2,$3,$4,$5)
+  `, [tenantId, itemId, movementType, qty, costPerUnit]);
+}
+
+
+module.exports = { upsertStockBalance, recordStockMovement };

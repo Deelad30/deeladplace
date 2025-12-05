@@ -1,9 +1,8 @@
-const express = require('express');
-const router = express.Router();
+const router = require('express').Router();
+const ctrl = require('../controllers/purchase.controller');
 const auth = require('../middleware/auth.middleware');
-const { requireTenant } = require('../middleware/tenant.middleware');
-const PurchaseController = require('../controllers/purchase.controller');
 
-router.post('/', auth, requireTenant, PurchaseController.createPurchase);
+router.get('/', auth, ctrl.getPurchases);
+router.post('/', auth, ctrl.createPurchase);
 
 module.exports = router;
