@@ -7,6 +7,17 @@ import './VendorsList.css';
 const ITEMS_PER_PAGE = 20;
 
 const VendorList = () => {
+
+const user = JSON.parse(localStorage.getItem('user')) || { plan: '' };;
+console.log(user);
+
+// Limit vendor creation based on plan
+const maxVendorsAllowed = (plan, currentCount) => {
+  if (plan === 'pro') return currentCount >= 1;
+  if (plan === 'enterprise') return currentCount >= 5;
+  return false; // no limit for other plans
+};
+
   // Vendor data states
   const [vendorToDelete, setVendorToDelete] = useState(null);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
@@ -147,6 +158,19 @@ const confirmDeleteVendor = async () => {
 
   // Create vendor
   const handleCreateVendor = async () => {
+
+    if (maxVendorsAllowed(user.plan, vendors.length)) {
+        setToast({ 
+        message: user.plan === 'pro' 
+          ? 'Pro plan allows only 1 vendor' 
+          : 'Enterprise plan allows up to 5 vendors', 
+        type: 'error' 
+      });
+      return;
+    }
+
+
+
     if (!newVendor.name.trim()) {
       setToast({ message: 'Name is required', type: 'error' });
       return;
@@ -211,11 +235,14 @@ const confirmDeleteVendor = async () => {
       {/* Header */}
       <div className="vendor-top-container">
         <h2 className='vendor-top'>Vendors Dashboard</h2>
-        <button className="create-btn" onClick={() => {
-          setEditingVendor(null);
-          setNewVendor({ name: '', description: '', is_active: true });
-          setModalVisible(true);
-        }}>Create Vendor</button>
+        {!maxVendorsAllowed(user.plan, vendors.length) && (
+  <button className="create-btn" onClick={() => {
+    setEditingVendor(null);
+    setNewVendor({ name: '', description: '', is_active: true });
+    setModalVisible(true);
+  }}>Create Vendor</button>
+)}
+
       </div>
 
       {/* Dashboard tiles */}
@@ -263,7 +290,7 @@ const confirmDeleteVendor = async () => {
     </td>
     <td style={{ fontWeight: "600" }}>{vendor.name}</td>
     <td style={{ fontWeight: "500" }}>{vendor.description}</td>
-    <td className="active-cell">
+    <td style={{    marginTop: "14px"}} className="active-cell">
       {vendor.is_active ? <span className="active-dot"></span> : ''}
     </td>
     <td>

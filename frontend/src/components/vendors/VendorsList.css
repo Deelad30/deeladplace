@@ -139,8 +139,9 @@ tr:hover{
 
 .active-cell {
   display: flex;
-  justify-content: center;
+  justify-content: left;
   align-items: center;
+  margin-left: 20px;
 }
 
 .active-dot {
