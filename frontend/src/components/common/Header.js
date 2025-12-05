@@ -1,13 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { APP_CONFIG } from "../../utils/constants";
 import "../../../src/styles/components/Header.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBars, faChevronDown, faUserCircle } from "@fortawesome/free-solid-svg-icons";
+import { faBars, faChevronDown, faUserCircle, faMoon, faSun } from "@fortawesome/free-solid-svg-icons";
+
 
 const Header = ({ onToggleSidebar }) => {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
+
 
   return (
     <header className="app-header">
@@ -19,7 +21,7 @@ const Header = ({ onToggleSidebar }) => {
         </button>
 
         {/* Brand */}
-        <div style={{ color:"#d91f22" }} className="header-brand">
+        <div style={{ color: "#d91f22" }} className="header-brand">
           <h1>{APP_CONFIG.APP_NAME}</h1>
         </div>
 
