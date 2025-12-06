@@ -1,0 +1,48 @@
+.breadcrumb {
+  font-size: 14px;
+  color: #888;
+  cursor: pointer;
+}
+
+.breadcrumb span:hover {
+  text-decoration: underline;
+}
+
+.costing-panel {
+  margin-top: 32px;
+  display: flex;
+  gap: 24px;
+}
+
+.cost-results {
+  background: #fff;
+  padding: 18px;
+  border-radius: 12px;
+  width: 280px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.05);
+}
+
+.cost-results h3 {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.cost-line,
+.cost-total {
+  display: flex;
+  justify-content: space-between;
+  margin: 6px 0;
+}
+
+.cost-total {
+  font-weight: 600;
+  margin-top: 12px;
+}
+
+.btn-secondary {
+  background: #fff;
+  border: 1px solid #ddd;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}

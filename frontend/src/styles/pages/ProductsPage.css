@@ -1,4 +1,4 @@
-/* Products Page Styles */
+Products Page Styles
 .products-page {
   margin: 0 auto;
 }
@@ -823,4 +823,89 @@
 
 .calculating {
   animation: calculatePrice 0.5s ease;
+}
+
+.page-container {
+  padding: 24px;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: #0055ff;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.link-btn:hover {
+  color: #003bcc;
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+}
+
+
+
+.content-area {
+  flex: 1;
+  padding: 32px;
+  width: 65%;
+  margin: auto;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.page-title {
+  font-size: 26px;
+  font-weight: 600;
+  color: #111;
+}
+
+.card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.04);
+  padding: 20px;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-primary {
+  background: #4b7bec;
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-light {
+  background: #eef2ff;
+  color: #334;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: none;
+}
+
+.btn-danger {
+  background: #ffe6e6;
+  color: #b00;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: none;
+}
+
+.full-width {
+  width: 100%;
 }
