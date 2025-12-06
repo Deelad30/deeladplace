@@ -4,16 +4,17 @@ async function addRecipeItem(req, res) {
   const tenantId = req.user.tenant_id;
   const productId = parseInt(req.params.productId, 10);
   const { material_id, recipe_qty, batch_qty, measurement_unit } = req.body;
-  if (!material_id || !recipe_qty) return res.status(400).json({ error: 'material_id & recipe_qty required' });
+
+  if (!material_id || !recipe_qty)
+    return res.status(400).json({ error: 'material_id & recipe_qty required' });
 
   try {
-    // Ensure product belongs to tenant (basic check)
-    // Add recipe item table if you have recipe_items table; for simplicity assume recipes table exists to hold per product items
     await db.query(
       `INSERT INTO recipes (tenant_id, product_id, material_id, recipe_qty, batch_qty, measurement_unit)
        VALUES ($1,$2,$3,$4,$5,$6)`,
       [tenantId, productId, material_id, recipe_qty, batch_qty || 1, measurement_unit || null]
     );
+
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
@@ -24,8 +25,64 @@ async function addRecipeItem(req, res) {
 async function getRecipe(req, res) {
   const tenantId = req.user.tenant_id;
   const productId = parseInt(req.params.productId, 10);
-  const result = await db.query(`SELECT * FROM recipes WHERE tenant_id = $1 AND product_id = $2`, [tenantId, productId]);
-  res.json({ ok: true, items: result.rows });
+
+  try {
+    const result = await db.query(
+      `SELECT * FROM recipes WHERE tenant_id = $1 AND product_id = $2`,
+      [tenantId, productId]
+    );
+    res.json({ ok: true, items: result.rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to load recipe' });
+  }
 }
 
-module.exports = { addRecipeItem, getRecipe };
+/* ⭐ NEW: UPDATE A RECIPE ITEM */
+async function updateRecipeItem(req, res) {
+  const tenantId = req.user.tenant_id;
+  const itemId = parseInt(req.params.itemId, 10);
+  const { material_id, recipe_qty, batch_qty, measurement_unit } = req.body;
+
+  try {
+    await db.query(
+      `UPDATE recipes
+       SET material_id = $1,
+           recipe_qty = $2,
+           batch_qty = $3,
+           measurement_unit = $4
+       WHERE id = $5 AND tenant_id = $6`,
+      [material_id, recipe_qty, batch_qty, measurement_unit, itemId, tenantId]
+    );
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Update failed' });
+  }
+}
+
+/* ⭐ NEW: DELETE A RECIPE ITEM */
+async function deleteRecipeItem(req, res) {
+  const tenantId = req.user.tenant_id;
+  const itemId = parseInt(req.params.itemId, 10);
+
+  try {
+    await db.query(
+      `DELETE FROM recipes WHERE id = $1 AND tenant_id = $2`,
+      [itemId, tenantId]
+    );
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Delete failed' });
+  }
+}
+
+module.exports = {
+  addRecipeItem,
+  getRecipe,
+  updateRecipeItem,
+  deleteRecipeItem
+};

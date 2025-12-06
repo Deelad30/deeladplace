@@ -7,5 +7,8 @@ const { requireTenant } = require('../middleware/tenant.middleware');
 
 router.post('/', auth, requireTenant, PackagingController.createPackaging);
 router.get('/', auth, requireTenant, PackagingController.getPackaging);
+router.put('/:id', auth, requireTenant, PackagingController.updatePackaging);
+router.delete('/:id', auth, requireTenant, PackagingController.deletePackaging);
+
 
 module.exports = router;

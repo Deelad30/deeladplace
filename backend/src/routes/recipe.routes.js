@@ -6,5 +6,7 @@ const RecipeController = require('../controllers/recipe.controller');
 
 router.post('/:productId/items', auth, requireTenant, RecipeController.addRecipeItem);
 router.get('/:productId', auth, requireTenant, RecipeController.getRecipe);
+router.put('/item/:itemId', auth, requireTenant, RecipeController.updateRecipeItem);
+router.delete('/item/:itemId', auth, requireTenant, RecipeController.deleteRecipeItem);
 
 module.exports = router;
