@@ -1,175 +1,203 @@
+// src/pages/ProductsDashboard.jsx
 import { useState, useEffect } from 'react';
-import { productService } from '../services/productService';
-import DashboardTiles from '../components/products/DashboardTiles';
-import ProductCharts from '../components/products/ProductCharts';
-import ProductMainGrid from '../components/products/ProductMainGrid';
 import { toast } from "react-hot-toast";
-import ConfirmModal from '../components/common/ConfirmModal';
-import ProductFormModal from '../components/products/ProductFormModal';
-import Pagination from '../components/products/Pagination';
 import Header from '../components/common/Header';
 import Sidebar from '../components/common/Sidebar';
-import ProductList from '../components/products/ProductList';
-import '../../src/styles/pages/ProductsPage.css';
+import {
+  getProducts,
+  createProduct,
+  updateProductById,
+  deleteProductById
+} from '../api/products';
+import Table from '../components/common/Table';
+import Modals from '../components/common/Modals';
+import { useNavigate } from 'react-router-dom';
+import '../styles/pages/ProductsPage.css';
 
 const ProductsDashboard = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [deleteProduct, setDeleteProduct] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [vendors, setVendors] = useState([]);
-  const [summary, setSummary] = useState({});
   const [products, setProducts] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null);
+  const [editProduct, setEditProduct] = useState(null);
 
-  const filteredVendors = vendors.map(vendor => ({
-    ...vendor,
-    products: vendor.products.filter(p =>
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.category?.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  })).filter(v => v.products.length > 0);
+  const [formData, setFormData] = useState({
+    name: "",
+    sku: "",
+    category_id: "",
+    description: ""
+  });
 
+  const navigate = useNavigate();
 
-  const fetchSummary = async () => {
-    const res = await productService.getDashboardSummary();
-    setSummary(res.summary);
-  };
-
-  const fetchProductsByVendor = async () => {
-  const res = await productService.getProductsGroupedByVendor();
-  setVendors(res.vendors); // vendors array with products nested
-   };
-
-  const fetchProducts = async (page = 1) => {
-    const res = await productService.getAllProducts(page);
-    setProducts(res.products);
-    setCurrentPage(res.page);
-    setTotalCount(res.totalCount);
-  };
+  async function loadProducts() {
+    setLoading(true);
+    try {
+      const res = await getProducts();
+      setProducts(res.data.products || []);
+    } catch (err) {
+      console.log(err);
+      toast.error('Error loading products');
+    }
+    setLoading(false);
+  }
 
   useEffect(() => {
-    fetchSummary();
-    fetchProducts();
-    fetchProductsByVendor();
+    loadProducts();
   }, []);
 
-const handleEdit = (product) => {
-  setEditingProduct(product);
-  setModalOpen(true);
-};
+  const handleSubmit = async () => {
+    try {
+      if (editProduct) {
+        await updateProductById(editProduct.id, formData);
+        toast.success("Product updated");
+      } else {
+        await createProduct(formData);
+        toast.success("Product created");
+      }
 
-const handleDelete = (vendorId, productId) => {
-
-  const vendor = vendors.find(v => v.vendor_id === vendorId);
-
-  if (!vendor) return;
-
-  const product = vendor.products.find(p => p.id === productId);
-
-  setDeleteProduct(product);
-};
-
-const confirmDelete = async () => {
-  try {
-    await productService.deleteProduct(deleteProduct.id);
-    toast.success("Product deleted!");
-
-    await fetchSummary();
-    await fetchProducts(currentPage);
-    await fetchProductsByVendor();
-  } catch {
-    toast.error("Failed to delete product");
-  }
-  setDeleteProduct(null);
-};
-
-
-  const handleModalClose = () => {
-    setEditingProduct(null);
-    setModalOpen(false);
+      setModalOpen(false);
+      loadProducts();
+    } catch (err) {
+      console.log(err);
+      toast.error("Failed to save product");
+    }
   };
 
-  const handleModalSubmit = async (productData) => {
-  setIsProcessing(true);
+  const handleEdit = (product) => {
+    setEditProduct(product);
+    setFormData({
+      name: product.name,
+      sku: product.sku,
+      category_id: product.category_id,
+      description: product.description
+    });
+    setModalOpen(true);
+  };
 
-  try {
-    if (editingProduct) {
-      await productService.updateProduct(editingProduct.id, productData);
-      toast.success("Product updated!");
-    } else {
-      await productService.createProduct(productData);
-      toast.success("Product created!");
-      await fetchProductsByVendor();
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this product?")) return;
 
+    try {
+      await deleteProductById(id);
+      toast.success("Product deleted");
+      loadProducts();
+    } catch (err) {
+      console.log(err);
+      toast.error("Failed to delete product");
     }
+  };
 
-    await fetchSummary();
-    await fetchProducts(currentPage);
-    await fetchProductsByVendor();
+const columns = [
+  { key: "name", label: "Name" },
+  { key: "sku", label: "SKU" },
+  { key: "category_id", label: "Category" },
+  {
+    key: "actions",
+    label: "Actions",
+    render: (row) => (
+      <div className="actions-cell">
+        <button
+          className="btn-outline"
+          onClick={() => navigate(`/products/${row.actions.id}/recipe`)}
+        >
+          Recipe
+        </button>
 
-    handleModalClose();
-  } catch (err) {
-    toast.error("Something went wrong");
+        <button
+          className="btn-light"
+          onClick={() => handleEdit(row.actions)}
+        >
+          Edit
+        </button>
+
+        <button
+          className="btn-danger"
+          onClick={() => handleDelete(row.actions.id)}
+        >
+          Delete
+        </button>
+      </div>
+    )
   }
-
-  setIsProcessing(false);
-};
-
+];
 
   return (
-     <div className="products-page">
-    <Header />
-    <div className="page-content">
-    <Sidebar />
-    <main  className="main-content">
-            {/* Header */}
-      <div style={{ marginTop:"28px", marginLeft:"20px" }} className="vendor-top-container">
-        <h2 className='vendor-top'>Products Dashboard</h2>
-        
-           <button className="create-btn" onClick={() => setModalOpen(true)}>Add a Product</button>
-      </div>
-    <div className="dashboard-container">
-      <DashboardTiles summary={summary} />
-         <input
-      type="text"
-      placeholder="Search products..."
-      value={searchQuery}
-      onChange={(e) => setSearchQuery(e.target.value)}
-      className="search-input-1"
-      style={{ padding: "8px 12px", marginRight: "15px", fontSize: "15px" }}
-    />
+    <div className="page-wrapper">
+      <Header />
+      <Sidebar />
 
-      <ProductMainGrid
-        vendors={filteredVendors}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
-      <Pagination
-        currentPage={currentPage}
-        totalCount={totalCount}
-        onPageChange={(page) => fetchProducts(page)}
-      />
-      {modalOpen && (
-        <ProductFormModal
-          product={editingProduct}
-          onClose={handleModalClose}
-          onSubmit={handleModalSubmit}
-        />
-      )}
-      {deleteProduct && (
-        <ConfirmModal
-          message={`Delete ${deleteProduct.name}?`}
-          onConfirm={confirmDelete}
-          onCancel={() => setDeleteProduct(null)}
-        />
-      )}
+      <main className="content-area">
 
-    </div>
-    </main>
-    </div>
+        <div className="page-header">
+          <h2 className="page-title">Products</h2>
+
+          <button
+            className="btn-primary"
+            onClick={() => {
+              setEditProduct(null);
+              setFormData({
+                name: "",
+                sku: "",
+                category_id: "",
+                description: ""
+              });
+              setModalOpen(true);
+            }}
+          >
+            + Add Product
+          </button>
+        </div>
+
+        <div className="card">
+          {loading ? (
+            <div className="loading">Loading...</div>
+          ) : (
+            <Table
+              columns={columns}
+              data={products.map(p => ({ ...p, actions: p }))}
+            />
+          )}
+        </div>
+
+      </main>
+
+      <Modals
+        open={modalOpen}
+        title={editProduct ? "Edit Product" : "New Product"}
+        onClose={() => setModalOpen(false)}
+      >
+        <div className="modal-form">
+
+          <label>Product Name</label>
+          <input
+            value={formData.name}
+            onChange={e => setFormData({ ...formData, name: e.target.value })}
+          />
+
+          <label>SKU</label>
+          <input
+            value={formData.sku}
+            onChange={e => setFormData({ ...formData, sku: e.target.value })}
+          />
+
+          <label>Category</label>
+          <input
+            value={formData.category_id}
+            onChange={e => setFormData({ ...formData, category_id: e.target.value })}
+          />
+
+          <label>Description</label>
+          <textarea
+            value={formData.description}
+            onChange={e => setFormData({ ...formData, description: e.target.value })}
+          />
+
+          <button className="btn-primary full-width" onClick={handleSubmit}>
+            {editProduct ? "Update" : "Create"}
+          </button>
+        </div>
+      </Modals>
     </div>
   );
 };

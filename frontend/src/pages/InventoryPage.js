@@ -7,6 +7,7 @@ import MaterialPurchase from '../components/inventory/MaterialPurchase';
 import SICSForm from '../components/inventory/SICSForm';
 import StockLevels from '../components/inventory/StockLevels';
 import VarianceReport from '../components/inventory/VarianceReport';
+import PackagingPage from '../components/inventory/Packaging';
 
 import '../../src/styles/pages/InventoryPage.css';
 
@@ -19,6 +20,8 @@ const InventoryPage = () => {
         return <RawMaterialsForm />;
       case 'material-purchase':
         return <MaterialPurchase />;
+      case 'packaging' :
+        return <PackagingPage />;
       case 'sics-form':
         return <SICSForm />;
       case 'stock-levels':
@@ -55,6 +58,12 @@ const InventoryPage = () => {
               onClick={() => setActiveTab('material-purchase')}   
             >
               Material Purchase
+            </button>
+              <button
+              className={`tab-button ${activeTab === 'packaging' ? 'active' : ''}`}
+              onClick={() => setActiveTab('packaging')}   
+            >
+              Packaging
             </button>
             <button
               className={`tab-button ${activeTab === 'sics-form' ? 'active' : ''}`}
