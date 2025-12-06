@@ -8,6 +8,8 @@ import SICSForm from '../components/inventory/SICSForm';
 import StockLevels from '../components/inventory/StockLevels';
 import VarianceReport from '../components/inventory/VarianceReport';
 import PackagingPage from '../components/inventory/Packaging';
+import LabourPage from '../components/inventory/LabourPage';  
+import OpexPage from '../components/inventory/OpexPage';
 
 import '../../src/styles/pages/InventoryPage.css';
 
@@ -22,6 +24,10 @@ const InventoryPage = () => {
         return <MaterialPurchase />;
       case 'packaging' :
         return <PackagingPage />;
+      case 'labour' :
+        return <LabourPage />;
+      case 'opex' :
+        return <OpexPage />;
       case 'sics-form':
         return <SICSForm />;
       case 'stock-levels':
@@ -66,24 +72,16 @@ const InventoryPage = () => {
               Packaging
             </button>
             <button
-              className={`tab-button ${activeTab === 'sics-form' ? 'active' : ''}`}
-              onClick={() => setActiveTab('sics-form')}
+              className={`tab-button ${activeTab === 'labour' ? 'active' : ''}`}
+              onClick={() => setActiveTab('labour')}
             >
-              SICS Form
+              Labour
             </button>
-
-            <button
-              className={`tab-button ${activeTab === 'stock-levels' ? 'active' : ''}`}
-              onClick={() => setActiveTab('stock-levels')}
+            <button 
+              className={`tab-button ${activeTab === 'opex' ? 'active' : ''}`}
+              onClick={() => setActiveTab('opex')}
             >
-              Stock Levels
-            </button>
-
-            <button
-              className={`tab-button ${activeTab === 'variance-report' ? 'active' : ''}`}
-              onClick={() => setActiveTab('variance-report')}
-            >
-              Variance Report
+              Opex
             </button>
           </div>
 

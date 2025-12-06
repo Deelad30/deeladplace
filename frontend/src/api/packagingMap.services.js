@@ -11,3 +11,9 @@ export const addPackagingToProduct = (body) =>
 // Delete packaging mapping for a product (optional)
 export const deleteProductPackaging = (mappingId) =>
   api.delete(`/packaging-map/${mappingId}`);
+
+// Delete packaging mapping for a product (optional)
+export const updateProductPackaging = (mappingId, body) =>
+  api.put(`/packaging-map/${mappingId}`, body);
+
+

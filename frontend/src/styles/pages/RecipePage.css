@@ -11,6 +11,7 @@
 .costing-panel {
   margin-top: 32px;
   display: flex;
+  flex-direction: column;
   gap: 24px;
 }
 
@@ -18,7 +19,7 @@
   background: #fff;
   padding: 18px;
   border-radius: 12px;
-  width: 280px;
+  width: 98%;
   box-shadow: 0 4px 18px rgba(0,0,0,0.05);
 }
 
