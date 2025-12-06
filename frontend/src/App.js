@@ -13,6 +13,7 @@ import AcceptInvite from "./pages/AcceptInvite";
 import DashboardPage from "./pages/DashboardPage";
 import POSPage from "./pages/POSPage";
 import VendorsPage from "./pages/VendorsPage";
+import RecipePage from './pages/RecipePage';
 import ProductsDashboard from "./pages/ProductsDashboard";
 import InventoryPage from "./pages/InventoryPage";
 import ExpensesPage from "./pages/ExpensesPage";
@@ -29,7 +30,6 @@ import SICProductsPage from "./pages/SIC/SICProductsPage";
 import SICRawPage from "./pages/SIC/SICRawPage";
 
 // Costing & Recipe
-import RecipePage from "./pages/Recipe/RecipePage";
 import CostingPage from "./pages/Costing/CostingPage";
 
 // Variance Pages
@@ -132,6 +132,14 @@ function App() {
             element={
               <PrivateRoute requiredSection="products">
                 <ProductsDashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/products/:id/recipe"
+            element={
+              <PrivateRoute>
+                <RecipePage />
               </PrivateRoute>
             }
           />
