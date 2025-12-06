@@ -1,15 +1,17 @@
-const db =  require('../config/database');
 const Compute = require('../services/compute.service');
 
 async function compute(req, res) {
   const tenantId = req.user.tenant_id;
   const productId = Number(req.params.productId);
-  const { marginPercent, sellingPrice } = req.body;
+
+  // Accept optional parameters from frontend
+  const { marginPercent, sellingPrice, batchSize } = req.body;
 
   try {
     const cost = await Compute.computeProductCost(productId, tenantId, {
-      marginPercent,
-      sellingPrice
+      marginPercent: marginPercent != null ? Number(marginPercent) : null,
+      sellingPrice: sellingPrice != null ? Number(sellingPrice) : null,
+      batchSize: batchSize != null ? Number(batchSize) : null
     });
 
     res.json({
@@ -17,7 +19,7 @@ async function compute(req, res) {
       cost
     });
   } catch (err) {
-    console.error(err);
+    console.error('compute error:', err);
     res.status(500).json({ error: "Costing failed" });
   }
 }

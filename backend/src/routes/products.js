@@ -12,6 +12,7 @@ const {
   updateProduct,
   deleteProduct
 } = require('../controllers/productController');
+const { getProductSettings, saveProductSettings } = require('../controllers/productSettings.controller');
 
 const auth = require('../middleware/auth.middleware');
 
@@ -34,5 +35,10 @@ router.delete('/:id', deleteProduct);      // Delete product
 router.get('/vendors', getVendors);        // List all vendors (tenant scoped)
 router.get('/grouped', getProductsByVendorGrouped); // Vendor + product grouping
 router.get('/', getProductsByVendor);      // Products by vendor_id
+// Get batch & margin
+router.get('/:id/settings', getProductSettings);
+
+// Save batch & margin
+router.post('/:id/settings', saveProductSettings);
 
 module.exports = router;
