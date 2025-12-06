@@ -13,9 +13,13 @@ exports.getPurchases = async (req, res) => {
 exports.createPurchase = async (req, res) => {
   try {
     const tenantId = req.user.tenant_id;
-    const item = await purchaseService.createPurchase(tenantId, req.body);
+    const userId = req.user.userId || req.user.id;
+
+    const item = await purchaseService.createPurchase(tenantId, req.body, userId);
+
     res.json({ ok: true, purchase: item });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ ok: false, message: err.message });
   }
 };

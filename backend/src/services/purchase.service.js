@@ -1,13 +1,13 @@
 const db = require('../config/database');
 const SQL = require('../utils/sql');
-const { recordStockMovement } = require('./stock.service');
+const { recordStockMovement, upsertStockBalance } = require('./stock.service');
 
 async function listPurchases(tenantId) {
   const res = await db.query(SQL.LIST_PURCHASES, [tenantId]);
   return res.rows;
 }
 
-async function createPurchase(tenantId, data) {
+async function createPurchase(tenantId, data, userId = null) {
   const {
     material_id,
     purchase_price,
@@ -17,6 +17,7 @@ async function createPurchase(tenantId, data) {
     measurement_unit
   } = data;
 
+  // 1️⃣ Insert purchase
   const res = await db.query(SQL.CREATE_PURCHASE, [
     tenantId,
     material_id,
@@ -27,17 +28,27 @@ async function createPurchase(tenantId, data) {
     measurement_unit
   ]);
 
-  // record stock in
+  const purchase = res.rows[0];
+
+  // 2️⃣ Compute unit cost
   const unitCost = Number(purchase_price) / Number(purchase_qty);
-  await recordStockMovement({
+
+  // 3️⃣ Record stock movement with all metadata
+  const movement = await recordStockMovement({
     tenantId,
     itemId: material_id,
     qty: purchase_qty,
     costPerUnit: unitCost,
-    movementType: 'in'
+    movementType: 'in',
+    vendorId: vendor_id,
+    reference: purchase.id,
+    createdBy: userId
   });
 
-  return res.rows[0];
+  // 4️⃣ Update stock balance
+  const stock = await upsertStockBalance(tenantId, 'material', material_id, purchase_qty, unitCost);
+
+  return { ...purchase, movement, stock };
 }
 
 module.exports = {

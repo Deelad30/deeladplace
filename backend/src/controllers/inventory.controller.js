@@ -5,32 +5,158 @@ const stockService = require('../services/stock.service');
 async function createMovement(req, res) {
   const tenantId = req.user.tenant_id;
   const userId = req.user.userId || req.user.id;
-  const { item_type, item_id, movement_type, qty, vendor_id, reference, cost_per_unit } = req.body;
+  const {
+    item_type,
+    item_id,
+    movement_type,
+    qty,
+    vendor_id = null,
+    reference = null,
+    cost_per_unit = null
+  } = req.body;
 
+  // ✅ Validate required fields
   if (!item_type || !item_id || !movement_type || qty === undefined) {
-    return res.status(400).json({ success: false, message: 'item_type,item_id,movement_type,qty required' });
+    return res.status(400).json({
+      success: false,
+      message: 'item_type, item_id, movement_type, qty are required'
+    });
   }
 
-  const total_cost = cost_per_unit ? Number(cost_per_unit) * Number(qty) : null;
-
   try {
-    const result = await db.query(
-      `INSERT INTO stock_movements
-       (tenant_id, item_type, item_id, movement_type, qty, vendor_id, reference, cost_per_unit, total_cost, created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
-      [tenantId, item_type, item_id, movement_type, qty, vendor_id || null, reference || null, cost_per_unit || null, total_cost || null, req.user.userId || req.user.userId]
+    // 1️⃣ Record the stock movement
+    const movement = await stockService.recordStockMovement({
+      tenantId,
+      itemType: item_type,
+      itemId: item_id,
+      qty,
+      movementType: movement_type,
+      costPerUnit: cost_per_unit,
+      vendorId: vendor_id,
+      reference,
+      createdBy: userId
+    });
+
+    // 2️⃣ Determine stock delta: inbound positive, outbound negative
+    const inboundTypes = ['in', 'vendor_delivery', 'purchase'];
+    const delta = inboundTypes.includes(movement_type) ? Number(qty) : -Number(qty);
+
+    // 3️⃣ Update stock balance
+    const stock = await stockService.upsertStockBalance(
+      tenantId,
+      item_type,
+      item_id,
+      delta,
+      cost_per_unit !== null ? cost_per_unit : undefined
     );
 
-    // Update stock balance: inbound = qty positive, outbound = negative
-    const delta = (movement_type === 'in' || movement_type === 'vendor_delivery') ? Number(qty) : -Number(qty);
+    // 4️⃣ Return full info
+    res.json({ success: true, movement, stock });
 
-    const stock = await stockService.upsertStockBalance(tenantId, item_type, item_id, delta, cost_per_unit === null ? undefined : cost_per_unit);
-
-    res.json({ success: true, movement: result.rows[0], stock });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Failed to create stock movement' });
   }
 }
 
-module.exports = { createMovement };
+async function issueToProduction(req, res) {
+  const tenantId = req.user.tenant_id;
+  const userId = req.user.userId || req.user.id;
+  const { items, reference } = req.body;
+
+  if (!items || !Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ success: false, message: 'Items array is required' });
+  }
+
+  try {
+    const results = [];
+
+    for (const item of items) {
+      const { item_id, item_type = 'material', qty, cost_per_unit = null } = item;
+
+      if (!item_id || qty === undefined) {
+        return res.status(400).json({ success: false, message: 'item_id and qty required for each item' });
+      }
+
+      // 1️⃣ Record stock movement (outbound)
+      const movement = await stockService.recordStockMovement({
+        tenantId,
+        itemType: item_type,
+        itemId: item_id,
+        qty,
+        movementType: 'issue', // outbound to production
+        costPerUnit: cost_per_unit,
+        reference,
+        createdBy: userId
+      });
+
+      // 2️⃣ Update stock balance
+      const stock = await stockService.upsertStockBalance(
+        tenantId,
+        item_type,
+        item_id,
+        -qty, // subtract qty from stock
+        cost_per_unit !== null ? cost_per_unit : undefined
+      );
+
+      results.push({ movement, stock });
+    }
+
+    res.json({ success: true, items: results });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Failed to issue raw materials to production' });
+  }
+}
+
+async function recordProduction(req, res) {
+  const tenantId = req.user.tenant_id;
+  const userId = req.user.userId || req.user.id;
+  const { product_id, qty, cost_per_unit = null, reference = null } = req.body;
+
+  if (!product_id || qty === undefined) {
+    return res.status(400).json({
+      success: false,
+      message: 'product_id and qty are required'
+    });
+  }
+
+  try {
+    // 1️⃣ Record movement
+    const movement = await stockService.recordStockMovement({
+      tenantId,
+      itemType: 'product',
+      itemId: product_id,
+      qty,
+      movementType: 'production_in', // inbound movement
+      costPerUnit: cost_per_unit,
+      reference,
+      createdBy: userId
+    });
+
+    // 2️⃣ Add stock to finished product inventory
+    const stock = await stockService.upsertStockBalance(
+      tenantId,
+      'product',
+      product_id,
+      qty,   // inbound
+      cost_per_unit !== null ? cost_per_unit : undefined
+    );
+
+    res.json({
+      success: true,
+      movement,
+      stock
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to record production'
+    });
+  }
+}
+
+
+module.exports = { createMovement, issueToProduction, recordProduction };
