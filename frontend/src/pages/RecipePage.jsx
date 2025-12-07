@@ -226,7 +226,9 @@ const RecipePage = () => {
   const handleSaveStandardCost = async () => {
     if (!costResult) return toast.error("Compute cost first before saving standard cost");
     try {
-      await standardize(productId);
+      console.log(marginPercent);
+      
+      await standardize(productId, { marginPercent });
       toast.success("Standard cost saved successfully!");
     } catch (err) {
       console.error(err);

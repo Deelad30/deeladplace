@@ -28,15 +28,27 @@ async function getRecipe(req, res) {
 
   try {
     const result = await db.query(
-      `SELECT * FROM recipes WHERE tenant_id = $1 AND product_id = $2`,
+      `SELECT r.id,
+              r.material_id,
+              m.name AS material_name,
+              r.recipe_qty,
+              r.batch_qty,
+              r.measurement_unit,
+              r.created_at
+       FROM recipes r
+       JOIN raw_materials m
+         ON r.material_id = m.id
+       WHERE r.tenant_id = $1 AND r.product_id = $2`,
       [tenantId, productId]
     );
+
     res.json({ ok: true, items: result.rows });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to load recipe' });
   }
 }
+
 
 /* ⭐ NEW: UPDATE A RECIPE ITEM */
 async function updateRecipeItem(req, res) {

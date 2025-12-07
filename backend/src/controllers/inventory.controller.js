@@ -112,51 +112,52 @@ async function issueToProduction(req, res) {
 async function recordProduction(req, res) {
   const tenantId = req.user.tenant_id;
   const userId = req.user.userId || req.user.id;
-  const { product_id, qty, cost_per_unit = null, reference = null } = req.body;
+  const { product_id, qty, reference } = req.body;
 
-  if (!product_id || qty === undefined) {
-    return res.status(400).json({
-      success: false,
-      message: 'product_id and qty are required'
-    });
+  if (!product_id || !qty) {
+    return res.status(400).json({ success: false, message: 'product_id and qty are required' });
   }
 
   try {
-    // 1️⃣ Record movement
-    const movement = await stockService.recordStockMovement({
-      tenantId,
-      itemType: 'product',
-      itemId: product_id,
-      qty,
-      movementType: 'production_in', // inbound movement
-      costPerUnit: cost_per_unit,
-      reference,
-      createdBy: userId
-    });
-
-    // 2️⃣ Add stock to finished product inventory
-    const stock = await stockService.upsertStockBalance(
-      tenantId,
-      'product',
-      product_id,
-      qty,   // inbound
-      cost_per_unit !== null ? cost_per_unit : undefined
+    // Check if product has a recipe
+    const recipeRes = await db.query(
+      `SELECT COUNT(*) AS cnt FROM recipes WHERE tenant_id = $1 AND product_id = $2`,
+      [tenantId, product_id]
     );
 
-    res.json({
-      success: true,
-      movement,
-      stock
-    });
+    if (Number(recipeRes.rows[0].cnt) === 0) {
+      return res.status(400).json({ success: false, message: 'Cannot record production: Product has no recipe defined' });
+    }
+
+    // Fetch latest standard cost (TCOP) for this product
+    const costRes = await db.query(
+      `SELECT TCOP FROM standard_costs 
+       WHERE tenant_id = $1 AND product_id = $2
+       ORDER BY id DESC LIMIT 1`,
+      [tenantId, product_id]
+    );
+
+    const cost_per_unit = costRes.rows[0] ? Number(costRes.rows[0].tcop) : 0;
+    const total_cost = cost_per_unit * qty;     
+
+    // Record production
+    const movementRes = await db.query(
+      `INSERT INTO stock_movements 
+       (tenant_id, item_type, item_id, movement_type, qty, cost_per_unit, total_cost, created_by)
+       VALUES ($1, 'product', $2, 'production_in', $3, $4, $5, $6)
+       RETURNING *`,
+      [tenantId, product_id, qty, cost_per_unit, total_cost, userId]
+    );
+
+    res.json({ success: true, movement: movementRes.rows[0] });
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to record production'
-    });
+    res.status(500).json({ success: false, message: 'Failed to record production' });
   }
 }
+
+
 
 
 module.exports = { createMovement, issueToProduction, recordProduction };

@@ -20,6 +20,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchSalesSummary();
+     // eslint-disable-next-line 
   }, []);
 
 const fetchSalesSummary = async () => {
@@ -90,6 +91,8 @@ const fetchSalesSummary = async () => {
       today,
       this_month
     });
+    console.log(summary);
+    
 
   } catch (error) {
     console.error("Dashboard summary error:", error);
@@ -160,8 +163,8 @@ const fetchSalesSummary = async () => {
           <PieChart>
             <Pie
               data={[
-                { name: "Revenue", value: summary.this_month.total_revenue || 0 },
-                { name: "Commission", value: summary.this_month.total_commission || 0 }
+                { name: "Revenue", value: summary.this_month.revenue || 0 },
+                { name: "Commission", value: summary.this_month.commission || 0 }
               ]}
               dataKey="value"
               nameKey="name"

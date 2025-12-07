@@ -2,47 +2,178 @@
 const db = require('../config/database');
 
 // Raw SIC
+// RAW MATERIAL SIC (with variance)
 async function submitRawSIC(req, res) {
   const tenantId = req.user.tenant_id;
-  const { material_id, date, opening_qty = 0, issues_qty = 0, waste_qty = 0, closing_qty = 0, override_reason } = req.body;
+  const userId = req.user.userId || req.user.id;
 
-  const computed_usage = Number(opening_qty) + Number(issues_qty) - Number(waste_qty) - Number(closing_qty);
+  const {
+    material_id,
+    date,
+    opening_qty = 0,
+    issues_qty = 0,
+    waste_qty = 0,
+    closing_qty = 0,
+    override_reason = null
+  } = req.body;
 
   try {
-    const result = await db.query(
-      `INSERT INTO sic_raw_materials
-       (tenant_id, material_id, date, opening_qty, issues_qty, waste_qty, closing_qty, computed_usage, override_reason, created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
-      [tenantId, material_id, date, opening_qty, issues_qty, waste_qty, closing_qty, computed_usage, override_reason || null, req.user.userId || req.user.userId]
+    // 1️⃣ Get system-calculated usage (from issues to production)
+    const sysRes = await db.query(
+      `SELECT COALESCE(SUM(qty), 0) AS system_usage
+       FROM stock_movements
+       WHERE tenant_id = $1
+         AND item_type = 'material'
+         AND item_id = $2
+         AND movement_type = 'issue'
+         AND DATE(created_at) = $3`,
+      [tenantId, material_id, date]
     );
 
-    // Auto carry closing -> create/update tomorrow opening could be handled in batch; we will not auto-create rows but provide helper API to fetch last closing
+    const system_usage = Number(sysRes.rows[0].system_usage || 0);
+
+    // 2️⃣ Expected usage from SIC formula
+    const expected_usage =
+      Number(opening_qty) +
+      Number(issues_qty) -
+      (Number(closing_qty) + Number(waste_qty));
+
+    // 3️⃣ Variance = expected - system
+    const variance = expected_usage - system_usage;
+
+    // 4️⃣ Get cost per unit
+    const costRes = await db.query(
+      `SELECT COALESCE(AVG(cost_per_unit), 0) AS cost
+       FROM stock_movements
+       WHERE tenant_id = $1
+         AND item_type = 'material'
+         AND item_id = $2
+         AND cost_per_unit IS NOT NULL`,
+      [tenantId, material_id]
+    );
+
+    const cost_per_unit = Number(costRes.rows[0].cost || 0);
+    const variance_value = variance * cost_per_unit;
+
+    // 5️⃣ Insert SIC row
+    const result = await db.query(
+      `INSERT INTO sic_raw_materials
+       (tenant_id, material_id, date,
+        opening_qty, issues_qty, waste_qty, closing_qty,
+        expected_usage, system_usage, variance, variance_value,
+        override_reason, created_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+       RETURNING *`,
+      [
+        tenantId,
+        material_id,
+        date,
+        opening_qty,
+        issues_qty,
+        waste_qty,
+        closing_qty,
+        expected_usage,
+        system_usage,
+        variance,
+        variance_value,
+        override_reason,
+        userId
+      ]
+    );
+
     res.json({ success: true, sic: result.rows[0] });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ success: false, message: 'Failed to submit raw SIC' });
+    res.status(500).json({
+      success: false,
+      message: 'Failed to submit raw SIC'
+    });
   }
 }
 
 // Product SIC
+// PRODUCT SIC (with variance)
 async function submitProductSIC(req, res) {
   const tenantId = req.user.tenant_id;
-  const { product_id, date, opening_qty = 0, issues_qty = 0, waste_qty = 0, closing_qty = 0, override_reason } = req.body;
+  const userId = req.user.userId || req.user.id;
 
-  const computed_sales_qty = Number(opening_qty) + Number(issues_qty) - Number(waste_qty) - Number(closing_qty);
+  const {
+    product_id,
+    date,
+    opening_qty = 0,
+    issues_qty = 0,   // produced qty
+    waste_qty = 0,
+    closing_qty = 0,
+    override_reason = null
+  } = req.body;
 
   try {
+    // 1️⃣ Get system-calculated sales
+    const sysRes = await db.query(
+      `SELECT COALESCE(SUM(qty), 0) AS system_sales
+       FROM pos_sales
+       WHERE tenant_id = $1
+         AND product_id = $2
+         AND DATE(created_at) = $3`,
+      [tenantId, product_id, date]
+    );
+
+    const system_sales = Number(sysRes.rows[0].system_sales || 0);
+
+    // 2️⃣ Expected sales from SIC formula
+    const expected_sales =
+      Number(opening_qty) +
+      Number(issues_qty) -
+      (Number(closing_qty) + Number(waste_qty));
+
+    // 3️⃣ Variance
+    const variance = expected_sales - system_sales;
+
+    // 4️⃣ Get TCOP (standard cost)
+    const costRes = await db.query(
+      `SELECT tcop
+       FROM standard_costs
+       WHERE tenant_id = $1 AND product_id = $2
+       ORDER BY id DESC LIMIT 1`,
+      [tenantId, product_id]
+    );
+
+    const tcop = Number(costRes.rows[0]?.tcop || 0);
+    const variance_value = variance * tcop;
+
+    // 5️⃣ Insert SIC row
     const result = await db.query(
       `INSERT INTO sic_products
-       (tenant_id, product_id, date, opening_qty, issues_qty, waste_qty, closing_qty, computed_sales_qty, override_reason, created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
-      [tenantId, product_id, date, opening_qty, issues_qty, waste_qty, closing_qty, computed_sales_qty, override_reason || null, req.user.userId || req.user.userId]
+       (tenant_id, product_id, date,
+        opening_qty, issues_qty, waste_qty, closing_qty,
+        expected_sales, system_sales, variance, variance_value,
+        override_reason, created_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+       RETURNING *`,
+      [
+        tenantId,
+        product_id,
+        date,
+        opening_qty,
+        issues_qty,
+        waste_qty,
+        closing_qty,
+        expected_sales,
+        system_sales,
+        variance,
+        variance_value,
+        override_reason,
+        userId
+      ]
     );
 
     res.json({ success: true, sic: result.rows[0] });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ success: false, message: 'Failed to submit product SIC' });
+    res.status(500).json({
+      success: false,
+      message: 'Failed to submit product SIC'
+    });
   }
 }
 

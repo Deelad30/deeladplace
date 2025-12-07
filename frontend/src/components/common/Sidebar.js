@@ -17,7 +17,8 @@ import {
   faFileLines,
   faListCheck,
   faBowlFood,
-  faUtensils
+  faUtensils,
+  faSliders,
 } from "@fortawesome/free-solid-svg-icons";
 
 import "../../styles/components/Sidebar.css";
@@ -44,8 +45,10 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
     { path: "/sic/products", label: "SIC Products", icon: faBowlFood, key: "sic_product" },
     { path: "/sic/raw", label: "SIC Raw Materials", icon: faUtensils, key: "sic_raw" },
     { path: "/costing", label: "Costing", icon: faListCheck, key: "costing" },
-    { path: "/recipe", label: "Recipe", icon: faUtensils, key: "recipes" }
+    { path: "/recipe", label: "Recipe", icon: faUtensils, key: "recipes" },
+    { path: "/stocks-movement", label: "Stocks Movement", icon: faSliders, key: "stocks" }
   ];
+
 
   return (
     <>

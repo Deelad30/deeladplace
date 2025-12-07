@@ -19,6 +19,7 @@ import InventoryPage from "./pages/InventoryPage";
 import ExpensesPage from "./pages/ExpensesPage";
 import ReportsPage from "./pages/ReportPage";
 import Checkout from "./pages/Checkout";
+import Stocks from "./pages/Stocks";
 
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaystackCallback from "./pages/PaystackCallBack";
@@ -144,6 +145,15 @@ function App() {
             }
           />
 
+          {/* Stocks */}
+          <Route
+            path="/stocks-movement"
+            element={
+              <PrivateRoute>
+                <Stocks />
+              </PrivateRoute>
+            }
+          />
           {/* Inventory */}
           <Route
             path="/inventory"

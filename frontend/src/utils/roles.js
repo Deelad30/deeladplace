@@ -42,7 +42,8 @@ export const ROLE_PERMISSIONS = {
     sic_product: true,
     sic_raw: true,
     costing: true,
-    recipes: true
+    recipes: true,
+    stocks: true
   },
 
   manager: {

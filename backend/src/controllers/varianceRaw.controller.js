@@ -1,62 +1,98 @@
+// controllers/varianceRaw.controller.js
 const db = require("../config/database");
-const SQL = require("../utils/sql");
 
 exports.getRawMaterialVariance = async (req, res) => {
   try {
     const tenantId = req.user.tenant_id;
-    const { start, end } = req.query;
+    const { start_date, end_date } = req.query;
 
-    const expected = await db.query(SQL.GET_EXPECTED_MATERIAL_USAGE, [
-      tenantId,
-      start,
-      end,
-    ]);
+    const dateFilterPOS = start_date && end_date
+      ? `AND DATE(ps.created_at) BETWEEN '${start_date}' AND '${end_date}'`
+      : "";
 
-    const actual = await db.query(SQL.GET_ACTUAL_MATERIAL_USAGE, [
-      tenantId,
-      start,
-      end,
-    ]);
+    const dateFilterSIC = start_date && end_date
+      ? `AND DATE(sr.date) BETWEEN '${start_date}' AND '${end_date}'`
+      : "";
 
-    const actualMap = {};
-    actual.rows.forEach(a => actualMap[a.material_id] = Number(a.actual_usage));
+    const sql = `
+      SELECT
+        m.id AS material_id,
+        m.name AS material_name,
 
-    let results = [];
+        -- EXPECTED usage (recipe × product sales)
+        COALESCE((
+          SELECT SUM(ri.qty * ps.qty)
+          FROM recipe_items ri
+          JOIN pos_sales ps ON ps.product_id = ri.product_id
+          WHERE ri.material_id = m.id
+            AND ps.tenant_id = $1
+            ${dateFilterPOS}
+        ), 0) AS expected_usage,
 
-    for (const row of expected.rows) {
-      const materialId = row.material_id;
+        -- ACTUAL usage (from SIC raw)
+        COALESCE((
+          SELECT SUM(sr.computed_usage)
+          FROM sic_raw_materials sr
+          WHERE sr.material_id = m.id
+            AND sr.tenant_id = $1
+            ${dateFilterSIC}
+        ), 0) AS sic_actual_usage,
 
-      const unitCostRes = await db.query(SQL.GET_MATERIAL_UNIT_COST, [
-        materialId,
-        tenantId,
-      ]);
+        -- SYSTEM usage (issue to production)
+        COALESCE((
+          SELECT SUM(sm.qty)
+          FROM stock_movements sm
+          WHERE sm.item_type = 'material'
+            AND sm.item_id = m.id
+            AND sm.tenant_id = $1
+            AND sm.movement_type = 'issue'
+            ${start_date && end_date ? `AND DATE(sm.created_at) BETWEEN '${start_date}' AND '${end_date}'` : ""}
+        ), 0) AS system_actual_usage,
 
-      let unitCost = 0;
-      if (unitCostRes.rows.length > 0) {
-        const u = unitCostRes.rows[0];
-        unitCost = Number(u.purchase_price) / Number(u.purchase_qty);
-      }
+        -- Weighted average cost
+        (
+          SELECT average_cost
+          FROM stock_balance sb
+          WHERE sb.material_id = m.id
+            AND sb.tenant_id = $1
+            AND sb.item_type = 'material'
+          LIMIT 1
+        ) AS average_cost
+      FROM materials m
+      WHERE m.tenant_id = $1;
+    `;
 
-      const expected_usage = Number(row.expected_usage);
-      const actual_usage = Number(actualMap[materialId] || 0);
-      const variance_qty = expected_usage - actual_usage;
-      const variance_value = variance_qty * unitCost;
+    const result = await db.query(sql, [tenantId]);
 
-      results.push({
-        material_id: materialId,
+    const items = result.rows.map(row => {
+      const expected = Number(row.expected_usage);
+      const sicActual = Number(row.sic_actual_usage || 0);
+      const systemActual = Number(row.system_actual_usage || 0);
+
+      // You can choose which "actual" to use
+      const actual = Math.max(sicActual, systemActual); // best practice
+
+      const varianceQty = actual - expected;
+      const unitCost = Number(row.average_cost || 0);
+
+      return {
+        material_id: row.material_id,
         material_name: row.material_name,
-        expected_usage,
-        actual_usage,
+
+        expected_usage: expected,
+        actual_usage_sic: sicActual,
+        actual_usage_system: systemActual,
+        actual_usage: actual,
+
+        variance_qty: varianceQty,
         unit_cost: unitCost,
-        variance_qty,
-        variance_value,
-      });
-    }
+        variance_value: varianceQty * unitCost
+      };
+    });
 
-    res.json({ ok: true, items: results });
-
+    return res.json({ ok: true, items });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ ok: false, message: "Error computing raw variance" });
+    return res.status(500).json({ ok: false, message: "Error computing raw variance" });
   }
 };

@@ -1,7 +1,8 @@
 // src/pages/ProductsDashboard.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from "react-hot-toast";
 import Header from '../components/common/Header';
+import { vendorService } from '../services/vendorService';
 import Sidebar from '../components/common/Sidebar';
 import {
   getProducts,
@@ -16,17 +17,39 @@ import '../styles/pages/ProductsPage.css';
 
 const ProductsDashboard = () => {
   const [products, setProducts] = useState([]);
+  const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editProduct, setEditProduct] = useState(null);
 
-  const [formData, setFormData] = useState({
-    name: "",
-    sku: "",
-    category_id: "",
-    description: ""
-  });
+const [formData, setFormData] = useState({
+  name: "",
+  sku: "",
+  category_id: 1, // default
+  description: "",
+  commission: "",  // optional
+   vendor_id: ""
+});
+
+const fetchVendors = useCallback(async () => {
+  try {
+    const response = await vendorService.getAllVendors();    
+    if (response.data.success) {
+      const sortedVendors = response.data.vendors.sort((a, b) => a.id - b.id);
+      setVendors(sortedVendors);
+      console.log(sortedVendors);
+      
+    } else {
+      setError('Failed to fetch vendors');
+    }
+  } catch (err) {
+    console.error(err);
+    setError('Error fetching vendors');
+  } finally {
+    setLoading(false);
+  }
+}, []);
 
   const navigate = useNavigate();
 
@@ -44,34 +67,55 @@ const ProductsDashboard = () => {
 
   useEffect(() => {
     loadProducts();
-  }, []);
+    fetchVendors();
+  }, [fetchVendors]);
+
 
   const handleSubmit = async () => {
-    try {
-      if (editProduct) {
-        await updateProductById(editProduct.id, formData);
-        toast.success("Product updated");
-      } else {
-        await createProduct(formData);
-        toast.success("Product created");
-      }
+  try {
+    const dataToSend = {
+      ...formData,
+      category_id: formData.category_id || 1,
+      vendor_id: formData.vendor_id ? Number(formData.vendor_id) : null,
+      custom_commission: parseFloat(formData.commission) || 0, // map commission to custom_commission
 
-      setModalOpen(false);
-      loadProducts();
-    } catch (err) {
-      console.log(err);
-      toast.error("Failed to save product");
+    };
+
+    // remove commission since backend does not recognize it
+    delete dataToSend.commission;
+
+    if (editProduct) {
+      await updateProductById(editProduct.id, dataToSend);
+      toast.success("Product updated");
+    } else {
+      await createProduct(dataToSend);
+      toast.success("Product created");
     }
-  };
+
+    setModalOpen(false);
+    loadProducts();
+  } catch (err) {
+    console.log(formData);
+    console.log(err);
+    toast.error("Failed to save product");
+  }
+};
+
+
 
   const handleEdit = (product) => {
+    console.log(product);
+    
     setEditProduct(product);
-    setFormData({
-      name: product.name,
-      sku: product.sku,
-      category_id: product.category_id,
-      description: product.description
-    });
+setFormData({
+  name: product.name,
+  sku: product.sku,
+  category_id: 1,
+  description: product.description,
+  commission: product.commission || "",
+  vendor_id: product.vendor_id || ""
+});
+
     setModalOpen(true);
   };
 
@@ -162,42 +206,78 @@ const columns = [
 
       </main>
 
-      <Modals
-        open={modalOpen}
-        title={editProduct ? "Edit Product" : "New Product"}
-        onClose={() => setModalOpen(false)}
-      >
-        <div className="modal-form">
+<Modals
+  open={modalOpen}
+  title={editProduct ? "Edit Product" : "New Product"}
+  onClose={() => setModalOpen(false)}
+>
+  <div className="modal-form">
 
-          <label>Product Name</label>
-          <input
-            value={formData.name}
-            onChange={e => setFormData({ ...formData, name: e.target.value })}
-          />
+    <label>Product Name</label>
+    <input
+      value={formData.name}
+      onChange={e => setFormData({ ...formData, name: e.target.value })}
+    />
 
-          <label>SKU</label>
-          <input
-            value={formData.sku}
-            onChange={e => setFormData({ ...formData, sku: e.target.value })}
-          />
+    <label>SKU</label>
+    <input
+      value={formData.sku}
+      onChange={e => setFormData({ ...formData, sku: e.target.value })}
+    />
 
-          <label>Category</label>
-          <input
-            value={formData.category_id}
-            onChange={e => setFormData({ ...formData, category_id: e.target.value })}
-          />
+    <label>Commission (optional)</label>
+    <input
+      type="number"
+      placeholder="Enter commission"
+      value={formData.commission || ""}
+      onChange={e => setFormData({ ...formData, commission: e.target.value })}
+    />
 
-          <label>Description</label>
-          <textarea
-            value={formData.description}
-            onChange={e => setFormData({ ...formData, description: e.target.value })}
-          />
+    <label>Vendor</label>
+<select
+  value={formData.vendor_id}
+  onChange={(e) =>
+    setFormData({ ...formData, vendor_id: e.target.value })
+  }
+  style={{
+    width: "100%",
+    padding: "10px",
+    fontSize: "14px",
+    borderRadius: "4px",
+    border: "1px solid #ccc",
+    marginBottom: "12px"
+  }}
+>
+  <option value="">Select Vendor</option>
+  {vendors.map((vendor) => (
+    <option key={vendor.id} value={vendor.id}>
+      {vendor.name}
+    </option>
+  ))}
+</select>
 
-          <button className="btn-primary full-width" onClick={handleSubmit}>
-            {editProduct ? "Update" : "Create"}
-          </button>
-        </div>
-      </Modals>
+
+    <label>Description</label>
+    <textarea
+      value={formData.description}
+      onChange={e => setFormData({ ...formData, description: e.target.value })}
+      style={{
+        width: "100%",
+        padding: "10px",
+        fontSize: "14px",
+        borderRadius: "4px",
+        border: "1px solid #ccc",
+        minHeight: "80px",
+        resize: "vertical"
+      }}
+    />
+
+    <button className="btn-primary full-width" onClick={handleSubmit}>
+      {editProduct ? "Update" : "Create"}
+    </button>
+  </div>
+</Modals>
+
     </div>
   );
 };

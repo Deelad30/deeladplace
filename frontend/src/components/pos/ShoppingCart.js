@@ -2,6 +2,8 @@ import React from 'react';
 import { formatCurrency } from '../../utils/formatters';
 
 const ShoppingCart = ({ cart, onUpdateQuantity, onRemoveItem, totals, onContinue, processing, disabled }) => {
+  console.log(totals);
+    const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
   
   return (
     <div className="shopping-cart">
@@ -16,7 +18,7 @@ const ShoppingCart = ({ cart, onUpdateQuantity, onRemoveItem, totals, onContinue
               <div key={item.id} className="cart-item">
                 <div className="item-info">
                   <span className="item-name">{item.name}</span>
-                  <span className="item-price">{formatCurrency(+item.commission + +item.vendor_price)}</span>
+                  <span className="item-price">{formatCurrency(+item.commission + +item.selling_price)}</span>
                 </div>
                 <div className="item-controls">
                   <div className="quantity-controls">
@@ -38,15 +40,15 @@ const ShoppingCart = ({ cart, onUpdateQuantity, onRemoveItem, totals, onContinue
           <div className="cart-totals">
             <div className="total-line">
               <span>Subtotal:</span>
-              <span>{formatCurrency(totals.subtotal)}</span>
+              <span>{formatCurrency(round(totals.totalSellingPrice))}</span>
             </div>
             <div className="total-line">
               <span>Commission:</span>
-              <span>{formatCurrency(totals.commission)}</span>
+              <span>{formatCurrency(round(totals.totalCommission))}</span>
             </div>
             <div className="total-line grand-total">
               <span>Total:</span>
-              <span>{formatCurrency(totals.total)}</span>
+              <span>{formatCurrency(round(totals.total))}</span>
             </div>
           </div>
 

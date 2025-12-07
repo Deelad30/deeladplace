@@ -6,5 +6,6 @@ const { requireTenant } = require('../middleware/tenant.middleware');
 
 router.post('/sale', auth, requireTenant, pos.recordSale);
 router.post('/close-shift', auth, requireTenant, pos.closeShift);
+router.post('/open-shift', auth, requireTenant, pos.openShift); 
 
 module.exports = router;
