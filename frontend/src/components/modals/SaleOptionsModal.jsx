@@ -12,13 +12,14 @@ const SaleOptionsModal = ({ visible, onClose, onFinish, totals }) => {
   const [notification, setNotification] = useState(null); // { message: '', type: 'error'|'success' }
 
 
+  const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
   const showNotification = (message, type = "error") => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 3000);
   };
 
 const handleFinish = () => {
-  const saleTotal = totals.total;
+  const saleTotal = round(totals.total);
 
   if (paymentType === "multiple") {
     const paymentBreakdown = [
@@ -46,6 +47,10 @@ const handleFinish = () => {
         return;
       }
     }
+    console.log(totalPaid);
+    console.log(saleTotal);
+    
+    
 
     if (totalPaid > saleTotal) {
       showNotification("Total payment cannot exceed the sale total.", "error");
@@ -100,7 +105,7 @@ const handleFinish = () => {
           <h3>Complete Sale</h3>
 
           <div className="sale-total">
-            <strong>Total Sale:</strong> ₦{totals.total.toLocaleString()}
+          <strong>Total Sale:</strong> ₦{round(totals.total).toLocaleString()}
           </div>
 
           <div className="modal-content">

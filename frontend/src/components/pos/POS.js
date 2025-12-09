@@ -280,8 +280,8 @@ const finishSale = async (options) => {
       const vendorName = item.vendor_name || item.vendor || 'Vendor';
       const qty = item.quantity || 1;
     const price =
-  (Number(item.selling_price) || 0) +
-  (Number(item.custom_commission) || 0);
+  (Number(round(item.selling_price)) || 0) +
+  (Number(round(item.custom_commission)) || 0);
       const lineTotal = (price * qty);
       // item line (name on first line, vendor on second, qty & price on right)
       return `
@@ -298,9 +298,20 @@ const finishSale = async (options) => {
       `;
     }).join('');
 
-    const paymentHtml = (sale.payment && Array.isArray(sale.payment.breakdown) && sale.payment.breakdown.length)
-      ? sale.payment.breakdown.map(p => `<div class="pay-row"><div class="pay-method">${escapeHtml(capitalize(p.method))}</div><div class="pay-amt">${currency(p.amount)}</div></div>`).join('')
-      : `<div class="pay-row"><div class="pay-method">${escapeHtml(capitalize(sale.payment?.type || 'Cash'))}</div><div class="pay-amt">${currency(sale.totals.total)}</div></div>`;
+    console.log("Sale object:", sale);
+
+const paymentHtml = (sale.payment && Array.isArray(sale.payment.breakdown) && sale.payment.breakdown.length)
+  ? sale.payment.breakdown.map(p => {
+      const amtRounded = round(Number(p.amount)); // round first, make sure it’s a number
+      return `<div class="pay-row">
+                <div class="pay-method">${escapeHtml(capitalize(p.method))}</div>
+                <div class="pay-amt">${currency(amtRounded)}</div>
+              </div>`;
+    }).join('')
+  : `<div class="pay-row">
+        <div class="pay-method">${escapeHtml(capitalize(sale.payment?.type || 'Cash'))}</div>
+        <div class="pay-amt">${currency(round(sale.totals.total))}</div>
+      </div>`;
 
     // Build HTML
     const html = `
@@ -390,7 +401,7 @@ const finishSale = async (options) => {
 
             <div class="totals">
 
-              <div class="row" style="font-weight:700;"><div>TOTAL</div><div>${currency(sale.totals.total)}</div></div>
+              <div class="row" style="font-weight:700;"><div>TOTAL</div><div>${currency(round(sale.totals.total))}</div></div>
             </div>
 
             <div class="sep"></div>
