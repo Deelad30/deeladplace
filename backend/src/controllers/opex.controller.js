@@ -3,10 +3,10 @@ const db = require('../config/database');
 // CREATE OPEX
 exports.createOpex = async (req, res) => {
   const tenantId = req.user.tenant_id;
-  const { name, allocation_mode, amount, percentage_value, effective_from, effective_to } = req.body;
+  const { name, allocation_mode, amount, percentage_value, estimated_monthly_sales, effective_from, effective_to } = req.body;
 
-  if (!name || !allocation_mode) {
-    return res.status(400).json({ success: false, message: "name and allocation_mode required" });
+  if (!name || !allocation_mode || !estimated_monthly_sales) {
+    return res.status(400).json({ success: false, message: "name and allocation_mode and estimated_monthly_sales required" });
   }
 
   if (allocation_mode === "fixed" && !amount) {
@@ -20,10 +20,10 @@ exports.createOpex = async (req, res) => {
   try {
     const result = await db.query(
       `INSERT INTO opex_items
-       (tenant_id, name, amount, allocation_mode, percentage_value, effective_from, effective_to)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)
+       (tenant_id, name, amount, allocation_mode, percentage_value, estimated_monthly_sales, effective_from, effective_to)
+       VALUES ($1,$2,$3,$4,$5,$6,$7, $8)
        RETURNING *`,
-      [tenantId, name, amount, allocation_mode, percentage_value, effective_from, effective_to]
+      [tenantId, name, amount, allocation_mode, percentage_value, estimated_monthly_sales, effective_from, effective_to]
     );
 
     res.json({ success: true, opex: result.rows[0] });
@@ -54,7 +54,7 @@ exports.getOpex = async (req, res) => {
 exports.updateOpex = async (req, res) => {
   const tenantId = req.user.tenant_id;
   const opexId = Number(req.params.id);
-  const { name, allocation_mode, amount, percentage_value, effective_from, effective_to } = req.body;
+  const { name, allocation_mode, amount, percentage_value, estimated_monthly_sales, effective_from, effective_to } = req.body;
 
   if (!name || !allocation_mode) {
     return res.status(400).json({ success: false, message: "name and allocation_mode required" });
@@ -71,10 +71,10 @@ exports.updateOpex = async (req, res) => {
   try {
     const result = await db.query(
       `UPDATE opex_items
-       SET name=$1, allocation_mode=$2, amount=$3, percentage_value=$4, effective_from=$5, effective_to=$6
-       WHERE id=$7 AND tenant_id=$8
+       SET name=$1, allocation_mode=$2, amount=$3, percentage_value=$4, estimated_monthly_sales=$5, effective_from=$6, effective_to=$7
+       WHERE id=$8 AND tenant_id=$9
        RETURNING *`,
-      [name, allocation_mode, amount, percentage_value, effective_from, effective_to, opexId, tenantId]
+      [name, allocation_mode, amount, percentage_value, estimated_monthly_sales, effective_from, effective_to, opexId, tenantId]
     );
 
     if (!result.rows.length) {
