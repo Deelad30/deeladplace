@@ -27,14 +27,15 @@ const GET_PACKAGING_FOR_PRODUCT =  `
   WHERE pp.product_id = $1 AND pp.tenant_id = $2
 `;
 
-const GET_LABOUR = `
-  SELECT amount FROM labour_costs WHERE tenant_id = $1
-`;
+const GET_LABOUR = `SELECT amount, estimated_monthly_sales, start_date, end_date
+FROM labour_costs
+WHERE tenant_id = $1`;
+
 
 const GET_OPEX = `
-  SELECT name, amount, allocation_mode, percentage_value
-  FROM opex_items
-  WHERE tenant_id = $1
+SELECT name, amount, estimated_monthly_sales, allocation_mode, percentage_value, effective_from, effective_to
+FROM opex_items
+WHERE tenant_id = $1
 `;
 
 const GET_LATEST_STANDARD = `

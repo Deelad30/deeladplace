@@ -25,7 +25,7 @@ async function computeRecipeCost(productId, tenantId) {
 
   for (const item of items) {
     const unitCost = await getMaterialUnitCost(item.material_id, tenantId);
-    const itemCostForBatch = unitCost * Number(item.recipe_qty); // cost contributed to batch by that material
+    const itemCostForBatch = unitCost * Number(item.recipe_qty);
     totalRecipeCost += itemCostForBatch;
 
     components.push({
@@ -56,8 +56,8 @@ async function computePackagingCost(productId, tenantId) {
   return total;
 }
 
-// ---------- LABOUR COST (total allocated -> per unit) ----------
-async function computeLabourCost(tenantId, batchSize) {
+// ---------- LABOUR COST (per unit) ----------
+async function computeLabourCost(tenantId) {
   const res = await db.query(SQL.GET_LABOUR, [tenantId]);
   const rows = res.rows || [];
   if (!rows.length) return 0;
@@ -71,42 +71,44 @@ async function computeLabourCost(tenantId, batchSize) {
 
   if (!active.length) return 0;
 
-  const totalLabour = active.reduce((s, x) => s + Number(x.amount), 0);
-  // Protect division by zero:
-  const bs = Number(batchSize) || 1;
-  return totalLabour / bs;
+  let totalLabour = 0;
+  for (const l of active) {
+    const amount = Number(l.amount) || 0;
+    const estSales = Number(l.estimated_monthly_sales) || 1; // protect division by zero
+    const perUnit = amount / estSales;
+    totalLabour += perUnit;
+  }
+  return totalLabour; // already per unit
 }
 
 // ---------- OPEX (per unit) ----------
-async function computeOpex(tenantId, preOpexCOGS, batchSize) {
+async function computeOpex(tenantId, preOpexCOGS) {
   const res = await db.query(SQL.GET_OPEX, [tenantId]);
   const rows = res.rows || [];
   if (!rows.length) return 0;
 
   const today = new Date();
-  let fixedTotal = 0;
-  let percentTotal = 0;
+  let totalOpex = 0;
+  console.log(rows);
+  
 
   for (const o of rows) {
-    const from = o.effective_from ? new Date(o.effective_from) : null;
-    const to = o.effective_to ? new Date(o.effective_to) : null;
-    const active = (!from || today >= from) && (!to || today <= to);
-    if (!active) continue;
+  const estSales = Number(o.estimated_monthly_sales) || 1;
 
-    if (o.allocation_mode === 'fixed') {
-      fixedTotal += Number(o.amount || 0);
-    } else if (o.allocation_mode === 'percent_of_cogs') {
-      percentTotal += (Number(o.percentage_value || 0) / 100) * preOpexCOGS;
-    }
+  if (o.allocation_mode === 'fixed') {
+    const perUnit = (Number(o.amount) || 0) / estSales;
+    console.log(`OPEX row: name=${o.name}, amount=${o.amount}, estSales=${estSales}, perUnit=${perUnit}`);
+    totalOpex += perUnit;
+  } else if (o.allocation_mode === 'percent_of_cogs') {
+    const perUnit = (Number(o.percentage_value || 0) / 100) * preOpexCOGS;
+    totalOpex += perUnit;
   }
-
-  const bs = Number(batchSize) || 1;
-  return (fixedTotal + percentTotal) / bs;
+}
+  return totalOpex;
 }
 
-// ---------- MAIN ---------- 
+// ---------- MAIN ----------
 async function computeProductCost(productId, tenantId, options = {}) {
-  // options: { batchSize, marginPercent, sellingPrice }
   const batchSize = options.batchSize && Number(options.batchSize) > 0 ? Number(options.batchSize) : 1;
 
   // 1) recipe total for batch + components
@@ -117,14 +119,14 @@ async function computeProductCost(productId, tenantId, options = {}) {
   const totalPackagingCost = await computePackagingCost(productId, tenantId);
   const packagingCostPerUnit = totalPackagingCost / batchSize;
 
-  // 3) labour per unit
-  const labourCostPerUnit = await computeLabourCost(tenantId, batchSize);
+  // 3) labour per unit (already per unit)
+  const labourCostPerUnit = await computeLabourCost(tenantId);
 
   // 4) pre-OPEX COGS (per unit)
   const preOpexCOGS = recipeCostPerUnit + packagingCostPerUnit + labourCostPerUnit;
 
-  // 5) opex per unit (depends on preOpexCOGS)
-  const opexCostPerUnit = await computeOpex(tenantId, preOpexCOGS, batchSize);
+  // 5) OPEX per unit
+  const opexCostPerUnit = await computeOpex(tenantId, preOpexCOGS);
 
   // 6) TCOP per unit
   const TCOP = preOpexCOGS + opexCostPerUnit;
