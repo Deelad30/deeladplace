@@ -119,17 +119,20 @@ async function recordProduction(req, res) {
   }
 
   try {
-    // Check if product has a recipe
+    // 1️⃣ Check if product has a recipe
     const recipeRes = await db.query(
       `SELECT COUNT(*) AS cnt FROM recipes WHERE tenant_id = $1 AND product_id = $2`,
       [tenantId, product_id]
     );
 
     if (Number(recipeRes.rows[0].cnt) === 0) {
-      return res.status(400).json({ success: false, message: 'Cannot record production: Product has no recipe defined' });
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot record production: Product has no recipe defined'
+      });
     }
 
-    // Fetch latest standard cost (TCOP) for this product
+    // 2️⃣ Fetch latest TCOP (cost per unit)
     const costRes = await db.query(
       `SELECT TCOP FROM standard_costs 
        WHERE tenant_id = $1 AND product_id = $2
@@ -138,24 +141,42 @@ async function recordProduction(req, res) {
     );
 
     const cost_per_unit = costRes.rows[0] ? Number(costRes.rows[0].tcop) : 0;
-    const total_cost = cost_per_unit * qty;     
+    const total_cost = cost_per_unit * qty;
 
-    // Record production
-    const movementRes = await db.query(
-      `INSERT INTO stock_movements 
-       (tenant_id, item_type, item_id, movement_type, qty, cost_per_unit, total_cost, created_by)
-       VALUES ($1, 'product', $2, 'production_in', $3, $4, $5, $6)
-       RETURNING *`,
-      [tenantId, product_id, qty, cost_per_unit, total_cost, userId]
+    // 3️⃣ Fetch vendor_id from product automatically
+    const vendorRes = await db.query(
+      `SELECT vendor_id FROM products WHERE id = $1 AND tenant_id = $2`,
+      [product_id, tenantId]
     );
 
-    res.json({ success: true, movement: movementRes.rows[0] });
+    const vendor_id = vendorRes.rows[0] ? vendorRes.rows[0].vendor_id : null;
+
+    // 4️⃣ Insert stock movement
+    const movementRes = await db.query(
+      `INSERT INTO stock_movements 
+       (tenant_id, item_type, item_id, movement_type, qty, cost_per_unit, total_cost, vendor_id, created_by)
+       VALUES ($1, 'product', $2, 'production_in', $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [tenantId, product_id, qty, cost_per_unit, total_cost, vendor_id, userId]
+    );
+
+    // 5️⃣ Update stock balance (NO vendor_id now)
+    const stock = await stockService.upsertStockBalance(tenantId, 'product', product_id, qty, cost_per_unit);
+
+    res.json({
+      success: true,
+      movement: movementRes.rows[0],
+      stock
+    });
 
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Failed to record production' });
   }
 }
+
+
+
 
 
 

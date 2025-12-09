@@ -1,6 +1,5 @@
 const db = require('../config/database');
 
-// stock.service.js
 async function recordStockMovement({
   tenantId,
   itemType = 'material',
@@ -29,24 +28,32 @@ async function upsertStockBalance(tenantId, itemType, itemId, deltaQty, costPerU
   const client = await db.pool.connect();
   try {
     await client.query('BEGIN');
+
+    // Get existing stock
     const cur = await client.query(
-      `SELECT qty, average_cost FROM stock_balance
-       WHERE tenant_id = $1 AND item_type = $2 AND item_id = $3 FOR UPDATE`,
+      `SELECT qty, average_cost 
+       FROM stock_balance
+       WHERE tenant_id = $1 AND item_type = $2 AND item_id = $3
+       FOR UPDATE`,
       [tenantId, itemType, itemId]
     );
 
     if (cur.rows.length === 0) {
+      // Insert new stock row
       const initialQty = Number(deltaQty);
       const avgCost = costPerUnit ? Number(costPerUnit) : 0;
+
       await client.query(
         `INSERT INTO stock_balance (tenant_id, item_type, item_id, qty, average_cost)
-         VALUES ($1,$2,$3,$4,$5)`,
+         VALUES ($1, $2, $3, $4, $5)`,
         [tenantId, itemType, itemId, initialQty, avgCost]
       );
+
       await client.query('COMMIT');
       return { qty: initialQty, average_cost: avgCost };
     }
 
+    // Update existing stock
     const existing = cur.rows[0];
     const oldQty = Number(existing.qty);
     const oldAvg = Number(existing.average_cost || 0);
@@ -60,13 +67,15 @@ async function upsertStockBalance(tenantId, itemType, itemId, deltaQty, costPerU
     }
 
     await client.query(
-      `UPDATE stock_balance SET qty = $1, average_cost = $2, updated_at = now()
+      `UPDATE stock_balance 
+       SET qty = $1, average_cost = $2, updated_at = now()
        WHERE tenant_id = $3 AND item_type = $4 AND item_id = $5`,
       [newQty, newAvg, tenantId, itemType, itemId]
     );
 
     await client.query('COMMIT');
     return { qty: newQty, average_cost: newAvg };
+
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;
@@ -74,8 +83,5 @@ async function upsertStockBalance(tenantId, itemType, itemId, deltaQty, costPerU
     client.release();
   }
 }
-
-
-
 
 module.exports = { upsertStockBalance, recordStockMovement };

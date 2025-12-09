@@ -14,7 +14,6 @@ async function recordSale(req, res) {
   payment_method,
   payment_breakdown = [],
   order_method,
-
   vendor_id,
   commission = 0,
   shift_id
@@ -195,6 +194,5 @@ async function openShift(req, res) {
     res.status(500).json({ success: false, message: 'Failed to open shift' });
   }
 }
-
 
 module.exports = { recordSale, closeShift, openShift };
