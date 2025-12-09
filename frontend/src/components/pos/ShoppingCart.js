@@ -18,7 +18,7 @@ const ShoppingCart = ({ cart, onUpdateQuantity, onRemoveItem, totals, onContinue
               <div key={item.id} className="cart-item">
                 <div className="item-info">
                   <span className="item-name">{item.name}</span>
-                  <span className="item-price">{formatCurrency(+item.commission + +item.selling_price)}</span>
+                  <span className="item-price">{formatCurrency(+item.custom_commission + +item.selling_price)}</span>
                 </div>
                 <div className="item-controls">
                   <div className="quantity-controls">

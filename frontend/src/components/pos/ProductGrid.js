@@ -24,7 +24,7 @@ const ProductGrid = ({ products, onAddToCart, disabled }) => {
               <div className="product-pricing">
                 <span className="price">{formatCurrency(round(product.selling_price))}</span>
                 <span className="commission">
-                  Commission: {formatCurrency(round(product.commission))}
+                  Commission: {formatCurrency(round(product.custom_commission))}
                 </span>
               </div>
             </div>

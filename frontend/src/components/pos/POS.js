@@ -4,7 +4,7 @@ import ProductGrid from './ProductGrid';
 import ShoppingCart from './ShoppingCart';
 import { vendorService } from '../../services/vendorService';
 import { productService } from '../../services/productService';
-import { recordSale, closeShift, openShift  } from '../../api/pos';
+import { recordSale, closeShift, openShift, listPOSProducts  } from '../../api/pos';
 import { useApp } from '../../context/AppContext';
 import SuccessModal from '../modals/SuccessModal';
 import SaleOptionsModal from '../modals/SaleOptionsModal';
@@ -70,7 +70,9 @@ const POS = () => {
 
   const fetchAllProducts = useCallback(async () => {
     try {
-      const res = await productService.getAllProducts();
+      const res = await productService.getAllProducts();;
+      console.log(res);
+      
       setProducts(res.data.products);
       setAppProducts(res.data.products);
     } catch (err) {
@@ -264,48 +266,175 @@ const finishSale = async (options) => {
 };
 
 
-  // --- Print Sale Receipt ---
+    // Print: open a new window with receipt HTML + CSS optimized for 80mm and call print()
   const openPrintWindow = (sale = lastSale) => {
-    if (!sale) return;
-    const win = window.open('', 'PRINT', 'height=800,width=400');
-    const formattedDate = new Date(sale.date || Date.now()).toLocaleString();
-    const itemsHtml = sale.items.map(item => `
-      <div class="line-item">
-        <div class="item-left">
-          <div class="item-name">${item.name}</div>
-        </div>
-        <div class="item-right">
-          <div class="item-qty">x${item.quantity}</div>
-          <div class="item-price">${currency((Number(item.selling_price) || 0) * item.quantity)}</div>
-        </div>
-      </div>
-    `).join('');
+    if (!sale || !sale.items || sale.items.length === 0) return;
 
-    const paymentHtml = sale.payment.breakdown.map(p => `
-      <div class="pay-row"><div class="pay-method">${p.method}</div><div class="pay-amt">${currency(round(p.amount))}</div></div>
-    `).join('');
+    const win = window.open('', 'PRINT', 'height=800,width=400');
+    const saleDate = new Date(sale.date || Date.now());
+    const formattedDate = saleDate.toLocaleString();
+    const itemsHtml = sale.items.map(item => {
+      console.log(item);
+      
+      const name = item.name || 'Item';      
+      const vendorName = item.vendor_name || item.vendor || 'Vendor';
+      const qty = item.quantity || 1;
+    const price =
+  (Number(item.selling_price) || 0) +
+  (Number(item.custom_commission) || 0);
+      const lineTotal = (price * qty);
+      // item line (name on first line, vendor on second, qty & price on right)
+      return `
+        <div class="line-item">
+          <div class="item-left">
+            <div class="item-name">${escapeHtml(name)}</div>
+            <div class="item-vendor"></div>
+          </div>
+          <div class="item-right">
+            <div class="item-qty">x${qty}</div>
+            <div class="item-price">${currency(lineTotal)}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    const paymentHtml = (sale.payment && Array.isArray(sale.payment.breakdown) && sale.payment.breakdown.length)
+      ? sale.payment.breakdown.map(p => `<div class="pay-row"><div class="pay-method">${escapeHtml(capitalize(p.method))}</div><div class="pay-amt">${currency(p.amount)}</div></div>`).join('')
+      : `<div class="pay-row"><div class="pay-method">${escapeHtml(capitalize(sale.payment?.type || 'Cash'))}</div><div class="pay-amt">${currency(sale.totals.total)}</div></div>`;
+
+    // Build HTML
+    const html = `
+      <html>
+        <head>
+          <title>Receipt</title>
+          <meta charset="utf-8" />
+         <style>
+  @page {
+    size: 80mm 100%;
+    margin: 0;
+  }
+
+  html, body {
+    width: 80mm;
+    margin: 0;
+    padding: 0;
+    font-family: "monospace", "Courier New", monospace;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    overflow: visible !important;
+  }
+
+  .receipt {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 4mm 3mm;
+  }
+
+  .center { text-align:center; }
+  .logo-placeholder {
+    width: 60px;
+    height: 60px;
+    border-radius: 6px;
+    border: 1px dashed #999;
+    display: inline-block;
+    margin-bottom: 6px;
+    line-height: 60px;
+    font-size: 10px;
+    color: #666;
+  }
+  h2.store {
+    font-size: 12px;
+    margin: 4px 0;
+  }
+  .meta { font-size: 9px; margin-bottom: 6px; }
+  .sep { border-top: 1px dashed #444; margin: 4px 0; }
+
+  .line-item {
+    display:flex;
+    justify-content:space-between;
+    font-size: 10px;
+    margin-bottom: 4px;
+    white-space: nowrap;
+  }
+
+  .item-left { text-align:left; max-width: 54mm; }
+  .item-right { text-align:right; min-width: 20mm; }
+  .item-name { font-weight: 600; }
+  .item-vendor { font-size: 9px; color: #444; }
+
+  .totals { font-size: 10px; margin-top:6px; }
+  .totals .row { display:flex; justify-content:space-between; margin:2px 0; }
+
+  .payment { margin-top:8px; font-size: 10px; }
+  .pay-row { display:flex; justify-content:space-between; margin:2px 0; }
+
+  .thankyou { margin-top:10px; text-align:center; font-size:10px; }
+  .small { font-size:9px; color:#333; }
+</style>
+
+        </head>
+        <body>
+          <div class="receipt">
+            <div class="center">
+              <div class="logo-placeholder">LOGO</div>
+              <h2 class="store">Deelad Softwork</h2>
+              <div class="meta">${formattedDate}</div>
+              <div class="meta"><span style="font-weight:700">Customer Type:</span> ${escapeHtml(capitalize(sale.payment?.customer_type || 'Walk-in'))}</div>
+            </div>
+
+            <div class="sep"></div>
+
+            ${itemsHtml}
+
+            <div class="sep"></div>
+
+            <div class="totals">
+
+              <div class="row" style="font-weight:700;"><div>TOTAL</div><div>${currency(sale.totals.total)}</div></div>
+            </div>
+
+            <div class="sep"></div>
+
+            <div class="payment">
+              <div style="font-weight:700; margin-bottom:4px;">PAYMENT</div>
+              ${paymentHtml}
+            </div>
+
+            <div class="sep"></div>
+
+            <div class="thankyou">
+              <div>Thank you for shopping!</div>
+              <div class="small">Powered by Deelad Softwork</div>
+            </div>
+
+          </div>
+        </body>
+      </html>
+    `;
 
     win.document.open();
-    win.document.write(`
-      <html>
-      <head><title>Receipt</title></head>
-      <body>
-        <div class="receipt">
-          <h2>Deelad Softwork</h2>
-          <p>${formattedDate}</p>
-          ${itemsHtml}
-          <hr />
-          <div>Total: ${currency(round(sale.totals.total))}</div>
-          <div>Payment:</div>
-          ${paymentHtml}
-        </div>
-      </body>
-      </html>
-    `);
+    win.document.write(html);
     win.document.close();
+
+    // Give the new window a tiny moment to render before printing
+    win.focus();
+    // print dialog will show
     win.print();
+
+    // Optionally close after print. Some browsers block closing windows opened by script after print.
+    // win.close();
   };
 
+  //Helpers 
+    // Helpers
+  function escapeHtml(str) {
+    if (typeof str !== 'string') return str;
+    return str.replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+  }
+  function capitalize(s) {
+    if (!s) return s;
+    return String(s).charAt(0).toUpperCase() + String(s).slice(1);
+  }
   // --- Close Shift & Download PDF ---
 const handleCloseShift = async () => {
   if (!currentShiftId) return toast.error("No active shift");
@@ -377,6 +506,8 @@ const handleCloseShift = async () => {
     toast.error('Failed to close shift');
   }
 };
+
+
 
 
   return (

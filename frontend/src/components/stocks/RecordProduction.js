@@ -16,15 +16,18 @@ export default function RecordProduction() {
     try {
       const res = await api.get("/products/all");
       setProducts(res.data.products || []); // show all products
+      console.log(res);
+      
     } catch (err) {
       console.error(err);
       toast.error("Failed to load products");
     }
   };
 
-  const onProductChange = (id) => {
-    setSelectedProduct(id);
-  };
+const onProductChange = (id) => {
+  const product = products.find(p => p.id === Number(id));
+  setSelectedProduct(product);
+};
 
   const onQtyChange = (val) => {
     const q = Number(val);
@@ -32,27 +35,29 @@ export default function RecordProduction() {
   };
 
   const submitProduction = async () => {
-    if (!selectedProduct) {
-      toast.error("Please select a product"); // prevent submit
-      return;
-    }
+  if (!selectedProduct) {
+    toast.error("Please select a product");
+    return;
+  }
 
-    try {
-      await recordProductionAPI(
-        selectedProduct,
-        qtyProduced,
-        null, // cost_per_unit handled automatically in backend
-        `PROD-${selectedProduct}` // reference
-      );
-      toast.success("Production recorded successfully!");
-      // reset form
-      setSelectedProduct(null);
-      setQtyProduced(1);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to record production");
-    }
-  };
+  try {
+    await recordProductionAPI(
+      selectedProduct.id,
+      qtyProduced,
+      null,
+      `PROD-${selectedProduct.id}`
+    );
+
+    toast.success("Production recorded successfully!");
+    setSelectedProduct(null);
+    setQtyProduced(1);
+
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to record production");
+  }
+};
+
 
   return (
     <div className="page">
@@ -62,7 +67,7 @@ export default function RecordProduction() {
       <div>
         <label>Product</label>
         <select
-          value={selectedProduct || ""}
+          value={selectedProduct?.id || ""}
           onChange={(e) => onProductChange(e.target.value)}
         >
           <option value="">Select product...</option>
