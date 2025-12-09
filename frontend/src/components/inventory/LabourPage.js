@@ -16,6 +16,7 @@ export default function LabourPage() {
     name: '',
     amount: '',
     allocation_type: 'fixed',
+    estimated_monthly_sales: '',
     start_date: '',
     end_date: ''
   });
@@ -75,10 +76,12 @@ export default function LabourPage() {
         await createLabour(form);
         toast.success('Labour record added.');
       }
-      setForm({ name: '', amount: '', allocation_type: 'fixed', start_date: '', end_date: '' });
+      setForm({ name: '', amount: '', allocation_type: 'fixed', estimated_monthly_sales: '', start_date: '', end_date: '' });
       setOpenModal(false);
       loadLabour();
     } catch (err) {
+      console.log(err);
+      
       toast.error('Error saving labour record.');
     }
   }
@@ -89,6 +92,7 @@ export default function LabourPage() {
       name: record.name,
       amount: record.amount,
       allocation_type: record.allocation_type,
+      estimated_monthly_sales: record.estimated_monthly_sales || '' ,
       start_date: formatDateForInputLocal(record.start_date),
       end_date: formatDateForInputLocal(record.end_date)
     });
@@ -110,6 +114,7 @@ export default function LabourPage() {
     { key: 'name', label: 'Name' },
     { key: 'amount', label: 'Amount' },
     { key: 'allocation_type', label: 'Type' },
+     { key: 'estimated_monthly_sales', label: 'Monthly Sales' },
     { key: 'start_date', label: 'Start Date' },
     { key: 'end_date', label: 'End Date' },
     { key: 'actions', label: 'Actions' }
@@ -239,6 +244,15 @@ export default function LabourPage() {
           >
             <option value="fixed">Fixed</option>
           </select>
+        </div>
+
+        <div className="form-group">
+          <label>Estimated Monthly Sales</label>
+          <input
+            type="number"
+            value={form.estimated_monthly_sales}
+            onChange={e => setForm({ ...form, estimated_monthly_sales: e.target.value })}
+          />
         </div>
 
         <div className="form-group">

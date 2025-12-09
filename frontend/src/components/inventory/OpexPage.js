@@ -16,6 +16,7 @@ export default function OpexPage() {
   const [form, setForm] = useState({
     name: '',
     allocation_mode: 'fixed',
+    estimated_monthly_sales: '',
     amount: '',
     percentage_value: '',
     effective_from: '',
@@ -110,6 +111,7 @@ export default function OpexPage() {
     setForm({
       name: record.name,
       allocation_mode: record.allocation_mode,
+      estimated_monthly_sales: record.estimated_monthly_sales,
       amount: record.amount || '',
       percentage_value: record.percentage_value || '',
       effective_from: formatDateForInputLocal(record.effective_from),
@@ -136,6 +138,7 @@ export default function OpexPage() {
     { key: 'allocation_mode', label: 'Mode' },
     { key: 'amount', label: 'Amount' },
     { key: 'percentage_value', label: '% of COGS' },
+    { key: 'estimated_monthly_sales', label: 'Monthly Sales' },
     { key: 'effective_from', label: 'Start Date' },
     { key: 'effective_to', label: 'End Date' },
     { key: 'actions', label: 'Actions' }
@@ -191,7 +194,7 @@ export default function OpexPage() {
   return (
     <div className="page-container">
       <PageHeader
-        title="OPEX"
+        title="Operational Expenses"
         actionLabel="Add OPEX"
         onAction={() => {
           setOpenModal(true);
@@ -199,6 +202,7 @@ export default function OpexPage() {
           setForm({
             name: '',
             allocation_mode: 'fixed',
+            estimated_monthly_sales: '',
             amount: '',
             percentage_value: '',
             effective_from: '',
@@ -268,6 +272,7 @@ export default function OpexPage() {
           </select>
         </div>
 
+
         {form.allocation_mode === 'fixed' && (
           <div className="form-group">
             <label>Amount</label>
@@ -289,6 +294,16 @@ export default function OpexPage() {
             />
           </div>
         )}
+
+        <div className="form-group">
+          <label>Estimated Monthly Sales</label>
+          <input
+            type="number"
+            value={form.estimated_monthly_sales}
+            onChange={e => setForm({ ...form, estimated_monthly_sales: e.target.value })}
+          />
+        </div>
+
 
         <div className="form-group">
           <label>Start Date</label>

@@ -81,7 +81,7 @@ const InventoryPage = () => {
               className={`tab-button ${activeTab === 'opex' ? 'active' : ''}`}
               onClick={() => setActiveTab('opex')}
             >
-              Opex
+              Operational Expenses
             </button>
           </div>
 
