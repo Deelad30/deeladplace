@@ -31,7 +31,7 @@ import SICProductsPage from "./pages/SIC/SICProductsPage";
 import SICRawPage from "./pages/SIC/SICRawPage";
 
 // Costing & Recipe
-import CostingPage from "./pages/Costing/CostingPage";
+import CostingPage from "./pages/Costing";
 
 // Variance Pages
 import ProductVariancePage from "./pages/Variance/ProductVariance";
@@ -226,7 +226,7 @@ function App() {
 
           {/* COSTING */}
           <Route
-            path="/costing/:productId"
+            path="/costing"
             element={
               <PrivateRoute requiredSection="costing">
                 <CostingPage />

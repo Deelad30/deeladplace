@@ -1,41 +1,24 @@
 import React, { useState } from 'react';
 import Header from '../components/common/Header';
 import Sidebar from '../components/common/Sidebar';
-
-import RawMaterialsForm from "../components/inventory/RawMaterialsForm";
-import MaterialPurchase from '../components/inventory/MaterialPurchase';
-import SICSForm from '../components/inventory/SICSForm';
-import StockLevels from '../components/inventory/StockLevels';
-import VarianceReport from '../components/inventory/VarianceReport';
-import PackagingPage from '../components/inventory/Packaging';
-import LabourPage from '../components/inventory/LabourPage';  
-import OpexPage from '../components/inventory/OpexPage';
-
+import IssueToProduction from '../components/stocks/IssueToProduction';
+import RecordProduction from '../components/stocks/RecordProduction';
+import StockList from '../components/stocks/StockList'
 import '../../src/styles/pages/InventoryPage.css';
 
-const InventoryPage = () => {
-  const [activeTab, setActiveTab] = useState('raw-materials');
+const Stocks = () => {
+  const [activeTab, setActiveTab] = useState('issues-to-production');
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'raw-materials':
-        return <RawMaterialsForm />;
-      case 'material-purchase':
-        return <MaterialPurchase />;
-      case 'packaging' :
-        return <PackagingPage />;
-      case 'labour' :
-        return <LabourPage />;
-      case 'opex' :
-        return <OpexPage />;
-      case 'sics-form':
-        return <SICSForm />;
-      case 'stock-levels':
-        return <StockLevels />;
-      case 'variance-report':
-        return <VarianceReport />;
+      case 'issues-to-production':
+        return <StockList />;
+      case 'record-production':
+        return <StockList />;
+      case 'stocks':
+        return <StockList />;
       default:
-        return <SICSForm />;
+        return <StockList />;
     }
   };
 
@@ -48,40 +31,28 @@ const InventoryPage = () => {
         <main className="main-content">
 
           <div className="content-header">
-            <h1>Inventory Management</h1>
+            <h1>Manage Your Inventory</h1>
           </div>
 
           {/* ---- TABS ---- */}
           <div className="inventory-tabs">
             <button
-              className={`tab-button ${activeTab === 'raw-materials' ? 'active' : ''}`}
-              onClick={() => setActiveTab('raw-materials')}
+              className={`tab-button ${activeTab === 'issues-to-production' ? 'active' : ''}`}
+              onClick={() => setActiveTab('issues-to-production')}
             >
-              Raw Materials
+              Stocks
             </button>
             <button
-              className={`tab-button ${activeTab === 'material-purchase' ? 'active' : ''}`}
-              onClick={() => setActiveTab('material-purchase')}   
+              className={`tab-button ${activeTab === 'record-production' ? 'active' : ''}`}
+              onClick={() => setActiveTab('record-production')}   
             >
-              Material Purchase
-            </button>
-              <button
-              className={`tab-button ${activeTab === 'packaging' ? 'active' : ''}`}
-              onClick={() => setActiveTab('packaging')}   
-            >
-              Packaging
+            SIC Raw
             </button>
             <button
-              className={`tab-button ${activeTab === 'labour' ? 'active' : ''}`}
-              onClick={() => setActiveTab('labour')}
+              className={`tab-button ${activeTab === 'stocks' ? 'active' : ''}`}
+              onClick={() => setActiveTab('stocks')}   
             >
-              Labour
-            </button>
-            <button 
-              className={`tab-button ${activeTab === 'opex' ? 'active' : ''}`}
-              onClick={() => setActiveTab('opex')}
-            >
-              Operational Expenses
+             SIC Product
             </button>
           </div>
 
@@ -96,4 +67,4 @@ const InventoryPage = () => {
   );
 };
 
-export default InventoryPage;
+export default Stocks;

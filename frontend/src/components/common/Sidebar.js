@@ -35,18 +35,18 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
 
   const menuItems = [
     { path: "/dashboard", label: "Dashboard", icon: faChartLine, key: "dashboard" },
-    { path: "/pos", label: "POS", icon: faCashRegister, key: "pos" },
+    { path: "/users/invite", label: "Users / Invites", icon: faListCheck, key: "users" },
     { path: "/vendors", label: "Vendors", icon: faStore, key: "vendors" },
     { path: "/products", label: "Products", icon: faBoxOpen, key: "products" },
+    { path: "/costing", label: "Costing", icon: faListCheck, key: "costing" },
     { path: "/inventory", label: "Inventory", icon: faBoxesStacked, key: "stock" },
+    { path: "/pos", label: "POS", icon: faCashRegister, key: "pos" },
     { path: "/expenses", label: "Expenses", icon: faWallet, key: "expenses" },
     { path: "/reports", label: "Reports", icon: faFileLines, key: "reports" },
-    { path: "/users/invite", label: "Users / Invites", icon: faListCheck, key: "users" },
-    { path: "/sic/products", label: "SIC Products", icon: faBowlFood, key: "sic_product" },
-    { path: "/sic/raw", label: "SIC Raw Materials", icon: faUtensils, key: "sic_raw" },
-    { path: "/costing", label: "Costing", icon: faListCheck, key: "costing" },
-    { path: "/recipe", label: "Recipe", icon: faUtensils, key: "recipes" },
-    { path: "/stocks-movement", label: "Stocks Movement", icon: faSliders, key: "stocks" }
+    // { path: "/sic/products", label: "SIC Products", icon: faBowlFood, key: "sic_product" },
+    // { path: "/sic/raw", label: "SIC Raw Materials", icon: faUtensils, key: "sic_raw" },
+    // { path: "/recipe", label: "Recipe", icon: faUtensils, key: "recipes" },
+    // { path: "/stocks-movement", label: "Stocks Movement", icon: faSliders, key: "stocks" }
   ];
 
 

@@ -1,0 +1,330 @@
+/* ---------------- Page Container ---------------- */
+.page-container {
+  padding: 30px;
+  background-color: #f9fafb;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ---------------- Page Header ---------------- */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.page-header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.page-header button {
+  padding: 10px 18px;
+  background: #2563eb;
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.page-header button:hover {
+  background: #1d4ed8;
+}
+
+/* ---------------- Search Input ---------------- */
+.search-input {
+  width: 300px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+/* ---------------- Table ---------------- */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+.table th, .table td {
+  padding: 14px 18px;
+  text-align: left;
+  font-size: 14px;
+  color: #374151;
+}
+
+.table th {
+  background-color: #f3f4f6;
+  font-weight: 600;
+  color: #111827;
+}
+
+.table tr:hover {
+  background-color: #f9fafb;
+}
+
+/* ---------------- Buttons ---------------- */
+.btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  margin-right: 4px;
+  transition: 0.2s;
+}
+
+.btn-edit {
+  background-color: #4ade80;
+  color: #065f46;
+}
+
+.btn-edit:hover {
+  background-color: #22c55e;
+}
+
+.btn-delete {
+  background-color: #f87171;
+  color: #7f1d1d;
+}
+
+.btn-delete:hover {
+  background-color: #ef4444;
+}
+
+.btn-add {
+  background-color: #60a5fa;
+  color: #1e40af;
+}
+
+.btn-add:hover {
+  background-color: #3b82f6;
+}
+
+.btn-remove {
+  background-color: #fbbf24;
+  color: #78350f;
+}
+
+.btn-remove:hover {
+  background-color: #f59e0b;
+}
+
+/* ---------------- Loading ---------------- */
+.loading {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: #6b7280;
+  padding: 50px 0;
+}
+
+/* ---------------- Pagination ---------------- */
+.pagination {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.pagination button {
+  padding: 6px 14px;
+  border-radius: 5px;
+  border: none;
+  background-color: #2563eb;
+  color: #fff;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.pagination button:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.pagination button:hover:not(:disabled) {
+  background-color: #1d4ed8;
+}
+
+/* ---------------- Modal ---------------- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(17, 24, 39, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.modal-content {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 25px;
+  width: 400px;
+  max-width: 90%;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {opacity: 0; transform: translateY(-10px);}
+  to {opacity: 1; transform: translateY(0);}
+}
+
+.modal-content h2 {
+  margin-bottom: 20px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* ---------------- Modal Form ---------------- */
+.form-group {
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.form-group input {
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  outline: none;
+  transition: 0.2s;
+}
+
+.form-group input:focus {
+  border-color: #2563eb;
+}
+
+/* ---------------- Primary Button ---------------- */
+.primary-btn {
+  width: 100%;
+  background-color: #2563eb;
+  color: #fff;
+  font-weight: 600;
+  padding: 10px 0;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.primary-btn:hover {
+  background-color: #1d4ed8;
+}
+
+/* ---------------- Stock quantity highlight ---------------- */
+.stock-low {
+  color: #f44336;
+  font-weight: 600;
+}
+
+.stock-ok {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+/* ---------------- Responsive ---------------- */
+@media screen and (max-width: 768px) {
+  .table th, .table td {
+    font-size: 12px;
+    padding: 10px 12px;
+  }
+
+  .page-header h1 {
+    font-size: 22px;
+  }
+
+  .search-input {
+    width: 100%;
+  }
+
+  .modal-content {
+    width: 95%;
+  }
+}
+
+.stock-bar-container {
+  position: relative;
+  background-color: #e5e7eb;
+  height: 24px;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 5px;
+}
+
+.stock-bar {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.stock-ok {
+  background-color: #16a34a;
+}
+
+.stock-low {
+  background-color: #f44336;
+}
+
+.stock-text {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  line-height: 24px;
+}
+
+.stock-flex {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* Slimmer stock bar so it fits beautifully */
+.stock-bar-container.slim {
+  width: 160px;
+  position: relative;
+}
+
+/* Compact adjustment buttons beside bar */
+.btn.small {
+  padding: 4px 8px;
+  font-size: 13px;
+  width: 100px;
+  text-align: center;
+}
+
+th{
+  text-align: center;
+}
+
+.primary-btn{
+  width: 150px;
+}

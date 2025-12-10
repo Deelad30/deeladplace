@@ -3,6 +3,7 @@ import Header from '../components/common/Header';
 import Sidebar from '../components/common/Sidebar';
 import IssueToProduction from '../components/stocks/IssueToProduction';
 import RecordProduction from '../components/stocks/RecordProduction';
+import StockList from '../components/stocks/StockList'
 import '../../src/styles/pages/InventoryPage.css';
 
 const Stocks = () => {
@@ -14,6 +15,8 @@ const Stocks = () => {
         return <IssueToProduction />;
       case 'record-production':
         return <RecordProduction />;
+      case 'stocks':
+        return <StockList />;
       default:
         return <IssueToProduction />;
     }
@@ -44,6 +47,12 @@ const Stocks = () => {
               onClick={() => setActiveTab('record-production')}   
             >
             Record Production
+            </button>
+            <button
+              className={`tab-button ${activeTab === 'stocks' ? 'active' : ''}`}
+              onClick={() => setActiveTab('stocks')}   
+            >
+            Stocks
             </button>
           </div>
 

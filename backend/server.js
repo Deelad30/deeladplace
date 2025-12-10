@@ -71,6 +71,7 @@ const sicRoutes = require('./src/routes/sic.routes');
 const invRoutes = require('./src/routes/inventory.routes');
 const posRoutes = require('./src/routes/pos.routes');
 const standardRoutes = require('./src/routes/standard.routes');
+const stocksRoutes = require('./src/routes/stocksRoutes');
 const reportsRoutes = require('./src/routes/reports.routes');
 
 
@@ -96,6 +97,7 @@ app.use('/api/sic', sicRoutes);
 app.use('/api/inventory', invRoutes);
 app.use('/api/pos', posRoutes);
 app.use('/api/standard', standardRoutes);
+app.use('/api/stocks', stocksRoutes)
 
 
 // 404 handler

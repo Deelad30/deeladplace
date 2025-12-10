@@ -353,25 +353,33 @@ const RecipePage = () => {
 
       {/* Pie Chart */}
       <ResponsiveContainer width="100%" height={300}>
-        <PieChart>
-          <Pie
-            data={perUnitCostData}
-            dataKey="value"
-            nameKey="name"
-            cx="50%"
-            cy="50%"
-            outerRadius={100}
-            fill="#8884d8"
-            label
-            isAnimationActive={true}
-          >
-            {perUnitCostData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-            ))}
-          </Pie>
-          <ReTooltip formatter={(value) => `₦${value.toFixed(2)}`} />
-          <ReLegend />
-        </PieChart>
+<PieChart>
+  <Pie
+    data={perUnitCostData}
+    dataKey="value"
+    nameKey="name"
+    cx="50%"
+    cy="50%"
+    outerRadius={100}
+    fill="#8884d8"
+    label={(entry) => `₦${round(entry.value, 2).toFixed(2)}`}
+    isAnimationActive={true}
+  >
+    {perUnitCostData.map((entry, index) => (
+      <Cell
+        key={`cell-${index}`}
+        fill={COLORS[index % COLORS.length]}
+      />
+    ))}
+  </Pie>
+
+  <ReTooltip
+    formatter={(value) => `₦${Number(value).toFixed(2)}`}
+  />
+
+  <ReLegend />
+</PieChart>
+
       </ResponsiveContainer>
 
       {/* Bar Chart for Per Batch */}
@@ -381,7 +389,7 @@ const RecipePage = () => {
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="name" />
           <YAxis />
-          <ReTooltip formatter={(value) => `₦${value.toFixed(2)}`} />
+          <ReTooltip formatter={(value) => `₦${round(value.toFixed(2))}`} />
           <ReLegend />
           <Bar dataKey="value" fill="#82ca9d" isAnimationActive={true} />
         </BarChart>

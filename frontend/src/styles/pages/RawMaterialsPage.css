@@ -45,6 +45,7 @@
   padding: 12px 14px;
   font-size: 14px;
   border-bottom: 1px solid #eee;
+  text-align: center;
 }
 
 .empty-state {
