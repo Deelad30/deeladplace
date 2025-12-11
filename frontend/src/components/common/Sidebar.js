@@ -15,10 +15,8 @@ import {
   faBoxesStacked,
   faWallet,
   faFileLines,
-  faListCheck,
-  faBowlFood,
-  faUtensils,
-  faSliders,
+  faCoins,
+  faUsers,
 } from "@fortawesome/free-solid-svg-icons";
 
 import "../../styles/components/Sidebar.css";
@@ -35,10 +33,10 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
 
   const menuItems = [
     { path: "/dashboard", label: "Dashboard", icon: faChartLine, key: "dashboard" },
-    { path: "/users/invite", label: "Users / Invites", icon: faListCheck, key: "users" },
+    { path: "/users/invite", label: "Users / Invites", icon: faUsers, key: "users" },
     { path: "/vendors", label: "Vendors", icon: faStore, key: "vendors" },
     { path: "/products", label: "Products", icon: faBoxOpen, key: "products" },
-    { path: "/costing", label: "Costing", icon: faListCheck, key: "costing" },
+    { path: "/costing", label: "Costing", icon: faCoins, key: "costing" },
     { path: "/inventory", label: "Inventory", icon: faBoxesStacked, key: "stock" },
     { path: "/pos", label: "POS", icon: faCashRegister, key: "pos" },
     { path: "/expenses", label: "Expenses", icon: faWallet, key: "expenses" },

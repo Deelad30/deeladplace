@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import Header from '../components/common/Header';
 import Sidebar from '../components/common/Sidebar';
-import IssueToProduction from '../components/stocks/IssueToProduction';
-import RecordProduction from '../components/stocks/RecordProduction';
+import SICSForm from '../components/inventory/SICSForm';
 import StockList from '../components/stocks/StockList'
+import ProductSICPage from '../components/inventory/ProductSIC';
 import '../../src/styles/pages/InventoryPage.css';
 
 const Stocks = () => {
@@ -14,9 +14,9 @@ const Stocks = () => {
       case 'issues-to-production':
         return <StockList />;
       case 'record-production':
-        return <StockList />;
+        return <SICSForm />;
       case 'stocks':
-        return <StockList />;
+        return <ProductSICPage />;
       default:
         return <StockList />;
     }

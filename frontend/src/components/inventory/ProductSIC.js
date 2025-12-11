@@ -1,47 +1,54 @@
 import React, { useEffect, useState } from 'react';
-import { postRawSic, listRawSic } from '../../api/sic';
-import { rawMaterialsService } from '../../services/rawMaterialsService';
+import { postProductSic, listProductSic } from '../../api/sic';
+import { productService } from '../../services/productService';
 import toast from 'react-hot-toast';
 import '../../styles/pages/SICSForm.css';
 
-export default function RawSICPage() {
-  const [materials, setMaterials] = useState([]);
+export default function ProductSICPage() {
+  const [products, setProducts] = useState([]);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const today = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
-    loadMaterials();
+    loadProducts();
     // eslint-disable-next-line
   }, []);
 
-  async function loadMaterials() {
+  async function loadProducts() {
     try {
-      const data = await rawMaterialsService.getAll();
-      setMaterials(data);
+      // 1️⃣ Fetch all products
+      const productRes = await productService.getAllProducts();
+      const allProducts = productRes?.data?.products || productRes.products || [];
+      console.log(allProducts);
+      
 
-      // Fetch existing SIC entries for today to prevent duplicates
-      const todaySIC = await listRawSic(); // adjust backend endpoint to accept optional date filter
-      const todayMap = new Map(todaySIC.data.sic?.map(s => [s.material_id, s]) || []);
+      setProducts(allProducts);
+      // 2️⃣ Fetch today's SIC entries to prevent duplicates
+      const sicRes = await listProductSic();
+      const sicData = sicRes.data?.sic || [];
+      const todayMap = new Map(sicData.map(s => [s.product_id, s]));
 
-      setRows(
-        data.map(m => {
-          const existing = todayMap.get(m.id);
-          return {
-            material_id: m.id,
-            name: m.name,
-            unit: m.measurement_unit,
-            date: today,
-            opening_qty: existing ? existing.opening_qty : 0,
-            issues_qty: 0,
-            waste_qty: 0,
-            closing_qty: existing ? existing.closing_qty : 0,
-            duplicate: !!existing
-          };
-        })
-      );
+      // 3️⃣ Build rows for the form
+      const newRows = allProducts.map(p => {
+        const existing = todayMap.get(p.id);
+
+        return {
+          product_id: p.id,
+          name: p.name,
+          unit: p.unit || 'pcs',
+          date: today,
+          opening_qty: existing ? existing.opening_qty : 0,
+          issues_qty: 0,
+          waste_qty: 0,
+          closing_qty: existing ? existing.closing_qty : 0,
+          duplicate: !!existing,
+        };
+      });
+
+      setRows(newRows);
     } catch (err) {
-      toast.error('Failed to load raw materials.');
+      toast.error('Failed to load products.');
       console.error(err);
     }
   }
@@ -65,8 +72,8 @@ export default function RawSICPage() {
       }
 
       try {
-        await postRawSic({
-          material_id: row.material_id,
+        await postProductSic({
+          product_id: row.product_id,
           date: row.date,
           opening_qty: row.opening_qty,
           issues_qty: row.issues_qty,
@@ -84,9 +91,8 @@ export default function RawSICPage() {
     }
 
     if (successCount > 0) {
-      toast.success(`Submitted ${successCount} SIC entries.`);
-      // Reload for next day prep
-      loadMaterials();
+      toast.success(`Submitted ${successCount} Product SIC entries.`);
+      await loadProducts(); // Refresh rows
     }
 
     setLoading(false);
@@ -94,24 +100,23 @@ export default function RawSICPage() {
 
   return (
     <div className="sics-form-container">
-      <h2>Daily Raw Material SIC</h2>
+      <h2>Daily Product SIC</h2>
 
       <form className="sics-form" onSubmit={handleSubmit}>
         <table>
           <thead>
             <tr>
-              <th>Material</th>
+              <th>Product</th>
               <th>Unit</th>
               <th>Opening</th>
-              <th>Issues</th>
+              <th>Produced</th>
               <th>Waste</th>
               <th>Closing</th>
             </tr>
           </thead>
-
           <tbody>
             {rows.map((r, index) => (
-              <tr key={r.material_id}>
+              <tr key={r.product_id}>
                 <td>{r.name}</td>
                 <td>{r.unit}</td>
 
@@ -120,8 +125,8 @@ export default function RawSICPage() {
                     type="number"
                     min="0"
                     value={r.opening_qty}
-                    disabled={r.duplicate} // disable editing if duplicate
-                    onChange={(e) => handleChange(index, 'opening_qty', e.target.value)}
+                    disabled={r.duplicate}
+                    onChange={e => handleChange(index, 'opening_qty', e.target.value)}
                   />
                 </td>
 
@@ -130,7 +135,7 @@ export default function RawSICPage() {
                     type="number"
                     min="0"
                     value={r.issues_qty}
-                    onChange={(e) => handleChange(index, 'issues_qty', e.target.value)}
+                    onChange={e => handleChange(index, 'issues_qty', e.target.value)}
                   />
                 </td>
 
@@ -139,7 +144,7 @@ export default function RawSICPage() {
                     type="number"
                     min="0"
                     value={r.waste_qty}
-                    onChange={(e) => handleChange(index, 'waste_qty', e.target.value)}
+                    onChange={e => handleChange(index, 'waste_qty', e.target.value)}
                   />
                 </td>
 
@@ -148,7 +153,7 @@ export default function RawSICPage() {
                     type="number"
                     min="0"
                     value={r.closing_qty}
-                    onChange={(e) => handleChange(index, 'closing_qty', e.target.value)}
+                    onChange={e => handleChange(index, 'closing_qty', e.target.value)}
                   />
                 </td>
               </tr>
@@ -157,7 +162,7 @@ export default function RawSICPage() {
         </table>
 
         <button type="submit" disabled={loading}>
-          {loading ? 'Submitting...' : 'Submit Raw SIC'}
+          {loading ? 'Submitting...' : 'Submit Product SIC'}
         </button>
       </form>
     </div>
