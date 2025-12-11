@@ -18,7 +18,19 @@ async function submitRawSIC(req, res) {
   } = req.body;
 
   try {
-    // 1️⃣ Get system-calculated usage (from issues to production)
+    const duplicateRaw = await db.query(
+      `SELECT id FROM sic_raw_materials
+       WHERE tenant_id = $1 AND material_id = $2 AND date = $3`,
+      [tenantId, material_id, date]
+    );
+
+    if (duplicateRaw.rows.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Raw SIC for this material and date already exists.'
+      });
+    }
+
     const sysRes = await db.query(
       `SELECT COALESCE(SUM(qty), 0) AS system_usage
        FROM stock_movements
@@ -108,7 +120,19 @@ async function submitProductSIC(req, res) {
   } = req.body;
 
   try {
-    // 1️⃣ Get system-calculated sales
+   const duplicateProduct = await db.query(
+  `SELECT id FROM sic_products
+   WHERE tenant_id = $1 AND product_id = $2 AND date = $3`,
+  [tenantId, product_id, date]
+);
+
+if (duplicateProduct.rows.length > 0) {
+  return res.status(400).json({
+    success: false,
+    message: 'SIC for this product and date has already been submitted.'
+  });
+}
+
     const sysRes = await db.query(
       `SELECT COALESCE(SUM(qty), 0) AS system_sales
        FROM pos_sales
@@ -177,4 +201,39 @@ async function submitProductSIC(req, res) {
   }
 }
 
-module.exports = { submitRawSIC, submitProductSIC };
+// List Raw SIC
+async function listRawSIC(req, res) {
+  const tenantId = req.user.tenant_id;
+  try {
+    const result = await db.query(
+      `SELECT * FROM sic_raw_materials WHERE tenant_id=$1 ORDER BY date DESC`,
+      [tenantId]
+    );
+    res.json({ success: true, sic: result.rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Failed to fetch raw SIC' });
+  }
+}
+
+// List Product SIC
+async function listProductSIC(req, res) {
+  const tenantId = req.user.tenant_id;
+  try {
+    const result = await db.query(
+      `SELECT * FROM sic_products WHERE tenant_id=$1 ORDER BY date DESC`,
+      [tenantId]
+    );
+    res.json({ success: true, sic: result.rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Failed to fetch product SIC' });
+  }
+}
+
+module.exports = { 
+  submitRawSIC, 
+  submitProductSIC, 
+  listRawSIC, 
+  listProductSIC 
+};
