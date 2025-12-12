@@ -20,14 +20,14 @@ exports.getRawMaterialVariance = async (req, res) => {
         m.name AS material_name,
 
         -- EXPECTED usage (recipe × product sales)
-        COALESCE((
-          SELECT SUM(ri.qty * ps.qty)
-          FROM recipe_items ri
-          JOIN pos_sales ps ON ps.product_id = ri.product_id
-          WHERE ri.material_id = m.id
-            AND ps.tenant_id = $1
-            ${dateFilterPOS}
-        ), 0) AS expected_usage,
+COALESCE((
+  SELECT SUM(r.recipe_qty * ps.qty)
+  FROM recipes r
+  JOIN pos_sales ps ON ps.product_id = r.product_id
+  WHERE r.material_id = m.id
+    AND ps.tenant_id = $1
+    ${dateFilterPOS}
+), 0) AS expected_usage,
 
         -- ACTUAL usage (from SIC raw)
         COALESCE((
@@ -53,12 +53,12 @@ exports.getRawMaterialVariance = async (req, res) => {
         (
           SELECT average_cost
           FROM stock_balance sb
-          WHERE sb.material_id = m.id
+          WHERE sb.item_id = m.id
             AND sb.tenant_id = $1
             AND sb.item_type = 'material'
           LIMIT 1
         ) AS average_cost
-      FROM materials m
+      FROM raw_materials m
       WHERE m.tenant_id = $1;
     `;
 

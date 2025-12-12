@@ -6,6 +6,7 @@ import ExpenseReport from '../components/expenses/Expensereport';
 import ExpenseList from '../components/expenses/ExpenseList';
 import VarianceReport from '../components/inventory/VarianceReport';
 import '../../src/styles/pages/ReportsPage.css';
+import ProductVarianceReport from '../components/inventory/ProductVariance';
 
 const ReportsPage = () => {
   const [activeTab, setActiveTab] = useState('sales'); // default tab
@@ -40,7 +41,14 @@ const ReportsPage = () => {
               className={`report-tab-btn ${activeTab === 'variance' ? 'active' : ''}`}
               onClick={() => setActiveTab('variance')}
             >
-              Variance Report
+              Raw Variance Report
+            </button>
+
+            <button
+              className={`report-tab-btn ${activeTab === 'product-variance' ? 'active' : ''}`}
+              onClick={() => setActiveTab('product-variance')}
+            >
+              Product Variance Report
             </button>
           </div>
 
@@ -55,6 +63,9 @@ const ReportsPage = () => {
             }
             {activeTab === 'variance' && (
                  <VarianceReport />
+            )}
+            {activeTab === 'product-variance' && (
+                 <ProductVarianceReport />
             )}
           </div>
         </main>
