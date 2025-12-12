@@ -14,7 +14,10 @@ const SalesTable = ({ filters, vendors }) => {
   const [selectedSale, setSelectedSale] = useState(null);
   const [activeTab, setActiveTab] = useState('details');
 
-  const fetchPage = useCallback(async (p = 1) => {
+
+const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
+
+const fetchPage = useCallback(async (p = 1) => { 
   setLoading(true);
   try {
     const params = {
@@ -25,22 +28,30 @@ const SalesTable = ({ filters, vendors }) => {
       vendor_id: filters.vendor_id,
       payment_type: filters.payment_type
     };
+
     const res = await salesService.getSalesPaginated(params);
-    if (res && res.data) {
-      setData(res.data);
+     console.log(res)
+
+    // CHANGE HERE: use res.items
+    if (res && res.ok && Array.isArray(res.items)) {
+      setData(res.items);
       setTotalPages(res.total_pages || 1);
-      setTotalRows(res.total_rows || 0);
+      setTotalRows(res.total_rows || res.items.length || 0);
+      toast(`Loaded page ${p}`, { icon: '📄' });
     } else {
       setData([]);
+      setTotalPages(1);
+      setTotalRows(0);
+      toast.error('No sales data available');
     }
-    toast(`Loaded page ${p}`, { icon: '📄' });
   } catch (err) {
-    console.error(err);
+    setData([]);
     toast.error('Failed to load sales');
   } finally {
     setLoading(false);
   }
-}, [filters, limit]); // include only values used from outer scope
+}, [filters, limit]);
+
 
 useEffect(() => {
   setPage(1);
@@ -92,13 +103,13 @@ useEffect(() => {
                 </tr>
               ) : data.map((row) => (
                 <tr key={row.id || Math.random()} onClick={() => openModal(row)} style={{ cursor: 'pointer' }}>
-                  <td>{new Date(row.sale_date).toLocaleString()}</td>
+                  <td>{new Date(row.created_at).toLocaleString()}</td>
                   <td>{row.product_name || `#${row.product_id}`}</td>
                   <td>{vendors.find(v => v.id === row.vendor_id)?.name || row.vendor_id}</td>
-                  <td>{row.quantity}</td>
-                  <td>{new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(Number(row.customer_price))}</td>
-                  <td>{new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(Number(row.hub_commission))}</td>
-                  <td><span className="row-badge">{row.payment_type || 'unknown'}</span></td>
+                  <td>{row.qty}</td>
+                  <td>{new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(Number(round(row.selling_price)))}</td>
+                  <td>{new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(Number(row.commission))}</td>
+                  <td><span className="row-badge">{row.payment_method || 'unknown'}</span></td>
                 </tr>
               ))}
             </tbody>
@@ -130,25 +141,32 @@ useEffect(() => {
             <div className="modal-tab-content">
               {activeTab === 'details' && (
                 <>
-                  <p><strong>Date:</strong> {new Date(selectedSale.sale_date).toLocaleString()}</p>
+                  <p><strong>Date:</strong> {new Date(selectedSale.created_at).toLocaleString()}</p>
                   <p><strong>Product:</strong> {selectedSale.product_name || `#${selectedSale.product_id}`}</p>
                   <p><strong>Vendor:</strong> {vendors.find(v => v.id === selectedSale.vendor_id)?.name || selectedSale.vendor_id}</p>
-                  <p><strong>Quantity:</strong> {selectedSale.quantity}</p>
-                  <p><strong>Commission:</strong> {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(Number(selectedSale.hub_commission))}</p>
+                  <p><strong>Quantity:</strong> {selectedSale.qty}</p>
+                  <p><strong>Commission:</strong> {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(Number(selectedSale.commission))}</p>
                 </>
               )}
 
               {activeTab === 'customer' && (
                 <>
-                  <p><strong>Customer Type:</strong> {selectedSale.customer_type || 'Unknown'}</p>
-                  <p><strong>Customer Price:</strong> {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(Number(selectedSale.customer_price))}</p>
+                  <p><strong>Customer Type:</strong> {selectedSale.order_method || 'Unknown'}</p>
+                 <p><strong>Customer Price:</strong> {
+  new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(
+    round(
+      Number(selectedSale.selling_price || 0) + Number(selectedSale.commission || 0)
+    )
+  )
+}</p>
+
                 </>
               )}
 
               {activeTab === 'payment' && (
                 <>
-                  <p><strong>Payment Type:</strong> {selectedSale.payment_type}</p>
-                  {selectedSale.payment_type === 'multiple' && selectedSale.payment_breakdown && (
+                  <p><strong>Payment Type:</strong> {selectedSale.payment_method}</p>
+                  {selectedSale.payment_method === 'multiple' && selectedSale.payment_breakdown && (
                     <ul>
                       {selectedSale.payment_breakdown.map((p, idx) => (
                         <li key={idx}>{p.method}: {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(p.amount)}</li>

@@ -3,6 +3,7 @@ import Header from '../components/common/Header';
 import Sidebar from '../components/common/Sidebar';
 import SalesReport from '../components/reports/SalesReport';
 import ExpenseReport from '../components/expenses/Expensereport';
+import ExpenseList from '../components/expenses/ExpenseList';
 import '../../src/styles/pages/ReportsPage.css';
 
 const ReportsPage = () => {
@@ -45,7 +46,12 @@ const ReportsPage = () => {
           {/* --- Tab Content --- */}
           <div className="report-content">
             {activeTab === 'sales' && <SalesReport />}
-            {activeTab === 'expense' && <ExpenseReport />}
+            {activeTab === 'expense' && 
+                <>
+                  <ExpenseReport />
+                  <ExpenseList hideActions={true}  />
+               </>
+            }
             {activeTab === 'variance' && (
               <div className="coming-soon-box">
                 <h2>📊 Variance Report</h2>

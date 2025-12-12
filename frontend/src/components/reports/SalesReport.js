@@ -12,6 +12,8 @@ import PaymentBreakdownChart from './components/PaymentBreakdownChart';
 import SalesTable from './components/SalesTable';
 import FiltersBar from './components/FiltersBar';
 import LoadingState from './components/LoadingState';
+// Add at the top
+import { exportCSV, exportExcel, exportPDF } from "../../utils/exportHelpers";
 
 import '../../components/reports/styles/sales-report.css';
 
@@ -96,6 +98,7 @@ const onApplyFilters = (newFilters) => {
   // Fetch data on mount
   useEffect(() => {
     fetchAll();
+    // eslint-disable-next-line
   }, []);
 
   return (
@@ -140,10 +143,45 @@ const onApplyFilters = (newFilters) => {
             </div>
 
             <div className="table-card" style={{ marginTop: 12 }}>
-              <div className="table-header">
-                <h3 style={{ fontWeight: 700 }}>Sales Report</h3>
-                <div style={{ color: 'var(--color-muted)', fontSize: 13 }}>Complete listing with filters</div>
-              </div>
+   <div className="table-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+  <div>
+    <h3 style={{ fontWeight: 700 }}>Sales Report</h3>
+    <div style={{ color: 'var(--color-muted)', fontSize: 13 }}>Complete listing with filters</div>
+  </div>
+
+  <div style={{ display: "flex", gap: 10 }}>
+    <button
+      className="page-btn"
+      onClick={async () => {
+        const all = await salesService.getAllSalesNoPagination(filters);
+        exportCSV(all.items, "sales.csv");
+      }}
+    >
+      CSV
+    </button>
+
+    <button
+      className="page-btn"
+      onClick={async () => {
+        const all = await salesService.getAllSalesNoPagination(filters);
+        exportExcel(all.items, "sales.xlsx");
+      }}
+    >
+      Excel
+    </button>
+
+    <button
+      className="page-btn"
+      onClick={async () => {
+        const all = await salesService.getAllSalesNoPagination(filters);
+        exportPDF(all.items, "sales.pdf", vendors);
+      }}
+    >
+      PDF
+    </button>
+  </div>
+</div>
+
 
               <SalesTable vendors={vendors} filters={filters} />
             </div>

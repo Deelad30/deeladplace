@@ -28,7 +28,8 @@ const KPISection = ({ overview = {} }) => {
     average_order_value = 0
   } = overview;
 
-  const netProfit = total_revenue - total_commission;
+  const netProfit = parseFloat(total_revenue || 0) - parseFloat(total_commission || 0);
+
 
   return (
     <div className="kpi-row">

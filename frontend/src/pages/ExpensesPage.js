@@ -10,7 +10,7 @@ const ExpensesPage = () => {
   const [showForm, setShowForm] = useState(false);
   const [activeTab, setActiveTab] = useState('list');
   const [editExpense, setEditExpense] = useState(null); 
-
+ 
   const handleOpenForm = () => {
   setEditExpense(null);
   setShowForm(true);

@@ -4,8 +4,9 @@ import toast from "react-hot-toast";
 import { vendorService } from "../../services/vendorService";
 import "../../styles/components/expenses/ExpenseList.css";
 import ConfirmationModal from "../common/ConfirmationModal";
+import { exportCSV, exportExcel, exportPDF } from "../../utils/exportExpenseHelpers";
 
-const ExpenseList = ({ refreshFlag, onEditExpense }) => {
+const ExpenseList = ({ refreshFlag, onEditExpense, hideActions = false  }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [dateFilter, setDateFilter] = useState({ from: "", to: "" });
@@ -130,7 +131,17 @@ const ExpenseList = ({ refreshFlag, onEditExpense }) => {
 
   return (
     <div className="expense-list-container">
-      <h2 className="list-title">All Expenses</h2>
+      <div style={{ display:"flex", width:"100%", justifyContent:"space-between" }}>
+        <h2 className="list-title">All Expenses</h2>
+        {hideActions && (
+  <div className="filter_btn" style={{ display: "flex", gap: 10, marginBottom: 12 }}>
+    <button onClick={() => exportCSV(currentExpenses, "expenses.csv", vendors)}>CSV</button>
+    <button onClick={() => exportExcel(currentExpenses, "expenses.xlsx", vendors)}>Excel</button>
+    <button onClick={() => exportPDF(currentExpenses, "expenses.pdf", vendors)}>PDF</button>
+  </div>
+)}
+      </div>
+      
 
       <div className="expense-filters">
         <input
@@ -179,7 +190,7 @@ const ExpenseList = ({ refreshFlag, onEditExpense }) => {
               <th>Supplier</th>
               <th>Vendor</th>
               <th>Date</th>
-              <th>Actions</th>
+              {!hideActions && <th>Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -192,8 +203,12 @@ const ExpenseList = ({ refreshFlag, onEditExpense }) => {
                 <td>{exp.vendor_name || "-"}</td>
                 <td>{new Date(exp.expense_date).toLocaleDateString()}</td>
                 <td>
-                  <button className="edit-btn" onClick={() => handleEdit(exp)}>Edit</button>
-                  <button className="delete-btn" onClick={() => confirmDelete(exp)}>Delete</button>
+                    {!hideActions && (
+                    <>
+                      <button className="edit-btn" onClick={() => handleEdit(exp)}>Edit</button>
+                      <button className="delete-btn" onClick={() => confirmDelete(exp)}>Delete</button>
+                    </>
+                  )}
                 </td>
               </tr>
             ))}
