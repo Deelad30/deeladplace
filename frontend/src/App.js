@@ -14,6 +14,7 @@ import DashboardPage from "./pages/DashboardPage";
 import POSPage from "./pages/POSPage";
 import VendorsPage from "./pages/VendorsPage";
 import RecipePage from './pages/RecipePage';
+import LandingPage from "./pages/LandingPage";
 import ProductsDashboard from "./pages/ProductsDashboard";
 import InventoryPage from "./pages/InventoryPage";
 import ExpensesPage from "./pages/ExpensesPage";
@@ -85,13 +86,14 @@ function App() {
               </PrivateRoute>
             }
           />
+          <Route path="/" element={<LandingPage />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
 
 
           {/* MAIN DASHBOARD */}
           <Route
-            path="/"
+            path="/dashboard"
             element={
               <PrivateRoute requiredSection="dashboard">
                 <DashboardPage />

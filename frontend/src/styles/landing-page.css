@@ -1,0 +1,273 @@
+/* GENERAL */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body,
+.landing {
+  font-family: Inter, sans-serif;
+  color: #222;
+  background: #fff;
+  overflow-x: hidden;
+}
+
+.dark {
+  background: #0b0b0b;
+  color: #eee;
+}
+
+/* PRELOADER */
+.preloader {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  animation: fadeOut 0.6s ease 0.6s forwards;
+}
+
+.logo-spin {
+  font-size: 1.8rem;
+  font-weight: bold;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0); }
+  to { transform: rotate(360deg); }
+}
+
+/* HEADER */
+.header {
+  display: flex;
+  justify-content: space-between;
+  padding: 22px 40px;
+  align-items: center;
+  margin-bottom: 0px!important;
+}
+
+.header nav {
+  display: flex;
+  gap: 26px;
+}
+
+.header nav a {
+  text-decoration: none;
+  color: inherit;
+  opacity: 0.8;
+  transition: 0.2s;
+}
+
+.header nav a:hover {
+  opacity: 1;
+}
+
+.nav-cta {
+  padding: 8px 14px;
+  border: 1px solid #333;
+  border-radius: 6px;
+}
+
+/* HERO */
+.hero {
+  padding: 120px 40px;
+  max-width: 800px;
+  margin: auto;
+  text-align: center;
+  animation: fadeUp 0.7s ease;
+}
+
+.hero h1 {
+  font-size: 2.8rem;
+  margin-bottom: 18px;
+}
+
+.hero p {
+  font-size: 1.2rem;
+  opacity: 0.8;
+  margin-bottom: 24px;
+}
+
+.hero-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.primary-btn,
+.secondary-btn {
+  padding: 15px 26px;
+  border-radius: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  width: 262px!important;
+}
+
+.primary-btn {
+  background: #d91f22!important;
+  color: #fff;
+
+}
+
+.secondary-btn {
+  border: 1px solid #000;
+  background: none;
+}
+
+/* PAIN GRID */
+.problem {
+  padding: 80px 40px;
+  text-align: center;
+}
+
+.pain-grid {
+  margin-top: 30px;
+  display: grid;
+  gap: 12px;
+  max-width: 700px;
+  margin-inline: auto;
+}
+
+.clincher {
+  margin-top: 20px;
+  font-weight: bold;
+}
+
+/* DIAGRAM */
+.diagram {
+  margin: 40px auto;
+  max-width: 600px;
+  display: grid;
+  gap: 12px;
+  text-align: center;
+}
+
+.node,
+.center {
+  padding: 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+/* MODULES */
+.module-grid {
+  margin-top: 40px;
+  display: grid;
+  gap: 20px;
+}
+
+.module {
+  border: 1px solid #ccc;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+/* PRICING */
+.pricing {
+  padding: 80px 40px;
+  text-align: center;
+}
+
+.pricing-grid {
+  margin-top: 30px;
+  display: grid;
+  gap: 20px;
+}
+
+.plan {
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+}
+
+.plan button {
+  margin-top: 12px;
+  padding: 12px 20px;
+}
+
+.popular {
+  border-width: 2px;
+}
+
+.tag {
+  background: black;
+  color: white;
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  margin-bottom: 10px;
+  display: inline-block;
+}
+
+/* STORY */
+.story {
+  padding: 80px 40px;
+}
+
+.founder-img {
+  width: 150px;
+  border-radius: 100%;
+  margin-bottom: 20px;
+}
+
+.story-box {
+  text-align: center;
+  max-width: 600px;
+  margin: auto;
+}
+
+/* FINAL CTA */
+.final-cta {
+  padding: 80px 40px;
+  text-align: center;
+}
+
+.cta-row {
+  margin-top: 40px;
+  display: grid;
+  gap: 20px;
+}
+
+.cta-box button {
+  padding: 14px 20px;
+}
+
+/* FOOTER */
+.footer {
+  padding: 30px;
+  text-align: center;
+  opacity: 0.7;
+}
+
+/* MOBILE */
+@media (max-width: 780px) {
+  .header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .hero {
+    padding: 80px 20px;
+  }
+
+  .pricing-grid,
+  .module-grid,
+  .cta-row {
+    grid-template-columns: 1fr;
+  }
+
+  nav {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeOut {
+  to { opacity: 0; visibility: hidden; }
+}

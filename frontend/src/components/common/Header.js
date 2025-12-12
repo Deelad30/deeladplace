@@ -22,7 +22,7 @@ const Header = ({ onToggleSidebar }) => {
 
         {/* Brand */}
         <div style={{ color: "#d91f22" }} className="header-brand">
-          <h1>{APP_CONFIG.APP_NAME}</h1>
+          <img src="/logo.png" alt="logo-deesoftwork" className="logo" />
         </div>
 
         {/* User Menu */}

@@ -7,7 +7,10 @@
   top: 0;
   z-index: 1000;
 }
-
+.logo{
+  width: 250px;
+  padding: 10px 20px;
+}
 /* ---------- INNER CONTENT ---------- */
 .header-inner {
   display: flex;
