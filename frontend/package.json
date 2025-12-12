@@ -35,7 +35,8 @@
     "react-router-dom": "^6.15.0",
     "react-scripts": "5.0.1",
     "react-spinners": "^0.17.0",
-    "recharts": "^3.4.1"
+    "recharts": "^3.4.1",
+    "xlsx": "^0.18.5"
   },
   "browserslist": {
     "production": [
