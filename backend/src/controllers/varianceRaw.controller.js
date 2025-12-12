@@ -75,6 +75,13 @@ exports.getRawMaterialVariance = async (req, res) => {
       const varianceQty = actual - expected;
       const unitCost = Number(row.average_cost || 0);
 
+      let remark = "Good";
+      if (varianceQty < 0) remark = "Over usage / Missing";       // negative = over usage
+      else if (varianceQty > 0) remark = "Under usage";           // positive = under usage
+
+      // Optional: suspicious threshold, e.g., more than 20% difference
+      if (Math.abs(varianceQty) > expected * 0.2) remark = "Suspicious variance";
+
       return {
         material_id: row.material_id,
         material_name: row.material_name,
@@ -86,7 +93,9 @@ exports.getRawMaterialVariance = async (req, res) => {
 
         variance_qty: varianceQty,
         unit_cost: unitCost,
-        variance_value: varianceQty * unitCost
+        variance_value: varianceQty * unitCost,
+
+        remark
       };
     });
 

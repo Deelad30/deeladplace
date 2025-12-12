@@ -1,51 +1,29 @@
 import React, { useState } from 'react';
-import { inventoryService } from '../../services/inventoryService';
+import { rawVariance } from '../../api/reports'; // raw variance API
 import toast from 'react-hot-toast';
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 import '../../styles/pages/VarianceReport.css';
 
 const VarianceReport = () => {
-  const [selectedDate, setSelectedDate] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [varianceData, setVarianceData] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const fetchVariance = async () => {
-    if (!selectedDate) return toast.error('Please select a date');
+    if (!startDate || !endDate) return toast.error('Please select both start and end dates');
 
     setLoading(true);
+    toast.loading('Fetching raw material variance...');
+
     try {
-      // Format the date to "YYYY-MM-DD"
-      const formattedDate = new Date(selectedDate).toISOString().split('T')[0];
-      toast.loading('Fetching variance...');
-
-      // Fetch today's movements
-      const todayResponse = await inventoryService.getMovementsByDate(formattedDate);
-      const todayMovements = todayResponse?.data?.data || [];
-
-      // Fetch yesterday's movements
-      const yesterday = new Date(formattedDate);
-      yesterday.setDate(yesterday.getDate() - 1);
-      const formattedYesterday = yesterday.toISOString().split('T')[0];
-
-      const yesterdayResponse = await inventoryService.getMovementsByDate(formattedYesterday);
-      const yesterdayMovements = yesterdayResponse?.data?.data || [];
-
-      // Combine data and calculate variance
-      const combinedData = todayMovements.map(today => {
-        const yesterdayRow = yesterdayMovements.find(
-          y => y.raw_material_id === today.raw_material_id
-        ) || {};
-        return {
-          ...today,
-          usage_yesterday: parseFloat(yesterdayRow.usage || 0),
-          variance: parseFloat(today.usage) - parseFloat(yesterdayRow.usage || 0),
-        };
-      });
-
-      setVarianceData(combinedData);
+      const response = await rawVariance({ start_date: startDate, end_date: endDate });
+      const items = response?.data?.items || [];
+      setVarianceData(items);
       toast.dismiss();
-      toast.success('Variance data loaded');
+      toast.success('Raw material variance data loaded');
     } catch (err) {
       console.error('Fetch variance error:', err);
       toast.dismiss();
@@ -56,90 +34,160 @@ const VarianceReport = () => {
     }
   };
 
-  const getVarianceClass = (variance) => {
-  if (variance > 0) return 'positive'; 
-  if (variance < 0) return 'negative';  
-  return 'neutral';                      
-};
+  // CSV export
+  const exportCSV = () => {
+    if (!varianceData.length) return toast.error("No data to export!");
 
-const downloadPDF = () => {
-  if (!varianceData || varianceData.length === 0) {
-    toast.error("No data to download!");
-    return;
-  }
+    const headers = [
+      "Material", "Expected Usage", "Actual Usage", "Variance Qty", "Unit Cost", "Variance Value", "Remark"
+    ];
 
-  const doc = new jsPDF();
+    const body = varianceData.map(item => [
+      item.material_name,
+      item.expected_usage,
+      item.actual_usage,
+      item.variance_qty,
+      item.unit_cost,
+      item.variance_value,
+      item.remark
+    ]);
 
-  const tableColumn = ["Material", "Opening Stock", "Closing Stock", "Usage", "Waste", "Variance"];
-  const tableRows = varianceData.map(item => [
-    item.raw_material_name,
-    item.opening_stock,
-    item.closing_stock,
-    item.usage,
-    item.waste,
-    item.variance
-  ]);
+    const csvContent = [
+      headers.join(','),
+      ...body.map(row => row.map(val => `"${val}"`).join(','))
+    ].join('\n');
 
-  autoTable(doc, { head: [tableColumn], body: tableRows });
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `raw_variance_${startDate}_to_${endDate}.csv`;
+    link.click();
+  };
 
-  doc.save(`variance-report-${new Date().toISOString().slice(0,10)}.pdf`);
-  toast.success("Variance report downloaded!");
-};
+  // Excel export
+  const exportExcel = () => {
+    if (!varianceData.length) return toast.error("No data to export!");
+    const ws = XLSX.utils.json_to_sheet(
+      varianceData.map(item => ({
+        Material: item.material_name,
+        "Expected Usage": item.expected_usage,
+        "Actual Usage": item.actual_usage,
+        "Variance Qty": item.variance_qty,
+        "Unit Cost": item.unit_cost,
+        "Variance Value": item.variance_value,
+        Remark: item.remark
+      }))
+    );
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Raw Variance");
+    XLSX.writeFile(wb, `raw_variance_${startDate}_to_${endDate}.xlsx`);
+  };
 
+  // PDF export
+  const exportPDF = () => {
+    if (!varianceData.length) return toast.error("No data to export!");
+
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+    const logoUrl = "/logo.png"; // logo in /public
+
+    const headers = ["Material", "Expected Usage", "Actual Usage", "Variance Qty", "Unit Cost", "Variance Value", "Remark"];
+    const body = varianceData.map(item => [
+      item.material_name,
+      item.expected_usage,
+      item.actual_usage,
+      item.variance_qty,
+      item.unit_cost,
+      item.variance_value,
+      item.remark
+    ]);
+
+    // Logo
+    doc.addImage(logoUrl, 'PNG', 40, 20, 120, 40);
+
+    // Title
+    doc.setFontSize(20);
+    doc.text("Raw Materials Variance Report", 200, 60);
+
+    // Watermark
+    doc.setFontSize(60);
+    doc.setTextColor(200, 200, 200);
+    doc.text("DEESOFTWORK", doc.internal.pageSize.width / 2, doc.internal.pageSize.height / 2, {
+      align: "center",
+      angle: 45,
+    });
+    doc.setTextColor(0, 0, 0);
+
+    // Table
+    autoTable(doc, {
+      head: [headers],
+      body,
+      startY: 100,
+      styles: { fontSize: 10, cellPadding: 6, overflow: "linebreak" },
+      headStyles: { fillColor: [40, 40, 40], textColor: 255, fontStyle: "bold" },
+      alternateRowStyles: { fillColor: [240, 240, 240] },
+      margin: { top: 100, bottom: 50 },
+      didDrawPage: (data) => {
+        const pageCount = doc.internal.getNumberOfPages();
+        const pageSize = doc.internal.pageSize;
+        // Footer
+        doc.setFontSize(10);
+        doc.text(
+          `Page ${data.pageNumber} of ${pageCount} | Generated by DEESOFTWORK POS`,
+          data.settings.margin.left,
+          pageSize.height - 20
+        );
+      },
+    });
+
+    doc.save(`raw_variance_${startDate}_to_${endDate}.pdf`);
+    toast.success("PDF downloaded!");
+  };
 
   return (
     <div className="variance-report-container">
-      <h2>Variance Report</h2>
+      <h2>Raw Materials Variance Report</h2>
       <div className="controls">
-        <input
-          type="date"
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-        />
+        <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+        <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
         <button onClick={fetchVariance} disabled={loading}>
           {loading ? 'Loading...' : 'Fetch Variance'}
         </button>
-<button 
-  className="download-btn" 
-  onClick={downloadPDF} 
-  disabled={varianceData.length === 0}
->
-  Download PDF
-</button>
-
+        {varianceData.length > 0 && (
+          <>
+            <button onClick={exportCSV}>CSV</button>
+            <button onClick={exportExcel}>Excel</button>
+            <button onClick={exportPDF}>PDF</button>
+          </>
+        )}
       </div>
 
       <table>
         <thead>
           <tr>
             <th>Material</th>
-            <th>Opening</th>
-            <th>Issues</th>
-            <th>Waste</th>
-            <th>Closing</th>
-            <th>Usage</th>
-            <th>Yesterday Usage</th>
-            <th>Variance</th>
+            <th>Expected Usage</th>
+            <th>Actual Usage</th>
+            <th>Variance Qty</th>
+            <th>Unit Cost</th>
+            <th>Variance Value</th>
+            <th>Remark</th>
           </tr>
         </thead>
         <tbody>
           {varianceData.length === 0 ? (
             <tr>
-              <td colSpan="8" style={{ textAlign: 'center' }}>
-                No data to display
-              </td>
+              <td colSpan="7" style={{ textAlign: 'center' }}>No data to display</td>
             </tr>
           ) : (
             varianceData.map(item => (
-              <tr key={item.id}>
-                <td>{item.raw_material_name}</td>
-                <td>{item.opening_stock}</td>
-                <td>{item.issues}</td>
-                <td>{item.waste}</td>
-                <td>{item.closing_stock}</td>
-                <td>{item.usage}</td>
-                <td>{item.usage_yesterday}</td>
-                <td className={getVarianceClass(item.variance)}>{item.variance}</td>
+              <tr key={item.material_id}>
+                <td>{item.material_name}</td>
+                <td>{item.expected_usage}</td>
+                <td>{item.actual_usage}</td>
+                <td>{item.variance_qty}</td>
+                <td>{item.unit_cost}</td>
+                <td>{item.variance_value}</td>
+                <td>{item.remark}</td>
               </tr>
             ))
           )}

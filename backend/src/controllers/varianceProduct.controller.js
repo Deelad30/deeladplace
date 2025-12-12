@@ -60,6 +60,11 @@ exports.getProductVariance = async (req, res) => {
 
       const profitVariance = revenueVariance - cogsVariance;
 
+      let remark = "Good";
+      if (revenueVariance < 0) remark = "Missing sales";     // negative variance = missing
+      else if (revenueVariance > 0) remark = "Overring";    // positive variance = overring
+
+
       return {
         product_id: r.product_id,
         product_name: r.product_name,
@@ -79,7 +84,9 @@ exports.getProductVariance = async (req, res) => {
         actual_cogs: actualCOGS,
         cogs_variance: cogsVariance,
 
-        profit_variance: profitVariance
+        profit_variance: profitVariance,
+
+        remark
       };
     });
 

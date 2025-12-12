@@ -4,6 +4,7 @@ import Sidebar from '../components/common/Sidebar';
 import SalesReport from '../components/reports/SalesReport';
 import ExpenseReport from '../components/expenses/Expensereport';
 import ExpenseList from '../components/expenses/ExpenseList';
+import VarianceReport from '../components/inventory/VarianceReport';
 import '../../src/styles/pages/ReportsPage.css';
 
 const ReportsPage = () => {
@@ -53,10 +54,7 @@ const ReportsPage = () => {
                </>
             }
             {activeTab === 'variance' && (
-              <div className="coming-soon-box">
-                <h2>📊 Variance Report</h2>
-                <p>This module is coming soon.</p>
-              </div>
+                 <VarianceReport />
             )}
           </div>
         </main>
