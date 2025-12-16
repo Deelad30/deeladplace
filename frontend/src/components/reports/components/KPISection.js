@@ -21,6 +21,7 @@ const KPICard = ({ icon, value, label }) => (
 );
 
 const KPISection = ({ overview = {} }) => {
+        const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
   const {
     total_revenue = 0,
     total_commission = 0,
@@ -41,7 +42,7 @@ const KPISection = ({ overview = {} }) => {
             <path d="M4 12h16" stroke="white" strokeWidth="2" />
           </svg>
         }
-        value={formatCurrency(total_revenue)}
+        value={formatCurrency(round(total_revenue))}
         label="Total Revenue"
       />
 
@@ -52,7 +53,7 @@ const KPISection = ({ overview = {} }) => {
             <path d="M6 4h12v16H6z" stroke="white" strokeWidth="2" />
           </svg>
         }
-        value={formatCurrency(total_commission)}
+        value={formatCurrency(round(total_commission))}
         label="Total Commission"
       />
 
@@ -74,7 +75,7 @@ const KPISection = ({ overview = {} }) => {
             <path d="M8 12h8" stroke="white" strokeWidth="2"/>
           </svg>
         }
-        value={formatCurrency(average_order_value)}
+        value={formatCurrency(round(average_order_value))}
         label="Avg Order Value"
       />
 
@@ -84,8 +85,8 @@ const KPISection = ({ overview = {} }) => {
             <path d="M3 6h18M3 12h18M3 18h18" stroke="white" strokeWidth="2"/>
           </svg>
         }
-        value={formatCurrency(netProfit)}
-        label="Net Profit"
+        value={formatCurrency(round(netProfit))}
+        label="Proceeds"
       />
 
     </div>

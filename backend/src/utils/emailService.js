@@ -791,6 +791,8 @@ html: `
     throw error;
   }
 }
+
+
   async sendPasswordResetConfirmation(user) {
     try {
       const mailOptions = {

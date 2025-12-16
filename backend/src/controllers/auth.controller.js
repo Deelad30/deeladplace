@@ -143,10 +143,7 @@ const forgotPassword = async (req, res) => {
       'SELECT id, email, name FROM users WHERE email = $1',
       [email]
     );
-
-    console.log(userResult);
   
-    
 
     if (userResult.rows.length === 0) {
       return res.json({
@@ -191,13 +188,16 @@ const resetPassword = async (req, res) => {
   try {
     const { token, newPassword } = req.body;
 
-    if (!token || !newPassword)
+    if (!token || !newPassword) {
       return res.status(400).json({ success: false, message: 'Token and new password are required' });
+    }
 
+    // Hash the token to match the one stored in DB
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
+    // Fetch user including their email
     const userResult = await db.query(
-      `SELECT id FROM users 
+      `SELECT id, email FROM users 
        WHERE reset_token = $1 AND reset_token_expiry > $2`,
       [hashedToken, new Date()]
     );
@@ -207,8 +207,11 @@ const resetPassword = async (req, res) => {
     }
 
     const user = userResult.rows[0];
+
+    // Hash the new password
     const newHash = await bcrypt.hash(newPassword, 10);
 
+    // Update password and clear reset token
     await db.query(
       `UPDATE users 
        SET password_hash = $1, reset_token = NULL, reset_token_expiry = NULL
@@ -216,8 +219,10 @@ const resetPassword = async (req, res) => {
       [newHash, user.id]
     );
 
+    console.log('Password reset for user:', user.email);
+
     // Send confirmation email
-    emailService.sendPasswordResetConfirmation(user, new Date().toLocaleString())
+    await emailService.sendPasswordResetConfirmation(user)
       .catch(err => console.error('Failed to send reset confirmation email:', err));
 
     res.json({ success: true, message: 'Password reset successfully' });
@@ -227,6 +232,7 @@ const resetPassword = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
+
 
 module.exports = {
   signup,
