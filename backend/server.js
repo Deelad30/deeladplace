@@ -32,22 +32,13 @@ app.get('/api/test-email', async (req, res) => {
 });
 
 // Health check endpoint
-app.get('/api/health', async (req, res) => {
-  try {
-    const result = await database.query('SELECT NOW()');
-    res.json({
-      status: 'OK',
-      database: 'Connected',
-      timestamp: result.rows[0].now
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: 'Error',
-      database: 'Disconnected',
-      error: error.message
-    });
-  }
-});
+app.get('/health', (req, res) => res.status(200).json({ status: 'ok' }));
+if (process.env.NODE_ENV === 'production') {
+  app.use(require('morgan')('combined'));
+} else {
+  app.use(require('morgan')('dev'));
+}
+
 
 // Import routes
 // const authRoutes = require('./src/routes/auth');

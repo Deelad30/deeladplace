@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: deelad-softwork-backend
+    env: node
+    plan: free
+    branch: main
+    autoDeploy: true
+    buildCommand: "cd backend && npm install"
+    startCommand: "cd backend && npm run start"
+    healthCheckPath: "/health"   # Make sure to create a /health route in server.js returning 200
+    envVars:
+      - key: NODE_ENV
+        value: "production"
+      - key: PORT
+        value: "5000"
+      - key: DB_USER
+        fromDatabase:
+          name: neon-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: neon-db
+          property: password
+      - key: DB_HOST
+        fromDatabase:
+          name: neon-db
+          property: host
+      - key: DB_NAME
+        fromDatabase:
+          name: neon-db
+          property: database
+      - key: DB_PORT
+        fromDatabase:
+          name: neon-db
+          property: port
+      - key: JWT_SECRET
+        value: JWT_DATABASE
