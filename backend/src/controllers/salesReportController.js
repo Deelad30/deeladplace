@@ -113,32 +113,40 @@ exports.getSalesReport = async (req, res) => {
     if (start) start = `${start} 00:00:00`;
     if (end) end = `${end} 23:59:59.999`;
 
-    const sql = `
-      SELECT
-        ps.id,
-        ps.product_id,
-        p.name AS product_name,
-        ps.qty,
-        ps.selling_price,
-        p.custom_commission,
-        (ps.qty * ps.selling_price) AS revenue,
-        (ps.qty * COALESCE(p.custom_commission, 0)) AS commission,
-        ps.payment_method,
-        ps.order_method,
-        ps.vendor_id,
-        ps.created_at
-      FROM pos_sales ps
-      JOIN products p ON p.id = ps.product_id
-      WHERE ps.tenant_id = $1
-        AND ($2::timestamptz IS NULL OR ps.created_at >= $2)
-        AND ($3::timestamptz IS NULL OR ps.created_at <= $3)
-      ORDER BY ps.created_at DESC
-    `;
+const sql = `
+  SELECT
+    ps.id,
+    ps.product_id,
+    p.name AS product_name,
+    ps.qty,
+    ps.selling_price,
+    p.custom_commission,
+    (ps.qty * ps.selling_price) AS revenue,
+    (ps.qty * COALESCE(p.custom_commission, 0)) AS commission,
+    ps.payment_method,
+    ps.order_method,
+    ps.vendor_id,
+    ps.created_at,
+
+    u.name AS sold_by  
+
+  FROM pos_sales ps
+  JOIN products p ON p.id = ps.product_id
+  LEFT JOIN users u ON u.id = ps.created_by   
+
+  WHERE ps.tenant_id = $1
+    AND ($2::timestamptz IS NULL OR ps.created_at >= $2)
+    AND ($3::timestamptz IS NULL OR ps.created_at <= $3)
+
+  ORDER BY ps.created_at DESC
+`;
 
     const params = [tenantId, start || null, end || null];
     const result = await db.query(sql, params);
 
     res.json({ ok: true, items: result.rows });
+    console.log(result);
+    
 
   } catch (e) {
     console.error(e);

@@ -81,6 +81,7 @@ useEffect(() => {
               <tr>
                 <th>Date/Time</th>
                 <th>Product</th>
+                <th>Sold by</th>
                 <th>Vendor</th>
                 <th>Qty</th>
                 <th>Customer Price</th>
@@ -105,6 +106,7 @@ useEffect(() => {
                 <tr key={row.id || Math.random()} onClick={() => openModal(row)} style={{ cursor: 'pointer' }}>
                   <td>{new Date(row.created_at).toLocaleString()}</td>
                   <td>{row.product_name || `#${row.product_id}`}</td>
+                  <td>{row.sold_by || "-"}</td>
                   <td>{vendors.find(v => v.id === row.vendor_id)?.name || row.vendor_id}</td>
                   <td>{row.qty}</td>
                   <td>{new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(Number(round(row.selling_price)))}</td>

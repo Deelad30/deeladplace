@@ -109,8 +109,6 @@ app.use((error, req, res, next) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Deelad Place API server running on port ${PORT}`);
-});
+app.listen(process.env.PORT || 3000, '0.0.0.0');
 
 module.exports = app;
