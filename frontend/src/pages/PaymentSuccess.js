@@ -14,7 +14,7 @@ function PaymentSuccess() {
 
       try {
 
-        const response = await axios.get(`http://localhost:5000/api/paystack/verify/${reference}`);
+        const response = await axios.get(`https://deeladplace-production.up.railway.app/api/paystack/verify/${reference}`);
 
         if (response.data.status === "success") {
 

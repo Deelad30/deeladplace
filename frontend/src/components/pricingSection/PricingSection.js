@@ -12,7 +12,7 @@ function PricingSection({ user }) {
     setLoadingPlan(planType);
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/paystack/create-subscription",
+        "https://deeladplace-production.up.railway.app/api/paystack/create-subscription",
         {
           userId: user.id,
           planType,

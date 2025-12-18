@@ -19,7 +19,7 @@ export default function PaystackCallback() {
       }
 
       try {
-        const res = await axios.get(`http://localhost:5000/api/paystack/verify/${reference}`);
+        const res = await axios.get(`https://deeladplace-production.up.railway.app/api/paystack/verify/${reference}`);
         if (res.data.status === 'success') {
           setMessage('Payment successful. Redirecting...');
           // Optionally refresh user state here or fetch updated profile

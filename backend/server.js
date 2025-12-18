@@ -32,24 +32,6 @@ app.get('/api/test-email', async (req, res) => {
 });
 
 
-// const { Resend } = require("resend");
-// const resend = new Resend(process.env.RESEND_API_KEY);
-
-// (async () => {
-//   try {
-//     const email = await resend.emails.send({
-//       from: "Dee Softwork <onboarding@deesoftwork.com.ng>",
-//       to: "muhammadsaniharuna44@gmail.com",
-//       subject: "Test Resend Email",
-//       html: "<h1>Hello World</h1>",
-//     });
-//     console.log("Sent:", email);
-//   } catch (err) {
-//     console.error("Error sending email:", err);
-//   }
-// })();
-
-// Health check endpoint
 app.get('/health', (req, res) => res.status(200).json({ status: 'ok' }));
 if (process.env.NODE_ENV === 'production') {
   app.use(require('morgan')('combined'));
