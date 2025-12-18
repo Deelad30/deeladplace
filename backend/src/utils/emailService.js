@@ -1,28 +1,64 @@
 const nodemailer = require('nodemailer');
+const Resend = require("resend");
 
 class EmailService {
   constructor() {
-    this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT, 10) || 587,
-      secure: process.env.SMTP_SECURE === 'true', // false for port 587, true for 465
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
-
-    this.verifyConnection();
-  }
-
-  async verifyConnection() {
-    try {
-      await this.transporter.verify();
-      console.log('✅ Email service connected successfully');
-    } catch (error) {
-      console.error('❌ Email service connection failed:', error.message);
+    if (process.env.NODE_ENV === "production") {
+      // Use Resend in production
+      this.client = new Resend(process.env.RESEND_API_KEY);
+      this.sendMail = this.sendMailResend;
+    } else {
+      // Use Gmail SMTP locally
+      const nodemailer = require("nodemailer");
+      this.transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST || "smtp.gmail.com",
+        port: parseInt(process.env.SMTP_PORT, 10) || 587,
+        secure: process.env.SMTP_SECURE === "true",
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
+        },
+      });
+      this.sendMail = this.sendMailSMTP;
     }
   }
+
+  // Sends existing HTML via Resend
+  async sendMailResend({ to, subject, html }) {
+    await this.client.emails.send({
+      from: process.env.SMTP_FROM,
+      to,
+      subject,
+      html,
+    });
+    console.log(`✅ Email sent to ${to} via Resend`);
+  }
+
+  // Sends existing HTML via Gmail locally
+  async sendMailSMTP({ to, subject, html }) {
+    await this.transporter.sendMail({
+      from: process.env.SMTP_FROM,
+      to,
+      subject,
+      html,
+    });
+    console.log(`✅ Email sent to ${to} via SMTP`);
+  }
+
+
+
+async verifyConnection() {
+  if (process.env.NODE_ENV === "production") {
+    console.log("✅ Email service using Resend (production) — verification skipped");
+    return;
+  }
+  try {
+    await this.transporter.verify();
+    console.log('✅ Email service connected successfully');
+  } catch (error) {
+    console.error('❌ Email service connection failed:', error.message);
+  }
+}
 
   async sendWelcomeEmail(user) {
     try {
