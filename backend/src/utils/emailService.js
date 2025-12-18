@@ -1,15 +1,12 @@
 const nodemailer = require("nodemailer");
-const { Resend } = require("resend")
+const { Resend } = require("resend");
 require("dotenv").config();
 
 class EmailService {
   constructor() {
     if (process.env.NODE_ENV === "production") {
-      // Use Resend in production
-      this.client = new Resend({ apiKey: process.env.RESEND_API_KEY });
-      this.sendMail = this.sendMailResend;
+      this.client = new Resend( process.env.RESEND_API_KEY );
     } else {
-      // Use Gmail SMTP locally
       this.transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST || "smtp.gmail.com",
         port: parseInt(process.env.SMTP_PORT, 10) || 587,
@@ -19,28 +16,31 @@ class EmailService {
           pass: process.env.SMTP_PASS,
         },
       });
-      this.sendMail = this.sendMailSMTP;
     }
   }
 
-  async sendMailResend({ to, subject, html }) {
-    await this.client.emails.send({
-      from: process.env.SMTP_FROM,
-      to,
-      subject,
-      html,
-    });
-    console.log(`✅ Email sent to ${to} via Resend`);
-  }
-
-  async sendMailSMTP({ to, subject, html }) {
-    await this.transporter.sendMail({
-      from: process.env.SMTP_FROM,
-      to,
-      subject,
-      html,
-    });
-    console.log(`✅ Email sent to ${to} via SMTP`);
+  async sendMail({ to, subject, html, from }) {
+    if (process.env.NODE_ENV === "production") {
+      const sender = from || process.env.SMTP_FROM;
+      const result = await this.client.emails.send({
+        from: sender,
+        to,
+        subject,
+        html,
+      });
+      console.log(`✅ Email sent to ${to} via Resend`);
+      return result;
+    } else {
+      const sender = from || process.env.SMTP_FROM;
+      const result = await this.transporter.sendMail({
+        from: sender,
+        to,
+        subject,
+        html,
+      });
+      console.log(`✅ Email sent to ${to} via SMTP`);
+      return result;
+    }
   }
 
   async verifyConnection() {
@@ -56,117 +56,14 @@ class EmailService {
     }
   }
 
-
   async sendWelcomeEmail(user) {
     try {
       const mailOptions = {
         from: `"Dee Softwork" <${process.env.SMTP_FROM}>`,
         to: user.email,
         subject: 'Welcome to Dee Softwork App!',
-        html: `
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Welcome to Dee Softwork</title>
-  </head>
-  <body style="margin:0; padding:0; background-color:#f5f5f5;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5; padding:20px 0;">
-      <tr>
-        <td align="center">
-          <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px; background-color:#ffffff; border-radius:8px; overflow:hidden; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;">
-
-            <!-- Header / Logo -->
-            <tr>
-              <td align="center" style="padding:32px 20px; background-color:#ffffff;">
-                <!-- Replace src with your logo URL -->
-                <img 
-                  src="https://ibb.co/wNLNjKs0" 
-                  alt="Dee Softwork Logo" 
-                  width="120" 
-                  style="display:block; max-width:120px; height:auto;"
-                />
-              </td>
-            </tr>
-
-            <!-- Accent Divider -->
-            <tr>
-              <td style="height:4px; background-color:#d91f22;"></td>
-            </tr>
-
-            <!-- Content -->
-            <tr>
-              <td style="padding:40px 32px; color:#111111;">
-                <h2 style="margin:0 0 16px 0; font-size:24px; font-weight:600; color:#d91f22;">
-                  Welcome to Deelad Place SaaS
-                </h2>
-
-                <p style="margin:0 0 16px 0; font-size:16px; line-height:1.6;">
-                  Hello ${user.name},
-                </p>
-
-                <p style="margin:0 0 24px 0; font-size:16px; line-height:1.6;">
-                  Your account has been successfully created. You now have access to the Deelad Place management system.
-                </p>
-
-                <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
-                  <tr>
-                    <td style="font-size:16px; line-height:1.6;">
-                      <strong>Account Details</strong>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding-top:8px; font-size:15px; line-height:1.6;">
-                      Email: ${user.email}<br />
-                      Role: ${user.role}<br />
-                      Registration Date: ${new Date().toLocaleDateString()}
-                    </td>
-                  </tr>
-                </table>
-
-                <!-- CTA -->
-                <table cellpadding="0" cellspacing="0" style="margin:32px 0;">
-                  <tr>
-                    <td align="center">
-                      <a 
-                        href="${process.env.CLIENT_URL}/login"
-                        style="
-                          display:inline-block;
-                          padding:14px 28px;
-                          font-size:16px;
-                          font-weight:500;
-                          color:#ffffff;
-                          background-color:#d91f22;
-                          text-decoration:none;
-                          border-radius:6px;
-                        "
-                      >
-                        Log in to your account
-                      </a>
-                    </td>
-                  </tr>
-                </table>
-
-                <p style="margin:0 0 16px 0; font-size:15px; line-height:1.6; color:#444444;">
-                  If you have any questions, our support team is always happy to help.
-                </p>
-
-                <p style="margin:0; font-size:15px; line-height:1.6;">
-                  Best regards,<br />
-                  <strong>Dee Softwork Team</strong>
-                </p>
-              </td>
-            </tr>
-
-          </table>
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>
-`,
-
+        html:` <!DOCTYPE html> <html> <head> <meta charset="UTF-8" /> <meta name="viewport" content="width=device-width, initial-scale=1.0" /> <title>Welcome to Dee Softwork</title> </head> <body style="margin:0; padding:0; background-color:#f5f5f5;"> <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5; padding:20px 0;"> <tr> <td align="center"> <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px; background-color:#ffffff; border-radius:8px; overflow:hidden; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;"> <!-- Header / Logo --> <tr> <td align="center" style="padding:32px 20px; background-color:#ffffff;"> <!-- Replace src with your logo URL --> <img src="https://ibb.co/wNLNjKs0" alt="Dee Softwork Logo" width="120" style="display:block; max-width:120px; height:auto;" /> </td> </tr> <!-- Accent Divider --> <tr> <td style="height:4px; background-color:#d91f22;"></td> </tr> <!-- Content --> <tr> <td style="padding:40px 32px; color:#111111;"> <h2 style="margin:0 0 16px 0; font-size:24px; font-weight:600; color:#d91f22;"> Welcome to Deelad Place SaaS </h2> <p style="margin:0 0 16px 0; font-size:16px; line-height:1.6;"> Hello ${user.name}, </p> <p style="margin:0 0 24px 0; font-size:16px; line-height:1.6;"> Your account has been successfully created. You now have access to the Deelad Place management system. </p> <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;"> <tr> <td style="font-size:16px; line-height:1.6;"> <strong>Account Details</strong> </td> </tr> <tr> <td style="padding-top:8px; font-size:15px; line-height:1.6;"> Email: ${user.email}<br /> Role: ${user.role}<br /> Registration Date: ${new Date().toLocaleDateString()} </td> </tr> </table> <!-- CTA --> <table cellpadding="0" cellspacing="0" style="margin:32px 0;"> <tr> <td align="center"> <a href="${process.env.CLIENT_URL}/login" style=" display:inline-block; padding:14px 28px; font-size:16px; font-weight:500; color:#ffffff; background-color:#d91f22; text-decoration:none; border-radius:6px; " > Log in to your account </a> </td> </tr> </table> <p style="margin:0 0 16px 0; font-size:15px; line-height:1.6; color:#444444;"> If you have any questions, our support team is always happy to help. </p> <p style="margin:0; font-size:15px; line-height:1.6;"> Best regards,<br /> <strong>Dee Softwork Team</strong> </p> </td> </tr> </table> </td> </tr> </table> </body> </html>` ,
+        
       };
 
       const result = await this.sendMail(mailOptions);
@@ -177,7 +74,6 @@ class EmailService {
       throw error;
     }
   }
-
   async sendLoginNotification(user, loginTime) {
     try {
       const mailOptions = {
