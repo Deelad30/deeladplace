@@ -1,15 +1,15 @@
-const nodemailer = require('nodemailer');
-const Resend = require("resend");
+const nodemailer = require("nodemailer");
+const { Resend } = require("resend")
+require("dotenv").config();
 
 class EmailService {
   constructor() {
     if (process.env.NODE_ENV === "production") {
       // Use Resend in production
-      this.client = new Resend(process.env.RESEND_API_KEY);
+      this.client = new Resend({ apiKey: process.env.RESEND_API_KEY });
       this.sendMail = this.sendMailResend;
     } else {
       // Use Gmail SMTP locally
-      const nodemailer = require("nodemailer");
       this.transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST || "smtp.gmail.com",
         port: parseInt(process.env.SMTP_PORT, 10) || 587,
@@ -23,7 +23,6 @@ class EmailService {
     }
   }
 
-  // Sends existing HTML via Resend
   async sendMailResend({ to, subject, html }) {
     await this.client.emails.send({
       from: process.env.SMTP_FROM,
@@ -34,7 +33,6 @@ class EmailService {
     console.log(`✅ Email sent to ${to} via Resend`);
   }
 
-  // Sends existing HTML via Gmail locally
   async sendMailSMTP({ to, subject, html }) {
     await this.transporter.sendMail({
       from: process.env.SMTP_FROM,
@@ -45,20 +43,19 @@ class EmailService {
     console.log(`✅ Email sent to ${to} via SMTP`);
   }
 
-
-
-async verifyConnection() {
-  if (process.env.NODE_ENV === "production") {
-    console.log("✅ Email service using Resend (production) — verification skipped");
-    return;
+  async verifyConnection() {
+    if (process.env.NODE_ENV === "production") {
+      console.log("✅ Email service using Resend (production) — verification skipped");
+      return;
+    }
+    try {
+      await this.transporter.verify();
+      console.log('✅ Email service connected successfully');
+    } catch (error) {
+      console.error('❌ Email service connection failed:', error.message);
+    }
   }
-  try {
-    await this.transporter.verify();
-    console.log('✅ Email service connected successfully');
-  } catch (error) {
-    console.error('❌ Email service connection failed:', error.message);
-  }
-}
+
 
   async sendWelcomeEmail(user) {
     try {
@@ -172,7 +169,7 @@ async verifyConnection() {
 
       };
 
-      const result = await this.transporter.sendMail(mailOptions);
+      const result = await this.sendMail(mailOptions);
       console.log(`✅ Welcome email sent to: ${user.email}`);
       return result;
     } catch (error) {
@@ -297,7 +294,7 @@ html: `
 ,
       };
 
-      const result = await this.transporter.sendMail(mailOptions);
+      const result = await this.sendMail(mailOptions);
       console.log(`✅ Login notification sent to: ${user.email}`);
       return result;
     } catch (error) {
@@ -409,7 +406,7 @@ html: `
 
       };
 
-      const result = await this.transporter.sendMail(mailOptions);
+      const result = await this.sendMail(mailOptions);
       console.log(`✅ Password reset email sent to: ${user.email}`);
       return result;
     } catch (error) {
@@ -516,7 +513,7 @@ html: `
 ,
     };
 
-    const result = await this.transporter.sendMail(mailOptions);
+    const result = await this.sendMail(mailOptions);
     console.log(`📨 Invite email sent to: ${data.email}`);
     return result;
   } catch (error) {
@@ -622,7 +619,7 @@ html: `
 ,
     };
 
-    const result = await this.transporter.sendMail(mailOptions);
+    const result = await this.sendMail(mailOptions);
     console.log(`📨 Invite acceptance email sent to: ${data.email}`);
     return result;
   } catch (error) {
@@ -733,7 +730,7 @@ html: `
 
     };
 
-    const result = await this.transporter.sendMail(mailOptions);
+    const result = await this.sendMail(mailOptions);
     console.log(`❌ Subscription payment failed email sent to: ${user.email}`);
     return result;
   } catch (error) {
@@ -818,7 +815,7 @@ html: `
 ,
     };
 
-    const result = await this.transporter.sendMail(mailOptions);
+    const result = await this.sendMail(mailOptions);
     console.log(`✅ Subscription success email sent to: ${user.email}`);
     return result;
   } catch (error) {
@@ -901,7 +898,7 @@ html: `
 `,
       };
 
-      const result = await this.transporter.sendMail(mailOptions);
+      const result = await this.sendMail(mailOptions);
       console.log(`✅ Password reset confirmation sent to: ${user.email}`);
       return result;
     } catch (error) {
