@@ -23,7 +23,7 @@ export default function PaystackCallback() {
         if (res.data.status === 'success') {
           setMessage('Payment successful. Redirecting...');
           // Optionally refresh user state here or fetch updated profile
-          setTimeout(() => navigate('/'), 1200);
+          setTimeout(() => navigate('/dashboard'), 1200);
         } else {
           setMessage('Payment failed or not completed. Redirecting to checkout...');
           setTimeout(() => navigate('/checkout'), 1200);
