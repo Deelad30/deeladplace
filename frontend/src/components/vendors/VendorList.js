@@ -10,11 +10,11 @@ const VendorList = () => {
 
 const user = JSON.parse(localStorage.getItem('user')) || { plan: '' };;
 console.log(user);
-
 // Limit vendor creation based on plan
 const maxVendorsAllowed = (plan, currentCount) => {
   if (plan === 'pro') return currentCount >= 1;
   if (plan === 'enterprise') return currentCount >= 5;
+  if (plan === 'demo') return currentCount >= 5000;
   return false; // no limit for other plans
 };
 

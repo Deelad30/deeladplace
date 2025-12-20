@@ -52,7 +52,7 @@ function Login() {
       console.log(plan);
       
 
-      if (plan === "enterprise" || plan === "pro") {
+      if (plan === "enterprise" || plan === "pro" || plan === "demo") {
         navigate("/dashboard");
       } else {
         navigate("/checkout");
