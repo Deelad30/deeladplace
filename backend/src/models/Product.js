@@ -55,7 +55,7 @@ class Product {
       SELECT *
       FROM products
       WHERE tenant_id = $1 AND is_active = true
-      ORDER BY name
+      ORDER BY created_at
       LIMIT $2 OFFSET $3
       `,
       [tenant_id, limit, offset]

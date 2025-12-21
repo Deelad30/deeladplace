@@ -1,7 +1,11 @@
 import api from './axios';
 
 // Products
-export const getProducts = () => api.get('/products/all');
+export const getProducts = (page = 1) =>
+  api.get('/products/all', {
+    params: { page }
+  });
+
 export const createProduct = (body) => api.post('/products', body);
 export const updateProductById = (id, body) => api.put(`/products/${id}`, body);
 export const deleteProductById = (id) => api.delete(`/products/${id}`);

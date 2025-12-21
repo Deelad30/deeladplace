@@ -6,11 +6,12 @@ export default function Table({ columns, data }) {
       </thead>
       <tbody>
         {data.map((row, i) => (
-          <tr key={i}>
+          <tr key={row.id}>
             {columns.map(c => <td key={c.key}>{c.render ? c.render(row) : row[c.key]}</td>)}
           </tr>
         ))}
       </tbody>
     </table>
+    
   );
 }

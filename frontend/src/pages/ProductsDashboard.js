@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from "react-hot-toast";
 import Header from '../components/common/Header';
 import { vendorService } from '../services/vendorService';
+import TableSkeleton from '../components/common/TableSkeleton';
 import Sidebar from '../components/common/Sidebar';
 import {
   getProducts,
@@ -19,6 +20,10 @@ const ProductsDashboard = () => {
   const [products, setProducts] = useState([]);
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 20; // backend page size
+
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editProduct, setEditProduct] = useState(null);
@@ -38,7 +43,6 @@ const fetchVendors = useCallback(async () => {
     if (response.data.success) {
       const sortedVendors = response.data.vendors.sort((a, b) => a.id - b.id);
       setVendors(sortedVendors);
-      console.log(sortedVendors);
       
     } else {
       setError('Failed to fetch vendors');
@@ -53,11 +57,15 @@ const fetchVendors = useCallback(async () => {
 
   const navigate = useNavigate();
 
-  async function loadProducts() {
+  async function loadProducts(pageNumber = 1 ) {
     setLoading(true);
     try {
-      const res = await getProducts();
+      const res = await getProducts(pageNumber);
+       console.log("Raw API data:", res.data.products.map(p => ({name: p.name, created_at: p.created_at})));
       setProducts(res.data.products || []);
+      setTotalCount(res.data.totalCount || 0);
+      setPage(pageNumber);
+
     } catch (err) {
       console.log(err);
       toast.error('Error loading products');
@@ -66,7 +74,7 @@ const fetchVendors = useCallback(async () => {
   }
 
   useEffect(() => {
-    loadProducts();
+    loadProducts(1);
     fetchVendors();
   }, [fetchVendors]);
 
@@ -142,7 +150,7 @@ const columns = [
     render: (row) => (
       <div className="actions-cell">
         <button
-          className="btn-outline"
+          className="btn-bright"
           onClick={() => navigate(`/products/${row.actions.id}/recipe`)}
         >
           Recipe
@@ -195,14 +203,38 @@ const columns = [
 
         <div className="card">
           {loading ? (
-            <div className="loading">Loading...</div>
+            <TableSkeleton columns={columns} rows={pageSize} />
           ) : (
             <Table
               columns={columns}
               data={products.map(p => ({ ...p, actions: p }))}
             />
           )}
+
         </div>
+
+              {totalCount > pageSize && (
+  <div className="pagination">
+    <button
+      disabled={page === 1}
+      onClick={() => loadProducts(page - 1)}
+    >
+      Prev
+    </button>
+
+    <span>
+      Page {page} of {Math.ceil(totalCount / pageSize)}
+    </span>
+
+    <button
+      disabled={page >= Math.ceil(totalCount / pageSize)}
+      onClick={() => loadProducts(page + 1)}
+    >
+      Next
+    </button>
+  </div>
+)}
+
 
       </main>
 
