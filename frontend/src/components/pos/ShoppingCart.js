@@ -2,7 +2,6 @@ import React from 'react';
 import { formatCurrency } from '../../utils/formatters';
 
 const ShoppingCart = ({ cart, onUpdateQuantity, onRemoveItem, totals, onContinue, processing, disabled }) => {
-  console.log(totals);
     const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
   
   return (

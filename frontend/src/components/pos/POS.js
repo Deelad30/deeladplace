@@ -7,6 +7,9 @@ import { productService } from '../../services/productService';
 import { recordSale, closeShift, openShift, listPOSProducts  } from '../../api/pos';
 import { useApp } from '../../context/AppContext';
 import SuccessModal from '../modals/SuccessModal';
+import {
+  getProducts,
+} from '../../api/products';
 import SaleOptionsModal from '../modals/SaleOptionsModal';
 import { toast } from 'react-hot-toast';
 import jsPDF from 'jspdf';
@@ -69,17 +72,18 @@ const POS = () => {
   }, [setAppVendors]);
 
   const fetchAllProducts = useCallback(async () => {
-    try {
-      const res = await productService.getAllProducts();;
-      console.log(res);
-      
-      setProducts(res.data.products);
-      setAppProducts(res.data.products);
-    } catch (err) {
-      console.error(err);
-      toast.error('Failed to fetch products');
-    }
-  }, [setAppProducts]);
+  try {
+    const res = await getProducts(1, 1000); // fetch all products in one go
+    const allProducts = res.data.products;
+
+    setProducts(allProducts);
+    setAppProducts(allProducts);
+  } catch (err) {
+    console.error(err);
+    toast.error('Failed to fetch products');
+  }
+}, [setAppProducts]);
+
 
   const fetchProductsByVendor = useCallback(async (vendorId) => {
     try {
@@ -218,8 +222,7 @@ const finishSale = async (options) => {
     totals: calculateCartTotals(cart),
     date: new Date().toISOString(),
     selectedVendor
-  };
-
+  };  
   try {
     if (isOnline) {
       for (const item of cart) {

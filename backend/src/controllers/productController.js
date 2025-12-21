@@ -53,7 +53,7 @@ const getAllProducts = async (req, res) => {
     const tenantId = req.user.tenant_id;
 
     const page = parseInt(req.query.page, 10) || 1;
-    const limit = 20;
+    const limit = parseInt(req.query.limit, 10) || 20;
     const offset = (page - 1) * limit;
 
     const products = await Product.findAll(tenantId, limit, offset);

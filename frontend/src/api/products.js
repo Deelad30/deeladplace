@@ -1,9 +1,9 @@
 import api from './axios';
 
 // Products
-export const getProducts = (page = 1) =>
+export const getProducts = (page = 1, limit = 20) =>
   api.get('/products/all', {
-    params: { page }
+    params: { page,limit }
   });
 
 export const createProduct = (body) => api.post('/products', body);
