@@ -6,6 +6,7 @@ import { vendorService } from '../../services/vendorService';
 import { productService } from '../../services/productService';
 import { recordSale, closeShift, openShift, listPOSProducts  } from '../../api/pos';
 import { useApp } from '../../context/AppContext';
+import ProductGridSkeleton from './ProductGridSkeleton';
 import SuccessModal from '../modals/SuccessModal';
 import {
   getProducts,
@@ -29,6 +30,7 @@ const POS = () => {
   const [cart, setCart] = useState([]);
   const [lastSale, setLastSale] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [loadingSkeleton, setLoadingSkeleton] = useState(false);
   const [saleComplete, setSaleComplete] = useState(false);
   const [showSaleOptions, setShowSaleOptions] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -72,6 +74,7 @@ const POS = () => {
   }, [setAppVendors]);
 
   const fetchAllProducts = useCallback(async () => {
+  setLoadingSkeleton(true); 
   try {
     const res = await getProducts(1, 1000); // fetch all products in one go
     const allProducts = res.data.products;
@@ -81,6 +84,8 @@ const POS = () => {
   } catch (err) {
     console.error(err);
     toast.error('Failed to fetch products');
+  } finally{
+     setLoadingSkeleton(false); 
   }
 }, [setAppProducts]);
 
@@ -301,8 +306,6 @@ const finishSale = async (options) => {
       `;
     }).join('');
 
-    console.log("Sale object:", sale);
-
 const paymentHtml = (sale.payment && Array.isArray(sale.payment.breakdown) && sale.payment.breakdown.length)
   ? sale.payment.breakdown.map(p => {
       const amtRounded = round(Number(p.amount)); // round first, make sure it’s a number
@@ -346,15 +349,11 @@ const paymentHtml = (sale.payment && Array.isArray(sale.payment.breakdown) && sa
 
   .center { text-align:center; }
   .logo-placeholder {
-    width: 60px;
-    height: 60px;
+    width: 80px;
     border-radius: 6px;
-    border: 1px dashed #999;
     display: inline-block;
     margin-bottom: 6px;
     line-height: 60px;
-    font-size: 10px;
-    color: #666;
   }
   h2.store {
     font-size: 12px;
@@ -390,8 +389,7 @@ const paymentHtml = (sale.payment && Array.isArray(sale.payment.breakdown) && sa
         <body>
           <div class="receipt">
             <div class="center">
-              <div class="logo-placeholder">LOGO</div>
-              <h2 class="store">Deelad Softwork</h2>
+              <div><img src="/logo.png" alt="deesoftwork-logo" class="logo-placeholder" /></div>
               <div class="meta">${formattedDate}</div>
               <div class="meta"><span style="font-weight:700">Customer Type:</span> ${escapeHtml(capitalize(sale.payment?.customer_type || 'Walk-in'))}</div>
             </div>
@@ -528,7 +526,15 @@ const handleCloseShift = async () => {
     <div className="pos-container">
       <div className="pos-header">
         <h2>Point of Sale {isOnline ? '' : '(Offline Mode)'}</h2>
-        <button onClick={handleCloseShift} disabled={!currentShiftId}>End Shift & Download PDF</button>
+        <button onClick={handleCloseShift} style={{
+              background: "black",
+              color: "white",
+              padding: "8px",
+              fontWeight: "600",
+              borderRadius: "6px",
+              outline: "none",
+              cursor: "pointer",
+        }} disabled={!currentShiftId}>End Shift & Download PDF</button>
       </div>
 
       <div className="search-wrapper">
@@ -553,9 +559,20 @@ const handleCloseShift = async () => {
       </div>
 
       <div className="pos-content">
-        <div className="products-section">
-          <ProductGrid products={products} onAddToCart={addToCart} disabled={!products.length} />
-        </div>
+
+<div className="products-section">
+  {loadingSkeleton ? (
+    <ProductGridSkeleton count={12} />
+  ) : (
+    <ProductGrid
+      products={products}
+      onAddToCart={addToCart}
+      disabled={!products.length}
+      vendors={vendors}
+    />
+  )}
+</div>
+
         <div className="cart-section">
           <ShoppingCart
             cart={cart}

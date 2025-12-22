@@ -94,8 +94,6 @@ async function loadAll() {
         if (p.vendor_id) {
           try {
             const vendorResp = await vendorService.getVendorById(p.vendor_id);
-            console.log(vendorResp);
-            
             vendorName = vendorResp.data?.vendor?.name || 'N/A';
           } catch (err) {
             console.error(`Failed to fetch vendor ${p.vendor_id}`, err);

@@ -1,17 +1,14 @@
 import React from 'react';
 import { formatCurrency } from '../../utils/formatters';
 
-const ProductGrid = ({ products, onAddToCart, disabled }) => {
+const ProductGrid = ({ products, onAddToCart, vendors, disabled }) => {
       const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
-  if (disabled) {
-    return (
-      <div className="product-grid disabled">
-        <div className="placeholder">
-          Please select a vendor to view products
-        </div>
-      </div>
-    );
-  }
+      //console.log(products);
+      
+  const getVendorName = (vendorId) => {
+    const vendor = vendors.find(v => v.id === vendorId);
+    return vendor ? vendor.name : "Unknown Vendor";
+  };
 
   return (
     <div className="product-grid">
@@ -21,6 +18,7 @@ const ProductGrid = ({ products, onAddToCart, disabled }) => {
           <div key={product.id} className="product-card">
             <div className="product-info">
               <h4>{product.name}</h4>
+            <p style={{fontSize:"13px"}} className="commission">vendor: {getVendorName(product.vendor_id)}</p>
               <div className="product-pricing">
                 <span className="price">{formatCurrency(round(product.selling_price))}</span>
                 <span className="commission">

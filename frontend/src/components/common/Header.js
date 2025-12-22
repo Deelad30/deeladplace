@@ -36,6 +36,7 @@ const Header = ({ onToggleSidebar }) => {
           {/* Dropdown */}
           {open && (
             <div className="dropdown-menu">
+              <span className="username">{user?.name}</span>
               <button onClick={logout}>Logout</button>
             </div>
           )}
