@@ -4,5 +4,7 @@ const auth = require('../middleware/auth.middleware');
 
 router.get('/', auth, ctrl.getPurchases);
 router.post('/', auth, ctrl.createPurchase);
+router.put('/:id', auth, ctrl.updatePurchase);
+router.delete('/:id', auth, ctrl.deletePurchase);
 
 module.exports = router;
