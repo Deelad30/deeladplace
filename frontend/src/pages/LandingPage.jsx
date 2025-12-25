@@ -62,7 +62,7 @@ export default function LandingPage() {
 
 const iconStyle = {
   fontSize: "20px",
-  color: "#555",
+  color: "rgb(236 0 0)",
   marginTop: "2px"
 };
 
@@ -131,11 +131,11 @@ const card = {
 
 const icon = {
   fontSize: "32px",
-  color: "#ff385c", // Airbnb signature red
+  color: "#D91F22", // Airbnb signature red
   marginBottom: "18px",
 };
 
-const accent = "#ff385c"; // warm accent (Airbnb-ish)
+const accent = "#D91F22"; // warm accent (Airbnb-ish)
 const muted = "#6b7280";
 
 /* button styles */
@@ -163,7 +163,11 @@ const secondaryBtn = {
 
 /* small util */
 const sectionDivider = { height: "20px" };
-
+    const token = localStorage.getItem('token');
+    
+    if (token) {
+      console.log(token);
+    }
 
 
   if (loading) {
@@ -184,10 +188,11 @@ const sectionDivider = { height: "20px" };
           <a href="#problem">The Problem</a>
           <a href="#pricing">Pricing</a>
           <a href="#story">Our Story</a>
-          <a style={{marginTop:"-9px", backgroundColor:"#d91f22", color:"#fff", fontWeight:"700", border:"1px solid #d91f22"}} href="#audit" className="nav-cta">Free Profit Audit</a>
+          <a style={{marginTop:"-9px", backgroundColor:"#d91f22", color:"#fff", fontWeight:"700", border:"1px solid #d91f22"}} href="mailto:deeladplacesoftwork@gmail.com" className="nav-cta">Free Profit Audit</a>
         </nav>
 
-        <div   style={{
+
+  <div   style={{
     display: "flex",
     alignItems: "center",
     gap: "12px",
@@ -206,11 +211,11 @@ const sectionDivider = { height: "20px" };
 
       {/* HERO */}
       <div style={{
-        background:"url('/logo.png') center center/cover",
-        height:"80vh"
+        background:"url('/Hero.png') center center/cover",
+        height:"88vh"
       }}>
       <section className="hero" id="hero">
-        <h1>Why hard work when you can just DeeSoftwork?</h1>
+        <h1>Why Hard Work When You Can Just Use DeeSoftwork?</h1>
         <p>
           Your all-in-one operating system connecting recipes, sales, stock and profit into 
           one living dashboard. No spreadsheets. No guesswork. Just clarity.
@@ -344,7 +349,7 @@ const sectionDivider = { height: "20px" };
 
 {/*Automated Profits sections  */}
 
-<section style={sectionStyle}>
+<section id="how" style={sectionStyle}>
 
   <h2 style={headlineStyle}>Your Automated Profit Protection System</h2>
 
@@ -447,7 +452,7 @@ const sectionDivider = { height: "20px" };
               <div style={{ fontSize: "13px", color: muted, fontWeight: 600 }}>Basic</div>
               <div style={{ fontSize: "28px", fontWeight: 700, marginTop: "8px" }}>N10,000<span style={{ fontSize: 14, color: muted, fontWeight: 600 }}> / month</span></div>
             </div>
-            <div style={{ textAlign: "right", color: muted, fontSize: "13px" }}>Best For<br/><span style={{ fontWeight: 600 }}>Single-location spots</span></div>
+            
           </div>
 
           <hr style={{ border: "none", height: "1px", background: "rgba(0,0,0,0.04)", margin: "14px 0 18px" }} />
@@ -456,11 +461,12 @@ const sectionDivider = { height: "20px" };
             <li><FontAwesomeIcon icon={faCheckCircle} style={{ color: accent, marginRight: 10 }} /> Smart POS & Sales Tracking</li>
             <li><FontAwesomeIcon icon={faCheckCircle} style={{ color: accent, marginRight: 10 }} /> Recipe-based costing module</li>
             <li><FontAwesomeIcon icon={faCheckCircle} style={{ color: accent, marginRight: 10 }} /> Basic reports & expense tracker</li>
-            <li><FontAwesomeIcon icon={faCheckCircle} style={{ color: accent, marginRight: 10 }} /> Add 1 vendor/store</li>
+            <li><FontAwesomeIcon icon={faCheckCircle} style={{ color: accent, marginRight: 10 }} /> Stocks Inventory</li>
+             <li><FontAwesomeIcon icon={faCheckCircle} style={{ color: accent, marginRight: 10 }} /> SIC Raw and Products</li>
           </ul>
 
-          <div style={{ marginTop: "20px", textAlign: "center" }}>
-            <a href="#audit" style={secondaryBtn}>Start with Basics</a>
+          <div style={{ marginTop: "18px", textAlign: "center" }}>
+            <a href="/login" style={primaryBtn}>Start with Basics</a>
           </div>
         </div>
 
@@ -471,21 +477,22 @@ const sectionDivider = { height: "20px" };
               <div style={{ fontSize: "13px", color: muted, fontWeight: 600 }}>Pro — Most Popular</div>
               <div style={{ fontSize: "34px", fontWeight: 800, marginTop: "8px" }}>N20,000<span style={{ fontSize: 14, color: muted, fontWeight: 600 }}> / month</span></div>
             </div>
-            <div style={{ textAlign: "right", color: muted, fontSize: "13px" }}>Best For<br/><span style={{ fontWeight: 600 }}>Growing businesses</span></div>
+          
           </div>
 
           <hr style={{ border: "none", height: "1px", background: "rgba(255,56,92,0.06)", margin: "14px 0 18px" }} />
 
           <ul style={{ listStyle: "none", padding: 0, margin: 0, color: "#444", lineHeight: "1.95" }}>
             <li><FontAwesomeIcon icon={faCheckCircle} style={{ color: accent, marginRight: 10 }} /> Everything in Basic</li>
-            <li><FontAwesomeIcon icon={faCheckCircle} style={{ color: accent, marginRight: 10 }} /> Multi-store & vendor management</li>
+            <li><FontAwesomeIcon icon={faCheckCircle} style={{ color: accent, marginRight: 10 }} /> Multi-store & vendors</li>
             <li><FontAwesomeIcon icon={faCheckCircle} style={{ color: accent, marginRight: 10 }} /> Advanced custom reports</li>
             <li><FontAwesomeIcon icon={faCheckCircle} style={{ color: accent, marginRight: 10 }} /> Priority support & staff training</li>
+            <li><FontAwesomeIcon icon={faCheckCircle} style={{ color: accent, marginRight: 10 }} /> Advanced custom reports</li>
           </ul>
 
           <div style={{ marginTop: "24px", display: "flex", gap: "12px", justifyContent: "center" }}>
-            <a href="#get-pro" style={primaryBtn}>Get Pro Control</a>
-            <a href="#audit" style={{ ...secondaryBtn, padding: "12px 18px" }}>Book Audit</a>
+            <a href="/login" style={primaryBtn}>Get Pro Control</a>
+          
           </div>
 
           <div style={{ marginTop: "18px", textAlign: "center", color: muted, fontSize: "13px" }}>
@@ -500,7 +507,7 @@ const sectionDivider = { height: "20px" };
               <div style={{ fontSize: "13px", color: muted, fontWeight: 600 }}>Enterprise</div>
               <div style={{ fontSize: "26px", fontWeight: 700, marginTop: "8px" }}>Custom<span style={{ fontSize: 14, color: muted, fontWeight: 600 }}> / month</span></div>
             </div>
-            <div style={{ textAlign: "right", color: muted, fontSize: "13px" }}>Best For<br/><span style={{ fontWeight: 600 }}>Large chains & franchises</span></div>
+            
           </div>
 
           <hr style={{ border: "none", height: "1px", background: "rgba(0,0,0,0.04)", margin: "14px 0 18px" }} />
@@ -512,8 +519,8 @@ const sectionDivider = { height: "20px" };
             <li><FontAwesomeIcon icon={faCheckCircle} style={{ color: accent, marginRight: 10 }} /> 24/7 priority support</li>
           </ul>
 
-          <div style={{ marginTop: "20px", textAlign: "center" }}>
-            <a href="#contact" style={secondaryBtn}>Contact for Scale</a>
+          <div style={{ marginTop: "46px", textAlign: "center" }}>
+            <a href="mailto:deeladplacesoftwork@gmail.com" style={primaryBtn}>Contact for Scale</a>
           </div>
         </div>
       </div>
@@ -523,12 +530,12 @@ const sectionDivider = { height: "20px" };
         <div style={{ flex: "1 1 520px" }}>
           <div style={{ fontSize: "18px", fontWeight: 700, marginBottom: "6px" }}>Not sure where to start?</div>
           <div style={{ color: muted, fontSize: "15px" }}>
-            Book a <strong>20-minute Free Profit Audit</strong> with founder Shuaib. We'll analyze your #1 challenge and map out your solution. No sales pitch — just a clear path forward.
+            Book a <strong>20-minute Free Profit Audit</strong> with our Founder. We'll analyze your #1 challenge and map out your solution. No sales pitch — just a clear path forward.
           </div>
         </div>
 
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          <a href="#audit" style={primaryBtn}><FontAwesomeIcon icon={faCalendarCheck} style={{ marginRight: 10 }} /> Book Your Free Profit Audit</a>
+          <a href="mailto:deeladplacesoftwork@gmail.com" style={primaryBtn}><FontAwesomeIcon icon={faCalendarCheck} style={{ marginRight: 10 }} /> Book Your Free Profit Audit</a>
         </div>
       </div>
     </section>
@@ -536,7 +543,7 @@ const sectionDivider = { height: "20px" };
     <div style={sectionDivider}></div>
 
     {/* ---------------- SECTION 7 — FOUNDER STORY ---------------- */}
-    <section style={sectionStyle} id="founder">
+    <section style={sectionStyle} id="story">
       <h2 style={headlineStyle}>We didn't imagine the problem. We lived it.</h2>
       <div style={{ display: "flex", gap: "28px", alignItems: "center", justifyContent: "center", flexWrap: "wrap" }}>
         {/* Photo */}
@@ -576,8 +583,8 @@ const sectionDivider = { height: "20px" };
           </div>
 
           <div style={{ marginTop: "20px", display: "flex", gap: "12px", alignItems: "center" }}>
-            <a href="#audit" style={primaryBtn}><FontAwesomeIcon icon={faUser} style={{ marginRight: 10 }} /> Talk to Shuaib</a>
-            <a href="#contact" style={secondaryBtn}><FontAwesomeIcon icon={faEnvelope} style={{ marginRight: 8 }} /> Contact</a>
+            <a href="mailto:deeladplacesoftwork@gmail.com" style={primaryBtn}><FontAwesomeIcon icon={faUser} style={{ marginRight: 10 }} /> Talk to Shuaib</a>
+            <a href="mailto:deeladplacesoftwork@gmail.com" style={secondaryBtn}><FontAwesomeIcon icon={faEnvelope} style={{ marginRight: 8 }} /> Contact</a>
           </div>
         </div>
       </div>
@@ -650,8 +657,8 @@ const sectionDivider = { height: "20px" };
           </div>
 
           <div style={{ marginTop: 18 }}>
-            <a href="#audit" style={primaryBtn}><FontAwesomeIcon icon={faCalendarCheck} style={{ marginRight: 10 }} /> Book Your Audit</a>
-            <a href="#pricing" style={{ ...secondaryBtn, marginLeft: 12 }}>See Plans</a>
+            <a href="mailto:deeladplacesoftwork@gmail.com" style={primaryBtn}><FontAwesomeIcon icon={faCalendarCheck} style={{ marginRight: 10 }} /> Book Your Audit</a>
+            <a href="/login" style={{ ...secondaryBtn, marginLeft: 12 }}>See Plans</a>
           </div>
         </div>
       </div>
@@ -689,7 +696,7 @@ const sectionDivider = { height: "20px" };
           </div>
 
           <div style={{ marginTop: 18 }}>
-            <a href="#get-pro" style={primaryBtn}><FontAwesomeIcon icon={faArrowRight} style={{ marginRight: 10 }} /> Get Started with Pro Plan</a>
+            <a href="/login" style={primaryBtn}><FontAwesomeIcon icon={faArrowRight} style={{ marginRight: 10 }} /> Get Started with Pro Plan</a>
           </div>
         </div>
 
@@ -709,8 +716,8 @@ const sectionDivider = { height: "20px" };
           </div>
 
           <div style={{ marginTop: 18 }}>
-            <a href="#audit" style={primaryBtn}><FontAwesomeIcon icon={faPhone} style={{ marginRight: 10 }} /> Book My Free Profit Audit</a>
-            <a href="#contact" style={{ ...secondaryBtn, marginLeft: 12 }}>Talk to Sales</a>
+            <a href="mailto:deeladplacesoftwork@gmail.com" style={primaryBtn}><FontAwesomeIcon icon={faPhone} style={{ marginRight: 10 }} /> Book My Free Profit Audit</a>
+          
           </div>
         </div>
       </div>

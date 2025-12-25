@@ -155,10 +155,8 @@ label {
 }
 
 .invite-container{
-  
-    width: 90%;
-    margin: auto;
-    max-width: 1161px;
+    width: 65% !important;
+    margin: auto !important;
 }
 
 
