@@ -59,31 +59,48 @@ const ProductsDashboard = () => {
 
   const navigate = useNavigate();
 
-  async function loadProducts(pageNumber = 1) {
-    setLoading(true);
-    setTilesLoading(true);
-    try {
-      const res = await getProducts(pageNumber);
-      const prods = res.data.products || [];
-      setProducts(prods);
-      setTotalCount(res.data.totalCount || 0);
-      setPage(pageNumber);
+ async function loadProducts() {
+  setLoading(true);
+  setTilesLoading(true);
+  try {
+    let allProducts = [];
+    let page = 1;
+    const limit = 100; // fetch 100 products per request to reduce number of requests
+    let totalCount = 0;
 
-      // --- Compute tile stats ---
-      setTotalProducts(prods.length);
-      setActiveProducts(prods.length);
-      const totalPrice = prods.reduce((acc, p) => acc + Number(p.selling_price || 0), 0);
-      setAvgPrice(prods.length ? (totalPrice / prods.length).toFixed(2) : 0);
-    } catch (err) {
-      console.log(err);
-      toast.error("Error loading products");
-    }
-    setLoading(false);
-    setTilesLoading(false);
+    do {
+      const res = await getProducts(page, limit);
+      const prods = res.data.products || [];
+      totalCount = res.data.totalCount || 0;
+
+      allProducts = [...allProducts, ...prods];
+      page++;
+    } while (allProducts.length < totalCount);
+
+    // Set products and total count
+    setProducts(allProducts);
+    setTotalCount(totalCount);
+
+    // --- Compute tile stats for all products ---
+    setTotalProducts(allProducts.length);
+    setActiveProducts(allProducts.length);
+    const totalPrice = allProducts.reduce(
+      (acc, p) => acc + Number(p.selling_price || 0),
+      0
+    );
+    setAvgPrice(allProducts.length ? (totalPrice / allProducts.length).toFixed(2) : 0);
+  } catch (err) {
+    console.log(err);
+    toast.error("Error loading products");
   }
 
+  setLoading(false);
+  setTilesLoading(false);
+}
+
+
   useEffect(() => {
-    loadProducts(1);
+    loadProducts();
     fetchVendors();
   }, [fetchVendors]);
 
@@ -137,6 +154,8 @@ const ProductsDashboard = () => {
       toast.error("Failed to delete product");
     }
   };
+
+  
 const filteredProducts = products.filter(p => {
   const matchesSearch =
     p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -147,6 +166,11 @@ const filteredProducts = products.filter(p => {
 
   return matchesSearch && matchesVendor;
 });
+
+const currentPageProducts = filteredProducts.slice(
+  (page - 1) * pageSize,
+  page * pageSize
+);
 
   const columns = [
     { key: "name", label: "Name" },
@@ -275,17 +299,37 @@ const filteredProducts = products.filter(p => {
           {loading ? (
             <TableSkeleton columns={columns} rows={pageSize} />
           ) : (
-            <Table columns={columns} data={filteredProducts.map(p => ({ ...p, actions: p }))} />
+            <Table columns={columns} data={currentPageProducts.map(p => ({ ...p, actions: p }))} />
           )}
         </div>
+        {filteredProducts.length > pageSize && (
+  <div className="pagination">
+    <button 
+      disabled={page === 1} 
+      onClick={() => setPage(prev => prev - 1)}
+    >
+      Prev
+    </button>
+    <span>
+      Page {page} of {Math.ceil(filteredProducts.length / pageSize)}
+    </span>
+    <button 
+      disabled={page >= Math.ceil(filteredProducts.length / pageSize)} 
+      onClick={() => setPage(prev => prev + 1)}
+    >
+      Next
+    </button>
+  </div>
+)}
 
-        {totalCount > pageSize && (
+
+        {/* {totalCount > pageSize && (
           <div className="pagination">
             <button disabled={page === 1} onClick={() => loadProducts(page - 1)}>Prev</button>
             <span>Page {page} of {Math.ceil(totalCount / pageSize)}</span>
             <button disabled={page >= Math.ceil(totalCount / pageSize)} onClick={() => loadProducts(page + 1)}>Next</button>
           </div>
-        )}
+        )} */}
       </main>
 
       <Modals

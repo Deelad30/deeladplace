@@ -3,6 +3,9 @@ import { formatCurrency } from '../../utils/formatters';
 
 const ShoppingCart = ({ cart, onUpdateQuantity, onRemoveItem, totals, onContinue, processing, disabled }) => {
     const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
+    const roundDown = (num, nearest = 100) => Math.floor(num / nearest) * nearest;
+    console.log(totals);
+    
   
   return (
     <div className="shopping-cart">

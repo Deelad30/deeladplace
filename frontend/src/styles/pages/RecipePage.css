@@ -15,6 +15,12 @@
   gap: 24px;
 }
 
+.section-header{
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
 .cost-results {
   background: #fff;
   padding: 18px;

@@ -159,7 +159,7 @@ const POS = () => {
   };
 
   const calculateCartTotals = (items = cart) => {
-    const totalSellingPrice = items.reduce((sum, item) => sum + (Number(item.selling_price) || 0) * item.quantity, 0);
+    const totalSellingPrice = items.reduce((sum, item) => sum + (Number(round(item.selling_price)) || 0) * item.quantity, 0);
     const totalCommission = items.reduce((sum, item) => sum + (Number(item.commission) || 0) * item.quantity, 0);
     return { totalSellingPrice, totalCommission, total: totalSellingPrice + totalCommission };
   };

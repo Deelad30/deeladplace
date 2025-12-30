@@ -56,29 +56,48 @@ async function computePackagingCost(productId, tenantId) {
   return total;
 }
 
-// ---------- LABOUR COST (per unit) ----------
+
+
+// ---------- LABOUR COST (per unit and old) ----------
+// async function computeLabourCost(tenantId) {
+//   const res = await db.query(SQL.GET_LABOUR, [tenantId]);
+//   console.log(res);
+  
+//   const rows = res.rows || [];
+//   if (!rows.length) return 0;
+
+//   const today = new Date();
+//   const active = rows.filter(l => {
+//     const from = l.start_date ? new Date(l.start_date) : null;
+//     const to = l.end_date ? new Date(l.end_date) : null;
+//     return (!from || today >= from) && (!to || today <= to);
+//   });
+
+//   if (!active.length) return 0;
+
+//   let totalLabour = 0;
+//   for (const l of active) {
+//     const amount = Number(l.amount) || 0;
+//     const estSales = Number(l.estimated_monthly_sales) || 1; // protect division by zero
+//     const perUnit = amount / estSales;
+//     totalLabour += perUnit;
+//   }
+//   return totalLabour; // already per unit
+// }
+
 async function computeLabourCost(tenantId) {
   const res = await db.query(SQL.GET_LABOUR, [tenantId]);
   const rows = res.rows || [];
   if (!rows.length) return 0;
 
-  const today = new Date();
-  const active = rows.filter(l => {
-    const from = l.start_date ? new Date(l.start_date) : null;
-    const to = l.end_date ? new Date(l.end_date) : null;
-    return (!from || today >= from) && (!to || today <= to);
-  });
-
-  if (!active.length) return 0;
-
   let totalLabour = 0;
-  for (const l of active) {
+  for (const l of rows) {
     const amount = Number(l.amount) || 0;
-    const estSales = Number(l.estimated_monthly_sales) || 1; // protect division by zero
-    const perUnit = amount / estSales;
-    totalLabour += perUnit;
+    const estSales = Number(l.estimated_monthly_sales) || 1; // prevent division by zero
+    totalLabour += amount / estSales;
   }
-  return totalLabour; // already per unit
+
+  return totalLabour; // per unit
 }
 
 // ---------- OPEX (per unit) ----------
@@ -88,16 +107,13 @@ async function computeOpex(tenantId, preOpexCOGS) {
   if (!rows.length) return 0;
 
   const today = new Date();
-  let totalOpex = 0;
-  console.log(rows);
-  
+  let totalOpex = 0;  
 
   for (const o of rows) {
   const estSales = Number(o.estimated_monthly_sales) || 1;
 
   if (o.allocation_mode === 'fixed') {
     const perUnit = (Number(o.amount) || 0) / estSales;
-    console.log(`OPEX row: name=${o.name}, amount=${o.amount}, estSales=${estSales}, perUnit=${perUnit}`);
     totalOpex += perUnit;
   } else if (o.allocation_mode === 'percent_of_cogs') {
     const perUnit = (Number(o.percentage_value || 0) / 100) * preOpexCOGS;
@@ -121,7 +137,8 @@ async function computeProductCost(productId, tenantId, options = {}) {
 
   // 3) labour per unit (already per unit)
   const labourCostPerUnit = await computeLabourCost(tenantId);
-
+  console.log(labourCostPerUnit);
+  
   // 4) pre-OPEX COGS (per unit)
   const preOpexCOGS = recipeCostPerUnit + packagingCostPerUnit + labourCostPerUnit;
 

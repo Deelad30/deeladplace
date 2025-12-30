@@ -217,6 +217,8 @@ const RecipePage = () => {
     try {
       const res = await computeCost(productId, { batchQty: batchSize, marginPercent });
       setCostResult(res.data.cost);
+      console.log(res.data.cost);
+      
       toast.success("Cost computed");
     } catch {
       toast.error("Failed to compute cost");
