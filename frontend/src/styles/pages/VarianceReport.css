@@ -9,6 +9,28 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+.skeleton-row td {
+  padding: 8px;
+}
+
+.skeleton-line {
+  height: 20px;
+  background: linear-gradient(90deg, #eee 25%, #ddd 50%, #eee 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+
 .positive { color: green; font-weight: bold; }
 .negative { color: red; font-weight: bold; }
 .neutral { color: #555; }
@@ -61,6 +83,7 @@
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.2s;
+  width: 100%;
 }
 
 .controls button:disabled {

@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { productVariance } from "../../api/reports";
 import toast from "react-hot-toast";
+import { vendorService } from '../../services/vendorService';
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
@@ -11,6 +12,47 @@ const ProductVarianceReport = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
 const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
+ const [vendors, setVendors] = useState([]);
+  const [selectedVendor, setSelectedVendor] = useState('');
+  const [search, setSearch] = useState('');
+const [filteredItems, setFilteredItems] = useState([]);
+
+const round0 = (value) => {
+  if (value === null || value === undefined) return '-';
+  return Math.round(Number(value));
+};
+  // Fetch vendors
+  const fetchVendors = useCallback(async () => {
+    try {
+      const res = await vendorService.getAllVendors();
+      setVendors(res.data.vendors || []);
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to fetch vendors');
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchVendors();
+  }, [fetchVendors]);
+
+  useEffect(() => {
+  const q = search.trim().toLowerCase();
+
+  setFilteredItems(
+    items.filter(i => {
+      const matchesSearch = i.product_name.toLowerCase().includes(q);
+      console.log(i);
+      
+      const matchesVendor = selectedVendor
+        ? String(i.vendor_id) === String(selectedVendor)
+        : true;
+
+      return matchesSearch && matchesVendor;
+    })
+  );
+}, [items, search, selectedVendor]);
+
 
   const fetchVariance = async () => {
     if (!startDate || !endDate)
@@ -132,30 +174,52 @@ const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
       <h2>Product Variance Report</h2>
 
       {/* Filters */}
-      <div className="controls">
-        <input
-          type="date"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-        />
-        <input
-          type="date"
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-        />
+      <div className="controls" style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+  <input
+    type="date"
+    value={startDate}
+    onChange={e => setStartDate(e.target.value)}
+  />
+  <input
+    type="date"
+    value={endDate}
+    onChange={e => setEndDate(e.target.value)}
+  />
 
-        <button onClick={fetchVariance} disabled={loading}>
-          {loading ? "Loading..." : "Fetch Variance"}
-        </button>
+  <input
+    type="text"
+    placeholder="Search products..."
+    value={search}
+    onChange={e => setSearch(e.target.value)}
+    style={{ minWidth: 200 }}
+  />
 
-        {items.length > 0 && (
-          <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={exportCSV}>CSV</button>
-            <button onClick={exportExcel}>Excel</button>
-            <button onClick={exportPDF}>PDF</button>
-          </div>
-        )}
-      </div>
+  <select
+    value={selectedVendor}
+    onChange={e => setSelectedVendor(e.target.value)}
+    style={{ minWidth: 200 }}
+  >
+    <option value="">All Vendors</option>
+    {vendors.map(v => (
+      <option key={v.id} value={v.id}>
+        {v.name}
+      </option>
+    ))}
+  </select>
+
+  <button onClick={fetchVariance} disabled={loading}>
+    {loading ? "Loading..." : "Fetch Variance"}
+  </button>
+
+  {filteredItems.length > 0 && (
+    <>
+      <button onClick={exportCSV}>CSV</button>
+      <button onClick={exportExcel}>Excel</button>
+      <button onClick={exportPDF}>PDF</button>
+    </>
+  )}
+</div>
+
 
       {/* Table */}
       <table>
@@ -173,29 +237,38 @@ const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
           </tr>
         </thead>
 
-        <tbody>
-          {items.length === 0 ? (
-            <tr>
-              <td colSpan="9" style={{ textAlign: "center" }}>
-                No data
-              </td>
-            </tr>
-          ) : (
-            items.map((i) => (
-              <tr key={i.product_id}>
-                <td>{i.product_name}</td>
-                <td>{i.expected_sales_qty}</td>
-                <td>{i.actual_sales_qty}</td>
-                <td>{i.variance_qty}</td>
-                <td>{round(i.expected_revenue)}</td>
-                <td>{round(i.actual_revenue)}</td>
-                <td>{round(i.revenue_variance)}</td>
-                <td>{round(i.profit_variance)}</td>
-                <td className={remarkClass(i.remark)}>{i.remark}</td>
-              </tr>
-            ))
-          )}
-        </tbody>
+<tbody>
+  {loading ? (
+    [...Array(6)].map((_, i) => (
+      <tr key={i} className="skeleton-row">
+        <td colSpan="9">
+          <div className="skeleton-line" />
+        </td>
+      </tr>
+    ))
+  ) : filteredItems.length === 0 ? (
+    <tr>
+      <td colSpan="9" style={{ textAlign: "center" }}>
+        No data
+      </td>
+    </tr>
+  ) : (
+    filteredItems.map(i => (
+      <tr key={i.product_id}>
+        <td>{i.product_name}</td>
+        <td>{round0(i.expected_sales_qty)}</td>
+        <td>{round0(i.actual_sales_qty)}</td>
+        <td>{round0(i.variance_qty)}</td>
+        <td>{round(i.expected_revenue)}</td>
+        <td>{round(i.actual_revenue)}</td>
+        <td>{round(i.revenue_variance)}</td>
+        <td>{round(i.profit_variance)}</td>
+        <td className={remarkClass(i.remark)}>{i.remark}</td>
+      </tr>
+    ))
+  )}
+</tbody>
+
       </table>
     </div>
   );

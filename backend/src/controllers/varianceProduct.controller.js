@@ -14,6 +14,7 @@ exports.getProductVariance = async (req, res) => {
       SELECT
         p.id AS product_id,
         p.name AS product_name,
+        p.vendor_id AS vendor_id,
 
         -- EXPECTED qty from SIC
         COALESCE(SUM(sp.expected_sales), 0) AS expected_sales_qty,
@@ -43,6 +44,8 @@ exports.getProductVariance = async (req, res) => {
     const result = await db.query(sql, [tenantId]);
 
     const items = result.rows.map(r => {
+      console.log(r);
+      
       const expectedQty = Number(r.expected_sales_qty);
       const actualQty = Number(r.actual_sales_qty);
       const varianceQty = actualQty - expectedQty;
@@ -68,6 +71,7 @@ exports.getProductVariance = async (req, res) => {
       return {
         product_id: r.product_id,
         product_name: r.product_name,
+        vendor_id: r.vendor_id,
 
         expected_sales_qty: expectedQty,
         actual_sales_qty: actualQty,
