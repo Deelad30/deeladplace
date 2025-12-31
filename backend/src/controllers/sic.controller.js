@@ -209,6 +209,7 @@ async function listRawSIC(req, res) {
       `SELECT * FROM sic_raw_materials WHERE tenant_id=$1 ORDER BY date DESC`,
       [tenantId]
     );
+    
     res.json({ success: true, sic: result.rows });
   } catch (err) {
     console.error(err);

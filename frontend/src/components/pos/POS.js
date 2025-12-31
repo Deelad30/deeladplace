@@ -23,6 +23,11 @@ const currency = (n) =>
 const POS = () => {
   const { setVendors: setAppVendors, setProducts: setAppProducts } = useApp();
 
+    const getVendorName = (vendorId) => {
+    const vendor = vendors.find(v => v.id === vendorId);
+    return vendor ? vendor.name : "Unknown Vendor";
+  };
+
   // State
   const [vendors, setVendors] = useState([]);
   const [selectedVendor, setSelectedVendor] = useState(null);
@@ -78,6 +83,8 @@ const POS = () => {
   try {
     const res = await getProducts(1, 1000); // fetch all products in one go
     const allProducts = res.data.products;
+    console.log(allProducts);
+    
 
     setProducts(allProducts);
     setAppProducts(allProducts);
@@ -551,7 +558,7 @@ const handleCloseShift = async () => {
           <ul className="search-dropdown">
             {searchResults.map(product => (
               <li key={product.id} onMouseDown={() => { addToCart({ ...product, quantity: 1 }); setSearchTerm(''); setSearchResults([]); setShowDropdown(false); }} style={{ cursor: "pointer", padding: "5px 10px" }}>
-                <strong>{product.name}</strong> ({product.vendor_name || "Vendor"}) - {currency(Number(product.vendor_price || 0))}
+                <strong>{product.name}</strong> - {getVendorName(product.vendor_id) || "Vendor"} - {currency(Number(round(product.selling_price  || 0)) + Number(round(product.commission || 0)))}
               </li>
             ))}
           </ul>
