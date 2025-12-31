@@ -9,6 +9,28 @@
   margin-bottom: 20px;
 }
 
+.skeleton-row td {
+  padding: 8px;
+}
+
+.skeleton-line {
+  height: 20px;
+  background: linear-gradient(90deg, #eee 25%, #ddd 50%, #eee 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+
 .refresh-btn {
   margin-bottom: 15px;
   padding: 8px 18px;

@@ -59,33 +59,43 @@ const StockLevels = () => {
           </tr>
         </thead>
         <tbody>
-          {allStock.length === 0 ? (
-            <tr>
-              <td colSpan="5" style={{ textAlign: 'center' }}>
-                No stock data available.
-              </td>
-            </tr>
-          ) : (
-            allStock.map((item) => (
-              <tr
-                key={item.raw_material_id}
-                className={getStatusClass(item.closing_stock, item.min_stock_level)}
-              >
-                <td>{item.name}</td>
-                <td>{item.closing_stock ?? '-'}</td>
-                <td>{item.min_stock_level}</td>
-                <td>
-                  {item.closing_stock === null
-                    ? 'No Data'
-                    : item.closing_stock <= item.min_stock_level
-                    ? 'Low Stock'
-                    : 'OK'}
-                </td>
-                <td>{formatDate(item.movement_date)}</td>
-              </tr>
-            ))
-          )}
-        </tbody>
+  {loading ? (
+    // Skeleton rows while loading
+    [...Array(5)].map((_, i) => (
+      <tr key={i} className="skeleton-row">
+        <td colSpan="5">
+          <div className="skeleton-line" />
+        </td>
+      </tr>
+    ))
+  ) : allStock.length === 0 ? (
+    <tr>
+      <td colSpan="5" style={{ textAlign: 'center' }}>
+        No stock data available.
+      </td>
+    </tr>
+  ) : (
+    allStock.map((item) => (
+      <tr
+        key={item.raw_material_id}
+        className={getStatusClass(item.closing_stock, item.min_stock_level)}
+      >
+        <td>{item.name}</td>
+        <td>{item.closing_stock ?? '-'}</td>
+        <td>{item.min_stock_level}</td>
+        <td>
+          {item.closing_stock === null
+            ? 'No Data'
+            : item.closing_stock <= item.min_stock_level
+            ? 'Low Stock'
+            : 'OK'}
+        </td>
+        <td>{formatDate(item.movement_date)}</td>
+      </tr>
+    ))
+  )}
+</tbody>
+
       </table>
     </div>
   );

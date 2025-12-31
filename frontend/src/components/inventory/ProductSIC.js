@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { postProductSic, listProductSic } from '../../api/sic';
 import { productService } from '../../services/productService';
 import { vendorService } from '../../services/vendorService';
 import toast from 'react-hot-toast';
+import { useApp } from '../../context/AppContext';
 import '../../styles/pages/SICSForm.css';
 
 export default function ProductSICPage() {
@@ -13,44 +14,25 @@ export default function ProductSICPage() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [vendors, setVendors] = useState([]);
-  const { setVendors: setAppVendors } = useApp();
+  const [selectedVendor, setSelectedVendor] = useState('');
 
-    const fetchVendors = useCallback(async () => {
+  const today = new Date().toISOString().split('T')[0];
+
+  // Fetch vendors
+  const fetchVendors = useCallback(async () => {
     try {
       const res = await vendorService.getAllVendors();
-      setVendors(res.data.vendors);
-      
-      setAppVendors(res.data.vendors);
+      setVendors(res.data.vendors || []);
     } catch (err) {
       console.error(err);
       toast.error('Failed to fetch vendors');
     }
-  }, [setAppVendors]);
-
-  console.log(vendors);
-  
-
-  const today = new Date().toISOString().split('T')[0];
-
-  useEffect(() => {
-    loadProducts();
-    fetchVendors();
-    // eslint-disable-next-line
   }, []);
 
-  useEffect(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) {
-      setFilteredRows(rows);
-    } else {
-      setFilteredRows(rows.filter(r => r.name.toLowerCase().includes(q)));
-    }
-  }, [search, rows]);
-
-  async function loadProducts() {
+  // Load products and today's SIC
+  const loadProducts = useCallback(async () => {
     try {
       setInitialLoading(true);
-
       const productRes = await productService.getAllProducts();
       const allProducts = productRes?.data?.products || productRes.products || [];
       setProducts(allProducts);
@@ -65,6 +47,7 @@ export default function ProductSICPage() {
           product_id: p.id,
           name: p.name,
           unit: p.unit || 'pcs',
+          vendor_id: p.vendor_id,
           date: today,
           opening_qty: existing ? existing.opening_qty : 0,
           issues_qty: 0,
@@ -77,12 +60,29 @@ export default function ProductSICPage() {
       setRows(newRows);
       setFilteredRows(newRows);
     } catch (err) {
-      toast.error('Failed to load products.');
       console.error(err);
+      toast.error('Failed to load products.');
     } finally {
       setInitialLoading(false);
     }
-  }
+  }, [today]);
+
+  // Filter rows based on search and vendor
+  useEffect(() => {
+    const q = search.trim().toLowerCase();
+    setFilteredRows(
+      rows.filter(r => {
+        const matchesSearch = r.name.toLowerCase().includes(q);
+        const matchesVendor = selectedVendor ? r.vendor_id === Number(selectedVendor)  : true;
+        return matchesSearch && matchesVendor;
+      })
+    );
+  }, [search, selectedVendor, rows]);
+
+  useEffect(() => {
+    fetchVendors();
+    loadProducts();
+  }, [fetchVendors, loadProducts]);
 
   function handleChange(index, field, value) {
     const updated = [...filteredRows];
@@ -134,14 +134,29 @@ export default function ProductSICPage() {
     <div className="sics-form-container">
       <h2>Daily Product SIC</h2>
 
-      {/* Search bar */}
-      <input
-        type="text"
-        placeholder="Search products (partial, case-insensitive)"
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-        className="sic-search"
-      />
+      {/* Search + Vendor filter */}
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+        <input
+          type="text"
+          placeholder="Search products..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="sic-search"
+          style={{ flex: 1 }}
+        />
+        <select
+          value={selectedVendor}
+          onChange={e => setSelectedVendor(e.target.value)}
+          style={{ padding: '8px', minWidth: '200px', width: '60%', height: "46px", marginTop: "8px" }}
+        >
+          <option value="">All Vendors</option>
+          {vendors.map(v => (
+            <option key={v.id} value={v.id}>
+              {v.name}
+            </option>
+          ))}
+        </select>
+      </div>
 
       <form className="sics-form" onSubmit={handleSubmit}>
         <table>

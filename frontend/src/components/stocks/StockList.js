@@ -184,9 +184,27 @@ const tableData = paginated.map(item => {
         onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
       />
 
-      {loading ? (
-        <div className="loading">Loading...</div>
-      ) : (
+      {loading ?  (
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Unit</th>
+        <th>Stock</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {[...Array(5)].map((_, i) => (
+        <tr key={i} className="skeleton-row">
+          <td colSpan="4">
+            <div className="skeleton-line" />
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+) : (
         <>
           <Table columns={[
             { key: 'name', label: 'Name' },
