@@ -75,6 +75,7 @@ app.use("/debug", require("./src/routes/testEmail"));
 
 app.use('/api/packaging', packagingRoutes);
 app.use('/api/raw-materials', rawMaterialRoutes);
+app.use("/api/report", require("./src/routes/profitability.routes"));
 app.use('/api/packaging-map', packagingMapRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/sales', salesRoutes);

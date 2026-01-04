@@ -119,7 +119,7 @@ useEffect(() => {
         </div>
       </div>
 
-      <div className="pagination" style={{ justifyContent: 'flex-end' }}>
+      <div className="pagination" style={{ justifyContent: 'center' }}>
         <button className="page-btn" onClick={() => setPage(1)} disabled={page === 1}>First</button>
         <button className="page-btn" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>Prev</button>
         <div className="page-info">Page {page} of {totalPages}</div>

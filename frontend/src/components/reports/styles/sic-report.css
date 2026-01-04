@@ -1,0 +1,251 @@
+.export-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.export-actions button {
+  padding: 6px 12px;
+}
+
+.product-card small {
+  display: block;
+  margin-top: 6px;
+  color: #555;
+}
+
+/* ==========================
+  PROFIT REPORT CONTAINER
+========================== */
+.profit-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: "Inter", sans-serif;
+  color: #2c2c2c;
+  background-color: #fdfdfd;
+}
+
+/* PAGE TITLE */
+.page-title {
+  font-size: 1.9rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #1f1f1f;
+}
+
+/* ==========================
+  FILTERS
+========================== */
+.profit-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.profit-filters input,
+.profit-filters select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background-color: #fff;
+  transition: all 0.2s;
+}
+
+.profit-filters input:focus,
+.profit-filters select:focus {
+  outline: none;
+  border-color: #4d70ff;
+  box-shadow: 0 0 0 3px rgba(77, 112, 255, 0.2);
+}
+
+.profit-filters button {
+  background-color: #4d70ff;
+  color: #fff;
+  padding: 0.55rem 1.2rem;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.profit-filters button:hover {
+  background-color: #3b54d1;
+}
+
+/* ==========================
+  EXPORT BUTTONS
+========================== */
+.export-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.export-actions button {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.export-actions button:first-child {
+  background-color: #f0f4ff;
+  color: #4d70ff;
+}
+
+.export-actions button:first-child:hover {
+  background-color: #e0e8ff;
+}
+
+.export-actions button:last-child {
+  background-color: #ffedeb;
+  color: #ff6b6b;
+}
+
+.export-actions button:last-child:hover {
+  background-color: #ffd8d2;
+}
+
+/* ==========================
+  NET PROFIT CARD
+========================== */
+.net-profit-card {
+  background: #fff;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.net-profit-card h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.net-profit-card strong {
+  font-size: 1.5rem;
+}
+
+.profit {
+  color: #28a745;
+}
+
+.loss {
+  color: #ff4d4f;
+}
+
+/* ==========================
+  SECTION TITLES
+========================== */
+.section-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 1.5rem 0 0.75rem 0;
+  color: #1f1f1f;
+}
+
+/* ==========================
+  GRID CARDS
+========================== */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.product-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.product-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+.product-card h4 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.product-card p {
+  font-size: 0.95rem;
+  margin: 0.25rem 0;
+}
+
+.product-card small {
+  font-size: 0.85rem;
+  color: #555;
+}
+
+/* ==========================
+  RECHARTS BAR CHART
+========================== */
+.recharts-wrapper {
+  margin-bottom: 2rem;
+}
+
+/* Tooltip styling */
+.recharts-tooltip-wrapper .recharts-default-tooltip {
+  background: #fff;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  font-size: 0.85rem;
+}
+
+/* ==========================
+  SKELETON CARD
+========================== */
+.skeleton-loader,
+.SkeletonCard {
+  background: linear-gradient(90deg, #e2e2e2 25%, #f5f5f5 50%, #e2e2e2 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 12px;
+}
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ==========================
+  RESPONSIVE
+========================== */
+@media (max-width: 768px) {
+  .profit-filters {
+    flex-direction: column;
+  }
+
+  .export-actions {
+    flex-direction: column;
+  }
+
+  .net-profit-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+

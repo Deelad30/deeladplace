@@ -3,8 +3,11 @@ import Header from '../components/common/Header';
 import Sidebar from '../components/common/Sidebar';
 import SalesReport from '../components/reports/SalesReport';
 import ExpenseReport from '../components/expenses/Expensereport';
+import ProductProfit from '../components/reports/components/ProductProfit';
 import ExpenseList from '../components/expenses/ExpenseList';
 import VarianceReport from '../components/inventory/VarianceReport';
+import SICProductReport from '../components/reports/components/SICProductReport';
+import SICRawReport from '../components/reports/components/SICRawReport'; 
 import '../../src/styles/pages/ReportsPage.css';
 import ProductVarianceReport from '../components/inventory/ProductVariance';
 
@@ -50,6 +53,27 @@ const ReportsPage = () => {
             >
               Product Variance Report
             </button>
+
+              <button
+              className={`report-tab-btn ${activeTab === 'product-profit' ? 'active' : ''}`}
+              onClick={() => setActiveTab('product-profit')}
+            >
+              Product Profitability Report
+            </button>
+
+              <button
+              className={`report-tab-btn ${activeTab === 'product-sic' ? 'active' : ''}`}
+              onClick={() => setActiveTab('product-sic')}
+            >
+              SIC Raw Report
+            </button>
+
+             <button
+              className={`report-tab-btn ${activeTab === 'raw-sic' ? 'active' : ''}`}
+              onClick={() => setActiveTab('raw-sic')}
+            >
+              SIC Product Report
+            </button>
           </div>
 
           {/* --- Tab Content --- */}
@@ -66,6 +90,15 @@ const ReportsPage = () => {
             )}
             {activeTab === 'product-variance' && (
                  <ProductVarianceReport />
+            )}
+            {activeTab === 'product-profit' && (
+                 <ProductProfit />
+            )}
+            {activeTab === 'raw-sic' && (
+               <SICProductReport />
+            )}
+            {activeTab === 'product-sic' && (
+            <SICRawReport />
             )}
           </div>
         </main>

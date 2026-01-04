@@ -76,9 +76,13 @@ exports.getSalesPaginated = async (req, res) => {
     // DATA QUERY
     // --------------------------------------------------
     const dataSql = `
-      SELECT ps.*, p.name AS product_name
+      SELECT
+        ps.*,
+        p.name AS product_name,
+        u.name AS sold_by
       FROM pos_sales ps
       LEFT JOIN products p ON p.id = ps.product_id
+      LEFT JOIN users u ON u.id = ps.user_id
       WHERE ps.tenant_id = $1
       ${whereSql}
       ORDER BY ps.created_at DESC
@@ -86,8 +90,7 @@ exports.getSalesPaginated = async (req, res) => {
     `;
 
     const dataParams = [...params, limit, offset];
-    const dataResult = await db.query(dataSql, dataParams);
-
+    const dataResult = await db.query(dataSql, dataParams);    
     // --------------------------------------------------
     // RESPONSE
     // --------------------------------------------------

@@ -1,0 +1,10 @@
+const express = require('express');
+const router = express.Router();
+
+const { getUserById } = require('../controllers/userController');
+const auth = require('../middleware/auth');
+
+// GET SINGLE USER
+router.get('/:id', auth, getUserById);
+
+module.exports = router;

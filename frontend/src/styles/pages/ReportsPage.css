@@ -330,13 +330,14 @@
 
 /* Pill button style */
 .report-tab-btn {
-  padding: 10px 20px;
-  background: #f0f0f5;
-  border: 1px solid #ccc;
-  border-radius: 30px;
-  cursor: pointer;
-  font-size: 15px;
-  transition: all 0.25s ease;
+    padding: 13px 5px;
+    background: #f0f0f5;
+    border: 1px solid #ccc;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.25s ease;
+    font-weight: 450;
 }
 
 /* Hover effect */

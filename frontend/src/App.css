@@ -318,3 +318,8 @@ canvas {
   outline: none;
   border-color: #22c55e;
 }
+
+@keyframes skeleton {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

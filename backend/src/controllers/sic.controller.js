@@ -232,9 +232,95 @@ async function listProductSIC(req, res) {
   }
 }
 
+// sic.controller.js
+async function getRawSICReport(req, res) {
+  const tenantId = req.user.tenant_id;
+  const { startDate, endDate, createdBy, materialId } = req.query;
+
+  try {
+    let filters = ["sr.tenant_id = $1"];
+    let values = [tenantId];
+    let idx = 2;
+
+    if (startDate && endDate) {
+      filters.push(`sr.date BETWEEN $${idx++} AND $${idx++}`);
+      values.push(startDate, endDate);
+    }
+
+    if (createdBy) {
+      filters.push(`sr.created_by = $${idx++}`);
+      values.push(createdBy);
+    }
+
+    if (materialId) {
+      filters.push(`sr.material_id = $${idx++}`);
+      values.push(materialId);
+    }
+
+    const sql = `
+      SELECT sr.*, m.name AS material_name, u.username AS submitted_by
+      FROM sic_raw_materials sr
+      LEFT JOIN materials m ON m.id = sr.material_id
+      LEFT JOIN users u ON u.id = sr.created_by
+      WHERE ${filters.join(" AND ")}
+      ORDER BY sr.date DESC, sr.created_at DESC
+    `;
+
+    const { rows } = await db.query(sql, values);
+    res.json({ success: true, report: rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Failed to fetch raw SIC report' });
+  }
+}
+
+async function getProductSICReport(req, res) {
+  const tenantId = req.user.tenant_id;
+  const { startDate, endDate, createdBy, productId } = req.query;
+
+  try {
+    let filters = ["sp.tenant_id = $1"];
+    let values = [tenantId];
+    let idx = 2;
+
+    if (startDate && endDate) {
+      filters.push(`sp.date BETWEEN $${idx++} AND $${idx++}`);
+      values.push(startDate, endDate);
+    }
+
+    if (createdBy) {
+      filters.push(`sp.created_by = $${idx++}`);
+      values.push(createdBy);
+    }
+
+    if (productId) {
+      filters.push(`sp.product_id = $${idx++}`);
+      values.push(productId);
+    }
+
+    const sql = `
+      SELECT sp.*, p.name AS product_name, u.username AS submitted_by
+      FROM sic_products sp
+      LEFT JOIN products p ON p.id = sp.product_id
+      LEFT JOIN users u ON u.id = sp.created_by
+      WHERE ${filters.join(" AND ")}
+      ORDER BY sp.date DESC, sp.created_at DESC
+    `;
+
+    const { rows } = await db.query(sql, values);
+    res.json({ success: true, report: rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Failed to fetch product SIC report' });
+  }
+}
+
+
 module.exports = { 
   submitRawSIC, 
   submitProductSIC, 
   listRawSIC, 
-  listProductSIC 
+  listProductSIC,
+  getRawSICReport,
+  getProductSICReport 
 };
