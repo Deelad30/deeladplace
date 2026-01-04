@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { sicService } from "../../../services/profitService"; // or separate sicService file
-import { vendorService } from "../../../services/vendorService";
+import { vendorService } from "../../../services/vendorService"; // implement materialService
+import { materialService } from "../../../services/materialService";
+
 import SkeletonCard from "../../../components/common/SkeletonCard";
 import toast from "react-hot-toast";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
