@@ -90,7 +90,8 @@ export const ROLE_PERMISSIONS = {
   },
 
   kitchen_staff: {
-    sic_raw: true
+    sic_raw: true,
+    pos: true
   },
 
   staff: {
