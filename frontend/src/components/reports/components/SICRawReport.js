@@ -27,8 +27,12 @@ const SICRawReport = () => {
       const cleanFilters = Object.fromEntries(
         Object.entries(filters).filter(([_, v]) => v !== "")
       );
-      const res = await sicService.getRawSICReport(cleanFilters);
-      if (res.data.success) setRawSIC(res.data.report);
+
+     const res = await sicService.getRawSICReport(cleanFilters);
+
+    if (res.data.success) {
+      setRawSIC(res.data.report); 
+    }
     } catch (err) {
       console.error(err);
       toast.error("Failed to load Raw SIC report");
@@ -42,8 +46,9 @@ const SICRawReport = () => {
     const loadMaterials = async () => {
       try {
         const res = await materialService.getAllMaterials(); // implement getAllMaterials in service
-        if (res.data.success) setMaterials(res.data.items);
-        console.log("Materials:", res.data.items);
+        if (res.data.ok) {
+        setMaterials(res.data.items || []);
+        }
       } catch (err) {
         console.error(err);
       }
@@ -63,7 +68,10 @@ const SICRawReport = () => {
       <div className="profit-filters">
         <input type="date" onChange={e => setFilters(f => ({ ...f, startDate: e.target.value }))} />
         <input type="date" onChange={e => setFilters(f => ({ ...f, endDate: e.target.value }))} />
-        <select onChange={e => setFilters(f => ({ ...f, materialId: e.target.value }))}>
+      <select
+  onChange={e => setFilters(f => ({ ...f, materialId: e.target.value }))}
+>
+
           <option value="">All Materials</option>
           {materials.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
         </select>

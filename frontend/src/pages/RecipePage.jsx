@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { toast } from "react-hot-toast";
 import {
   PieChart, Pie, Cell, Tooltip as ReTooltip, Legend as ReLegend,
@@ -10,6 +11,10 @@ import Header from "../components/common/Header";
 import Sidebar from "../components/common/Sidebar";
 import Table from "../components/common/Table";
 import Modals from "../components/common/Modals";
+
+import {
+  faArrowLeft
+} from "@fortawesome/free-solid-svg-icons";
 
 import {
   getRecipe, addRecipeItem, updateRecipeItem, deleteRecipeItem,
@@ -31,6 +36,11 @@ const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#A28BFE", "#FF6666"
 const RecipePage = () => {
   const { id: productId } = useParams();
   const navigate = useNavigate();
+  const icon = {
+  fontSize: "20px",
+  color: "#D91F22", // Airbnb signature red
+  marginBottom: "18px",
+};
 
   // --- Recipe / Ingredients
   const [recipeItems, setRecipeItems] = useState([]);
@@ -310,9 +320,9 @@ const RecipePage = () => {
 
         {/* Page Header */}
         <div className="page-header">
-          <div className="breadcrumb" onClick={() => navigate("/products")}>Products</div>
+          <div style={{display:"flex", justifyContent: "center"}} className="breadcrumb" onClick={() => navigate("/products")}>  <FontAwesomeIcon icon={faArrowLeft} onClick={() => navigate("/products")} style={icon} />  <span style={{display:"inline-block", fontSize:"15px"}}></span> Products</div>
           <h2 className="page-title">Recipe Setup</h2>
-          <button className="btn-primary" onClick={() => { setEditLine(null); setFormData({ material_id: "", recipe_qty: "" }); setModalOpen(true); }}>+ Add Ingredient</button>
+          <button style={{ backgroundColor:"rgb(217, 31, 34)" }} className="btn-primary" onClick={() => { setEditLine(null); setFormData({ material_id: "", recipe_qty: "" }); setModalOpen(true); }}>+ Add Ingredient</button>
         </div>
 
         {/* Batch Size & Margin */}
@@ -326,7 +336,7 @@ const RecipePage = () => {
             <label>Margin % (0.x)</label>
             <input type="number" value={marginPercent} onChange={e => setMarginPercent(Number(e.target.value))} step="0.01" min="0" max="1" placeholder="Enter 0.2 for 20%" />
           </div>
-          <button className="btn-primary" onClick={handleSaveBatchMargin}>Save Batch & Margin</button>
+          <button style={{backgroundColor:"rgb(217, 31, 34)"}} className="btn-primary" onClick={handleSaveBatchMargin}>Save Batch & Margin</button>
         </div>
 
         {/* Ingredients Table */}
@@ -338,7 +348,7 @@ const RecipePage = () => {
         <div className="card">
           <div className="section-header">
             <h3>Packaging</h3>
-            <button className="btn-primary" onClick={() => { setEditingPackaging(null); setPackForm({ packaging_id: "", qty: "" }); setPackagingModal(true); }}>+ Add Packaging</button>
+            <button style={{ backgroundColor:"rgb(217, 31, 34)" }} className="btn-primary" onClick={() => { setEditingPackaging(null); setPackForm({ packaging_id: "", qty: "" }); setPackagingModal(true); }}>+ Add Packaging</button>
           </div>
           <Table columns={packagingColumns} data={productPackaging} />
         </div>
@@ -347,7 +357,7 @@ const RecipePage = () => {
 
           {/* Cost Panel with Charts and List */}
 <div className="costing-panel">
-  <button className="btn-primary" onClick={handleComputeCost}>Compute Cost</button>
+  <button style={{ backgroundColor:"rgb(217, 31, 34)" }} className="btn-primary" onClick={handleComputeCost}>Compute Cost</button>
 
   {costResult && (
     <div className="cost-results">
@@ -415,7 +425,7 @@ const RecipePage = () => {
         <div className="cost-line">{`Margin: ${(costResult.margin_percent ? (costResult.margin_percent * 100).toFixed(2) : "0")}%`}</div>
       </div>
 
-      <button className="btn-primary full-width" onClick={handleSaveStandardCost}>Save Standard Cost</button>
+      <button style={{ backgroundColor:"rgb(217, 31, 34)" }} className="btn-primary full-width" onClick={handleSaveStandardCost}>Save Standard Cost</button>
     </div>
   )}
 </div>

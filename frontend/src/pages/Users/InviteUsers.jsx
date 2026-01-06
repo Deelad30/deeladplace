@@ -134,7 +134,7 @@ export default function InviteUsers() {
           {fetching ? (
             <div className="skeleton-table">
               {[...Array(5)].map((_, idx) => (
-                <div key={idx} className="skeleton-row">
+                <div key={idx} className="skeleton-roww">
                   {[...Array(5)].map((__, i) => (
                     <div key={i} className="skeleton-cell"></div>
                   ))}

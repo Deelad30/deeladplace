@@ -17,6 +17,8 @@ const SICProductReport = () => {
     createdBy: "",
     productId: "",
   });
+  
+const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
 
   const loadSIC = async () => {
     setLoading(true);
@@ -25,7 +27,9 @@ const SICProductReport = () => {
         Object.entries(filters).filter(([_, v]) => v !== "")
       );
       const res = await sicService.getProductSICReport(cleanFilters);
-      if (res.data.success) setProductSIC(res.data.sic);
+      console.log(res);
+      
+      if (res.data.success) setProductSIC(res.data.report);
     } catch (err) {
       console.error(err);
       toast.error("Failed to load Product SIC report");
@@ -43,7 +47,7 @@ const SICProductReport = () => {
     const loadProducts = async () => {
       try {
         const res = await productService.getAllProducts();
-        if (res.data.success) setProducts(res.data.products);
+      if (res.data.success) setProducts(res.data.products);
       } catch (err) {
         console.error(err);
       }
@@ -73,8 +77,6 @@ const SICProductReport = () => {
         <button onClick={() => exportToCSV(productSIC, "product_sic.csv")}>CSV</button>
         <button onClick={() => exportToPDF(productSIC, "Product SIC Report")}>PDF</button>
       </div>
-
-      <h3 className="section-title">Top 5 Variances</h3>
       {loading ? (
         <SkeletonCard height={300} />
       ) : (
@@ -82,7 +84,7 @@ const SICProductReport = () => {
           <BarChart data={top5Variance}>
             <XAxis dataKey="product_id" />
             <YAxis />
-            <Tooltip formatter={(value) => value.toFixed(2)} />
+            <Tooltip formatter={(value) => value} />
             <Bar dataKey="variance">
               {top5Variance.map((_, i) => (
                 <Cell key={i} fill="#4d70ff" />
@@ -106,7 +108,7 @@ const SICProductReport = () => {
               <p>Expected: {p.expected_sales}</p>
               <p>System: {p.system_sales}</p>
               <strong className={p.variance >= 0 ? "profit" : "loss"}>
-                Variance: {p.variance.toFixed(2)} ({p.variance_value.toFixed(2)})
+                Variance: {round(p.variance)} ({round(p.variance_value)})
               </strong>
               {p.override_reason && <small>Override: {p.override_reason}</small>}
             </div>

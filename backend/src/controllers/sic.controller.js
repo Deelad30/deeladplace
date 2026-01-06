@@ -299,7 +299,7 @@ async function getProductSICReport(req, res) {
     }
 
     const sql = `
-      SELECT sp.*, p.name AS product_name, u.username AS submitted_by
+      SELECT sp.*, p.name AS product_name, u.name AS submitted_by
       FROM sic_products sp
       LEFT JOIN products p ON p.id = sp.product_id
       LEFT JOIN users u ON u.id = sp.created_by
