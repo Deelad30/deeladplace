@@ -74,6 +74,8 @@ const ProductsDashboard = () => {
       totalCount = res.data.totalCount || 0;
 
       allProducts = [...allProducts, ...prods];
+      console.log(allProducts);
+      
       page++;
     } while (allProducts.length < totalCount);
 
@@ -175,6 +177,11 @@ const currentPageProducts = filteredProducts.slice(
   const columns = [
     { key: "name", label: "Name" },
     { key: "sku", label: "SKU" },
+    { key: "selling_price", label: "Selling Price",    render: (row) =>
+    row.selling_price == null || row.selling_price === ""
+      ? "-"
+      : round(row.selling_price).toLocaleString(),
+ },
     { key: "category_id", label: "Category" },
     {
       key: "actions",

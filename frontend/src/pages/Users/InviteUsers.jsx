@@ -1,4 +1,3 @@
-// src/pages/Users/InviteUsers.jsx
 import React, { useState, useEffect } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import Header from '../../components/common/Header';
@@ -8,7 +7,7 @@ import {
   inviteUser,
   cancelInvite,
   deleteInvite,
-} from "../../api/invites"; // make sure deleteInvite exists
+} from "../../api/invites";
 import "../../styles/pages/InviteUsers.css";
 
 export default function InviteUsers() {
@@ -16,15 +15,18 @@ export default function InviteUsers() {
   const [role, setRole] = useState("cashier");
   const [invites, setInvites] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
 
-  // Load invites
   const loadInvites = async () => {
+    setFetching(true);
     try {
       const res = await getInvites();
       setInvites(res.data.invites || []);
     } catch (err) {
-      console.error("Failed to load invites:", err);
+      console.error(err);
       toast.error("Failed to load invites");
+    } finally {
+      setFetching(false);
     }
   };
 
@@ -32,32 +34,25 @@ export default function InviteUsers() {
     loadInvites();
   }, []);
 
-  // Handle sending new invite
   const handleInvite = async () => {
-    if (!email.trim()) {
-      toast.error("Enter an email");
-      return;
-    }
-
+    if (!email.trim()) return toast.error("Enter an email");
     setLoading(true);
-
     try {
       await inviteUser(email, role);
       setEmail("");
       await loadInvites();
       toast.success("Invite sent successfully!");
     } catch (err) {
-      console.error("Invite error:", err);
+      console.error(err);
       toast.error(err.response?.data?.error || "Failed to send invite");
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle cancel invite (pending only)
-  const handleCancel = async (inviteId) => {
+  const handleCancel = async (id) => {
     try {
-      await cancelInvite(inviteId);
+      await cancelInvite(id);
       toast.success("Invite cancelled successfully");
       await loadInvites();
     } catch (err) {
@@ -66,10 +61,9 @@ export default function InviteUsers() {
     }
   };
 
-  // Handle delete invite (cancelled only)
-  const handleDelete = async (inviteId) => {
+  const handleDelete = async (id) => {
     try {
-      await deleteInvite(inviteId);
+      await deleteInvite(id);
       toast.success("Invite deleted successfully");
       await loadInvites();
     } catch (err) {
@@ -80,17 +74,17 @@ export default function InviteUsers() {
 
   return (
     <>
-      <Toaster position="top-right" reverseOrder={false} />
+      <Toaster position="top-right" />
       <Header />
       <Sidebar />
-      <div className="invite-container">
+
+      <div className="invite-container modern">
         <div className="invite-header">
           <h2>Invite Team Members</h2>
           <p className="invite-sub">Send invitations to users with assigned roles.</p>
         </div>
 
-        {/* Invite Form */}
-        <div className="invite-card">
+        <div className="invite-card shadow">
           <div className="form-grid">
             <div>
               <label>Email</label>
@@ -134,56 +128,72 @@ export default function InviteUsers() {
           </div>
         </div>
 
-        {/* Invites Table */}
-        <div className="invite-table-wrapper">
+        <div className="invite-table-wrapper shadow">
           <h3>Your Invites</h3>
 
-          <table className="invite-table">
-            <thead>
-              <tr>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Sent</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
+          {fetching ? (
+            <div className="skeleton-table">
+              {[...Array(5)].map((_, idx) => (
+                <div key={idx} className="skeleton-row">
+                  {[...Array(5)].map((__, i) => (
+                    <div key={i} className="skeleton-cell"></div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="table-container">
               {invites.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="empty-state">
-                    No invites
-                  </td>
-                </tr>
+                <div className="empty-state">No invites</div>
               ) : (
-                invites.map((inv) => (
-                  <tr key={inv.id}>
-                    <td>{inv.email}</td>
-                    <td className="role-badge">{inv.role_name}</td>
-                    <td>{inv.status}</td>
-                    <td>{new Date(inv.created_at).toLocaleString()}</td>
-                    <td className="table-actions">
-                        <button
-                          onClick={() => handleCancel(inv.id)}
-                          className="table-btn danger"
-                        >
-                          Cancel
-                        </button>
-                      {inv.status === "cancelled" && (
-                        <button
-                          onClick={() => handleDelete(inv.id)}
-                          className="table-btn secondary"
-                        >
-                          Delete
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))
+                <table className="invite-table">
+                  <thead>
+                    <tr>
+                      <th>Email</th>
+                      <th>Role</th>
+                      <th>Status</th>
+                      <th>Sent</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {invites.map((inv) => (
+                      <tr key={inv.id}>
+                        <td style={{ fontWeight:"bold", fontSize:"15px" }}>{inv.email}</td>
+                        <td>
+                          <span className="role-badge">{inv.role_name}</span>
+                        </td>
+                        <td>
+                          <span className={`status-pill ${inv.status}`}>
+                            {inv.status.toUpperCase()}
+                          </span>
+                        </td>
+                        <td>{new Date(inv.created_at).toLocaleString()}</td>
+
+                        {/* 🟢 PRESERVED EXACT SANCTITY OF ACTIONS CELL */}
+                        <td className="table-actions">
+                          <button
+                            onClick={() => handleCancel(inv.id)}
+                            className="table-btn danger"
+                          >
+                            Cancel
+                          </button>
+                          {inv.status === "cancelled" && (
+                            <button
+                              onClick={() => handleDelete(inv.id)}
+                              className="table-btn secondary"
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               )}
-            </tbody>
-          </table>
+            </div>
+          )}
         </div>
       </div>
     </>

@@ -258,9 +258,9 @@ async function getRawSICReport(req, res) {
     }
 
     const sql = `
-      SELECT sr.*, m.name AS material_name, u.username AS submitted_by
+      SELECT sr.*, m.name AS material_name, u.name AS submitted_by
       FROM sic_raw_materials sr
-      LEFT JOIN materials m ON m.id = sr.material_id
+      LEFT JOIN raw_materials m ON m.id = sr.material_id
       LEFT JOIN users u ON u.id = sr.created_by
       WHERE ${filters.join(" AND ")}
       ORDER BY sr.date DESC, sr.created_at DESC

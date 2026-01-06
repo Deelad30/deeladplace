@@ -19,7 +19,7 @@ export const ROLE_DEFAULT_ROUTE = {
   manager: "/dashboard",
   cashier: "/pos",
   cashier_plus: "/pos",
-  kitchen_staff: "/pos",
+  kitchen_staff: "/inventory",
   inventory_officer: "/inventory",
   accountant: "/expenses",
   auditor: "/reports",
@@ -73,7 +73,7 @@ export const ROLE_PERMISSIONS = {
 
   store_keeper: {
     stock: true,
-    sic_raw: true
+    sic_raw: true // should be able to see sic raw
   },
 
   auditor: {
@@ -86,15 +86,17 @@ export const ROLE_PERMISSIONS = {
 
   cashier_plus: {
     pos: true,
-    sic_product: true
+    sic_product: true, //should be able to see sic product
+    stock: true
   },
 
   kitchen_staff: {
-    sic_raw: true,
-    pos: true
+    stock: true, //raw only
   },
 
   staff: {
     // Fallback for undefined roles
   }
+
+  //stock === inventory management page
 };

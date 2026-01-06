@@ -99,7 +99,7 @@ html: `
               <td align="center" style="padding:32px 20px; background-color:#ffffff;">
                 <!-- Replace with your logo URL -->
                 <img 
-                  src="https://ibb.co/wNLNjKs0" 
+                  src="https://app.deesoftwork.com.ng/logo.png" 
                   alt="Dee Softwork Logo" 
                   width="120" 
                   style="display:block; max-width:120px; height:auto;"
@@ -226,7 +226,7 @@ html: `
               <td align="center" style="padding:32px 20px; background-color:#ffffff;">
                 <!-- Replace with your logo URL -->
                 <img 
-                  src="https://your-domain.com/logo.png" 
+                  src="https://app.deesoftwork.com.ng/logo.png" 
                   alt="Dee Softwork Logo" 
                   width="120" 
                   style="display:block; max-width:120px; height:auto;"
@@ -336,7 +336,7 @@ html: `
               <td align="center" style="padding:32px 20px;">
                 <!-- Replace with your logo URL -->
                 <img
-                  src="https://your-domain.com/logo.png"
+                  src="https://app.deesoftwork.com.ng/logo.png"
                   alt="Dee Softwork Logo"
                   width="120"
                   style="display:block; max-width:120px; height:auto;"
@@ -442,7 +442,7 @@ html: `
               <td align="center" style="padding:32px 20px;">
                 <!-- Replace with your logo URL -->
                 <img
-                  src="https://your-domain.com/logo.png"
+                  src="https://app.deesoftwork.com.ng/logo.png"
                   alt="Dee Softwork Logo"
                   width="120"
                   style="display:block; max-width:120px; height:auto;"
@@ -549,7 +549,7 @@ html: `
               <td align="center" style="padding:32px 20px;">
                 <!-- Replace with your logo URL -->
                 <img
-                  src="https://your-domain.com/logo.png"
+                  src="https://app.deesoftwork.com.ng/logo.png"
                   alt="Dee Softwork Logo"
                   width="120"
                   style="display:block; max-width:120px; height:auto;"
@@ -661,7 +661,7 @@ html: `
               <td align="center" style="padding:32px 20px;">
                 <!-- Replace with your logo URL -->
                 <img
-                  src="https://your-domain.com/logo.png"
+                  src="https://app.deesoftwork.com.ng/logo.png"
                   alt="Dee Softwork Logo"
                   width="120"
                   style="display:block; max-width:120px; height:auto;"
@@ -746,7 +746,7 @@ html: `
               <td align="center" style="padding:32px 20px;">
                 <!-- Replace with your logo URL -->
                 <img
-                  src="https://your-domain.com/logo.png"
+                  src="https://app.deesoftwork.com.ng/logo.png"
                   alt="Dee Softwork Logo"
                   width="120"
                   style="display:block; max-width:120px; height:auto;"

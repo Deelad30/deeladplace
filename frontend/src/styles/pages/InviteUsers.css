@@ -18,7 +18,6 @@
 
 /* Card */
 .invite-card {
-  background: #ffffff;
   padding: 20px;
   border-radius: 12px;
   box-shadow: 0 6px 18px rgba(20, 24, 40, 0.06);
@@ -165,3 +164,176 @@ label {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+:root {
+  --primary: rgb(217, 31, 34);
+  --bg: #f9f9f9;
+  --card: #fff;
+  --shadow: rgba(0, 0, 0, 0.08) 0px 4px 16px;
+  --radius: 8px;
+}
+
+.invite-container.modern {
+  padding: 2rem;
+  min-height: 100vh;
+}
+
+.invite-header h2 {
+  color: var(--primary);
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.invite-sub {
+  color: #555;
+  margin-top: 0.2rem;
+}
+
+.invite-card,
+.invite-table-wrapper {
+  border-radius: var(--radius);
+  padding: 2rem;
+  margin-top: 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+.input-field {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--radius);
+  border: 1px solid #ddd;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.input-field:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(217,31,34,0.15);
+}
+
+.invite-btn {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.5rem;
+  border-radius: var(--radius);
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.invite-btn:hover:not(:disabled) {
+  background: rgb(200, 25, 30);
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+.invite-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.invite-table th,
+.invite-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+}
+
+.invite-table th {
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.invite-table tr:nth-child(even) td {
+  background: #f5f5f5;
+}
+
+.role-badge {
+  background: rgba(217,31,34,0.1);
+  color: var(--primary);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.status-pill {
+  padding: 0.3rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #fff;
+  background-color: #15af37;
+}
+
+.status-pill.pending {
+  background: #f0ad4e;
+}
+
+.status-pill.cancelled {
+  background: #d9534f;
+}
+
+.table-btn {
+  padding: 0.35rem 0.7rem;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-right: 0.3rem;
+}
+
+.table-btn.danger {
+  background: #ff4d4f;
+  color: #fff;
+}
+
+.table-btn.secondary {
+  background: #aaa;
+  color: #fff;
+}
+
+.table-btn:hover {
+  opacity: 0.85;
+}
+
+.skeleton-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.skeleton-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1rem;
+}
+
+.skeleton-cell {
+  height: 1.5rem;
+  background: #e0e0e0;
+  border-radius: var(--radius);
+  animation: pulse 1.2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: #777;
+  font-style: italic;
+}
+

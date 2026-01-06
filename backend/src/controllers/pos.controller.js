@@ -117,7 +117,7 @@ async function closeShift(req, res) {
   }
 
   try {
-    // 1️⃣ Get the shift info
+    //Get the shift info
     const shiftRes = await db.query(
       `SELECT * FROM pos_shifts WHERE id = $1 AND tenant_id = $2 AND user_id = $3`,
       [shift_id, tenantId, userId]
@@ -128,20 +128,68 @@ async function closeShift(req, res) {
       return res.status(404).json({ success: false, message: 'Shift not found' });
     }
 
-    // 2️⃣ Fetch all sales for this shift
-    const salesRes = await db.query(
-      `SELECT ps.id, ps.product_id, ps.qty, ps.selling_price, ps.commission, ps.created_at, p.name as product_name
-       FROM pos_sales ps
-       JOIN products p ON ps.product_id = p.id
-       WHERE ps.shift_id = $1 AND ps.tenant_id = $2 AND ps.user_id = $3
-       ORDER BY ps.created_at ASC`,
-      [shift_id, tenantId, userId]
-    );
+    if (shift.closed_at) {
+      return res.status(400).json({
+        success: false,
+        message: 'Shift already closed'
+      });
+    }
+
+    //Fetch all sales for this shift
+const salesRes = await db.query(
+  `SELECT 
+     ps.id,
+     ps.product_id,
+     ps.qty,
+     ps.selling_price,
+     ps.commission,
+     ps.payment_method,
+     ps.payment_breakdown,
+     ps.created_at,
+     p.name AS product_name
+   FROM pos_sales ps
+   JOIN products p ON ps.product_id = p.id
+   WHERE ps.shift_id = $1 
+     AND ps.tenant_id = $2 
+     AND ps.user_id = $3
+   ORDER BY ps.created_at ASC`,
+  [shift_id, tenantId, userId]
+);
 
     const total_units = salesRes.rows.reduce((sum, s) => sum + Number(s.qty), 0);
     const total_sales = salesRes.rows.reduce((sum, s) => sum + Number(s.selling_price) * Number(s.qty), 0);
 
-    // 3️⃣ Update the shift to mark it closed
+    //Calculate payment totals
+    const paymentTotals = { cash: 0, transfer: 0, card: 0, other: 0 };
+
+salesRes.rows.forEach(sale => {
+  const breakdown = sale.payment_breakdown || [];
+
+  // If stored as JSON string in DB, parse it
+  const payments = Array.isArray(breakdown) ? breakdown : JSON.parse(breakdown || "[]");
+
+  payments.forEach(p => {
+    const amt = Number(p.amount || 0);
+    switch ((p.method || '').toLowerCase()) {
+      case 'cash': paymentTotals.cash += amt; break;
+      case 'transfer': paymentTotals.transfer += amt; break;
+      case 'card': paymentTotals.card += amt; break;
+      default: paymentTotals.other += amt; break;
+    }
+  });
+});
+
+
+const userRes = await db.query(
+  `SELECT name FROM users WHERE id = $1 AND tenant_id = $2`,
+  [userId, tenantId]
+);
+
+
+const staffName = userRes.rows[0]?.name || 'N/A';
+
+
+    //update the shift to mark it closed
     const updatedShift = await db.query(
       `UPDATE pos_shifts
        SET closed_at = now(), total_units = $1, total_sales = $2
@@ -150,11 +198,14 @@ async function closeShift(req, res) {
       [total_units, total_sales, shift_id]
     );
 
-    res.json({
-      success: true,
-      shift: updatedShift.rows[0],
-      sales: salesRes.rows
-    });
+res.json({
+  success: true,
+  shift: updatedShift.rows[0],
+  staff_name: staffName,
+  sales: salesRes.rows,
+  payment_totals: paymentTotals
+});
+
 
   } catch (err) {
     console.error(err);

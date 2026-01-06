@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { sicService } from "../../../services/profitService"; // or separate sicService file
 import { vendorService } from "../../../services/vendorService"; // implement materialService
-import { materialService } from "../../../services/materialService";
+ import { materialService } from "../../../services/materialService";
 
 import SkeletonCard from "../../../components/common/SkeletonCard";
 import toast from "react-hot-toast";
@@ -28,7 +28,7 @@ const SICRawReport = () => {
         Object.entries(filters).filter(([_, v]) => v !== "")
       );
       const res = await sicService.getRawSICReport(cleanFilters);
-      if (res.data.success) setRawSIC(res.data.sic);
+      if (res.data.success) setRawSIC(res.data.report);
     } catch (err) {
       console.error(err);
       toast.error("Failed to load Raw SIC report");
@@ -42,7 +42,8 @@ const SICRawReport = () => {
     const loadMaterials = async () => {
       try {
         const res = await materialService.getAllMaterials(); // implement getAllMaterials in service
-        if (res.data.success) setMaterials(res.data.materials);
+        if (res.data.success) setMaterials(res.data.items);
+        console.log("Materials:", res.data.items);
       } catch (err) {
         console.error(err);
       }
@@ -54,12 +55,6 @@ const SICRawReport = () => {
     loadSIC();
     // eslint-disable-next-line 
   }, []);
-
-  // Top 5 absolute variance for chart
-  const top5Variance = [...rawSIC]
-    .sort((a, b) => Math.abs(b.variance) - Math.abs(a.variance))
-    .slice(0, 5);
-
   return (
     <div className="sic-container">
       <h2 className="page-title">Raw Materials SIC Report</h2>
@@ -82,40 +77,22 @@ const SICRawReport = () => {
       </div>
 
       {/* Bar Chart */}
-      <h3 className="section-title">Top 5 Variances</h3>
-      {loading ? (
-        <SkeletonCard height={300} />
-      ) : (
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={top5Variance}>
-            <XAxis dataKey="material_id" />
-            <YAxis />
-            <Tooltip formatter={(value) => value.toFixed(2)} />
-            <Bar dataKey="variance">
-              {top5Variance.map((_, i) => (
-                <Cell key={i} fill="#4d70ff" />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      )}
-
       {/* Cards */}
       <div className="grid">
         {loading ? (
           <SkeletonCard height={150} />
         ) : (
           rawSIC.map(r => (
-            <div key={r.id} className="product-card">
+            <div style={{ height: "45vh" }} key={r.id} className="product-card">
               <h4>{r.material_name || `ID: ${r.material_id}`}</h4>
-              <p>Opening: {r.opening_qty}</p>
+              <p>Submitted by: {r.submitted_by}</p>
               <p>Issued: {r.issues_qty}</p>
               <p>Waste: {r.waste_qty}</p>
               <p>Closing: {r.closing_qty}</p>
               <p>Expected: {r.expected_usage}</p>
               <p>System: {r.system_usage}</p>
               <strong className={r.variance >= 0 ? "profit" : "loss"}>
-                Variance: {r.variance.toFixed(2)} ({r.variance_value.toFixed(2)})
+                Variance: {r.variance} ({r.variance_value})
               </strong>
               {r.override_reason && <small>Override: {r.override_reason}</small>}
             </div>

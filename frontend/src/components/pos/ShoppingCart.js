@@ -3,7 +3,6 @@ import { formatCurrency } from '../../utils/formatters';
 
 const ShoppingCart = ({ cart, onUpdateQuantity, onRemoveItem, totals, onContinue, processing, disabled }) => {
     const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
-    const roundDown = (num, nearest = 100) => Math.floor(num / nearest) * nearest;
     console.log(totals);
     
   
@@ -46,11 +45,11 @@ const ShoppingCart = ({ cart, onUpdateQuantity, onRemoveItem, totals, onContinue
             </div>
             <div className="total-line">
               <span>Commission:</span>
-              <span>{formatCurrency(round(totals.totalCommission))}</span>
+              <span>{formatCurrency(totals.totalCommission)}</span>
             </div>
             <div className="total-line grand-total">
               <span>Total:</span>
-              <span>{formatCurrency(round(totals.total))}</span>
+              <span>{formatCurrency(totals.total)}</span>
             </div>
           </div>
 

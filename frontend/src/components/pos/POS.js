@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import VendorSelector from './VendorSelector';
+import { getUser } from '../../api/users';
 import ProductGrid from './ProductGrid';
 import ShoppingCart from './ShoppingCart';
 import { vendorService } from '../../services/vendorService';
@@ -45,6 +45,8 @@ const POS = () => {
   const [currentShiftId, setCurrentShiftId] = useState(null);
 
   const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
+  
+
 
  useEffect(() => {
   async function initShift() {
@@ -83,9 +85,6 @@ const POS = () => {
   try {
     const res = await getProducts(1, 1000); // fetch all products in one go
     const allProducts = res.data.products;
-    console.log(allProducts);
-    
-
     setProducts(allProducts);
     setAppProducts(allProducts);
   } catch (err) {
@@ -283,6 +282,7 @@ const finishSale = async (options) => {
 
     // Print: open a new window with receipt HTML + CSS optimized for 80mm and call print()
   const openPrintWindow = (sale = lastSale) => {
+    
     if (!sale || !sale.items || sale.items.length === 0) return;
 
     const win = window.open('', 'PRINT', 'height=800,width=400');
@@ -292,7 +292,7 @@ const finishSale = async (options) => {
       console.log(item);
       
       const name = item.name || 'Item';      
-      const vendorName = item.vendor_name || item.vendor || 'Vendor';
+      const vendorName = getVendorName(item.vendor_id)  || 'Vendor';
       const qty = item.quantity || 1;
     const price =
   (Number(round(item.selling_price)) || 0) +
@@ -303,7 +303,7 @@ const finishSale = async (options) => {
         <div class="line-item">
           <div class="item-left">
             <div class="item-name">${escapeHtml(name)}</div>
-            <div class="item-vendor"></div>
+            <div style="margin-left: 1.5px;font-weight:600" class="item-vendor">vendor-${vendorName}</div>
           </div>
           <div class="item-right">
             <div class="item-qty">x${qty}</div>
@@ -351,7 +351,9 @@ const paymentHtml = (sale.payment && Array.isArray(sale.payment.breakdown) && sa
   .receipt {
     width: 100%;
     box-sizing: border-box;
-    padding: 4mm 3mm;
+    padding: 6mm 4mm;
+    border-left: 1px dashed #444;
+    border-right: 1px dashed #444;
   }
 
   .center { text-align:center; }
@@ -366,8 +368,19 @@ const paymentHtml = (sale.payment && Array.isArray(sale.payment.breakdown) && sa
     font-size: 12px;
     margin: 4px 0;
   }
-  .meta { font-size: 9px; margin-bottom: 6px; }
-  .sep { border-top: 1px dashed #444; margin: 4px 0; }
+  .meta { font-size: 9px; margin-bottom: 6px;text-align:center; }
+  .sep { border-top: 1px dashed #444; margin: 4px 6px; }
+  .receipt-end-space {
+  height: 20mm;
+  }
+  .totals .row {
+  font-weight: 700;
+}
+
+.totals .row div:last-child {
+  font-size: 11px;
+}
+  
 
   .line-item {
     display:flex;
@@ -387,6 +400,9 @@ const paymentHtml = (sale.payment && Array.isArray(sale.payment.breakdown) && sa
 
   .payment { margin-top:8px; font-size: 10px; }
   .pay-row { display:flex; justify-content:space-between; margin:2px 0; }
+  .payment {padding: 0px 6px}
+  .totals {padding: 0px 6px}
+  .line-item {padding: 0px 6px;}
 
   .thankyou { margin-top:10px; text-align:center; font-size:10px; }
   .small { font-size:9px; color:#333; }
@@ -397,8 +413,8 @@ const paymentHtml = (sale.payment && Array.isArray(sale.payment.breakdown) && sa
           <div class="receipt">
             <div class="center">
               <div><img src="/logo.png" alt="deesoftwork-logo" class="logo-placeholder" /></div>
-              <div class="meta">${formattedDate}</div>
-              <div class="meta"><span style="font-weight:700">Customer Type:</span> ${escapeHtml(capitalize(sale.payment?.customer_type || 'Walk-in'))}</div>
+              <di v class="meta">${formattedDate}</div>
+              <div style="margin-bottom:center;" class="meta"><span style="font-weight:700">Customer Type:</span> ${escapeHtml(capitalize(sale.payment?.customer_type || 'Walk-in'))}</div>
             </div>
 
             <div class="sep"></div>
@@ -424,6 +440,7 @@ const paymentHtml = (sale.payment && Array.isArray(sale.payment.breakdown) && sa
             <div class="thankyou">
               <div>Thank you for shopping!</div>
               <div class="small">Powered by Deelad Softwork</div>
+              <div class="receipt-end-space"></div>
             </div>
 
           </div>
@@ -459,9 +476,11 @@ const handleCloseShift = async () => {
   if (!currentShiftId) return toast.error("No active shift");
 
   try {
-    // Call backend to close shift and get sales
     const res = await closeShift({ shift_id: currentShiftId });
+
     const shiftSales = res.data.sales || [];
+    const staffName = res.data.staff_name || "N/A";
+    const paymentTotals = res.data.payment_totals || { cash: 0, transfer: 0, card: 0 };
 
     if (!shiftSales.length) {
       toast.info("No sales recorded for this shift");
@@ -472,57 +491,68 @@ const handleCloseShift = async () => {
     const doc = new jsPDF();
     doc.setFontSize(18);
     doc.text("Shift Report", 14, 20);
+
+    // Header
     doc.setFontSize(12);
     doc.text(`Shift ID: ${currentShiftId}`, 14, 28);
-    doc.text(`Date: ${new Date().toLocaleString()}`, 14, 36);
+    doc.text(`Staff Name: ${staffName}`, 14, 34);
+    doc.text(`Date: ${new Date().toLocaleString()}`, 14, 40);
 
-    // Prepare table
-    const tableColumn = ["#", "Product", "Qty", "Price (₦)", "Commission (₦)", "Total (₦)", "Time"];
-    const tableRows = shiftSales.map((sale, i) => {
-      const total = Number(sale.selling_price) * Number(sale.qty);
-      return [
-        i + 1,
-        sale.product_name,
-        sale.qty,
-        Number(sale.selling_price).toLocaleString(),
-        Number(sale.commission || 0).toLocaleString(),
-        (total + Number(sale.commission || 0)).toLocaleString(),
-        new Date(sale.created_at).toLocaleTimeString()
-      ];
-    });
+    // Optional: Sales Table for auditing
+    if (shiftSales.length) {
+      const tableColumns = ["#", "Product", "Qty", "Price (₦)", "Commission (₦)", "Total (₦)", "Time"];
+      const tableRows = shiftSales.map((sale, i) => {
+        const total = Number(round(sale.selling_price)) * Number(sale.qty) + Number(sale.commission || 0);
+        return [
+          i + 1,
+          sale.product_name,
+          sale.qty,
+          Number(round(sale.selling_price)).toLocaleString(),
+          Number(sale.commission || 0).toLocaleString(),
+          total.toLocaleString(),
+          new Date(sale.created_at).toLocaleTimeString()
+        ];
+      });
 
-    // Use autoTable
-    autoTable(doc, {
-      startY: 45,
-      head: [tableColumn],
-      body: tableRows,
-      styles: { fontSize: 10, cellPadding: 2 },
-      headStyles: { fillColor: [41, 128, 185], textColor: 255 },
-      alternateRowStyles: { fillColor: [240, 240, 240] },
-      margin: { left: 14, right: 14 },
-    });
+      autoTable(doc, {
+        startY: 48,
+        head: [tableColumns],
+        body: tableRows,
+        styles: { fontSize: 10, cellPadding: 2 },
+        headStyles: { fillColor: [41, 128, 185], textColor: 255 },
+        alternateRowStyles: { fillColor: [240, 240, 240] },
+        margin: { left: 14, right: 14 }
+      });
+    }
 
-    // Calculate totals
-    const totalSales = shiftSales.reduce((sum, s) => sum + Number(s.selling_price) * Number(s.qty), 0);
-    const totalCommission = shiftSales.reduce((sum, s) => sum + Number(s.commission || 0), 0);
-    const grandTotal = totalSales + totalCommission;
+    // Payment Summary
+    const finalY = doc.lastAutoTable?.finalY + 10 || 60;
+    const grandTotal =
+      (round(paymentTotals.cash) || 0) +
+      (round(paymentTotals.transfer) || 0) +
+      (round(paymentTotals.card) || 0);
 
-    const finalY = doc.lastAutoTable.finalY + 10;
     doc.setFontSize(12);
-    doc.text(`Total Sales: ₦${totalSales.toLocaleString()}`, 14, finalY);
-    doc.text(`Total Commission: ₦${totalCommission.toLocaleString()}`, 14, finalY + 6);
-    doc.text(`Grand Total: ₦${grandTotal.toLocaleString()}`, 14, finalY + 12);
+    doc.text("Payment Summary:", 14, finalY);
+    doc.setFontSize(11);
+    doc.text(`Cash: ₦${Number(round(paymentTotals.cash)).toLocaleString()}`, 18, finalY + 6);
+    doc.text(`Transfer: ₦${Number(round(paymentTotals.transfer) || paymentTotals.transfer).toLocaleString()}`, 18, finalY + 12);
+    doc.text(`Card: ₦${Number(round(paymentTotals.card)).toLocaleString()}`, 18, finalY + 18);
+
+    doc.setFontSize(12);
+    doc.text(`Grand Total: ₦${grandTotal.toLocaleString()}`, 14, finalY + 28);
 
     // Save PDF
     doc.save(`shift_${currentShiftId}.pdf`);
 
     // Clear shift
-    localStorage.removeItem('current_shift_id');
+    localStorage.removeItem("current_shift_id");
     setCurrentShiftId(null);
-    toast.success('Shift closed and PDF downloaded');
+    toast.success("Shift closed and PDF downloaded");
+
   } catch (err) {
     console.error(err);
-    toast.error('Failed to close shift');
+    toast.error("Failed to close shift");
   }
 };
 
@@ -558,7 +588,7 @@ const handleCloseShift = async () => {
           <ul className="search-dropdown">
             {searchResults.map(product => (
               <li key={product.id} onMouseDown={() => { addToCart({ ...product, quantity: 1 }); setSearchTerm(''); setSearchResults([]); setShowDropdown(false); }} style={{ cursor: "pointer", padding: "5px 10px" }}>
-                <strong>{product.name}</strong> - {getVendorName(product.vendor_id) || "Vendor"} - {currency(Number(round(product.selling_price  || 0)) + Number(round(product.commission || 0)))}
+                <strong>{product.name}</strong> - {getVendorName(product.vendor_id) || "Vendor"} - {currency(Number(round(product.selling_price  || 0)) + Number(product.commission || 0))}
               </li>
             ))}
           </ul>
