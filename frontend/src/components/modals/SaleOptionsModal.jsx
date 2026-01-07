@@ -105,7 +105,7 @@ const handleFinish = () => {
           <h3>Complete Sale</h3>
 
           <div className="sale-total">
-          <strong>Total Sale:</strong> ₦{round(totals.total).toLocaleString()}
+          <strong>Total Sale:</strong> ₦{totals.total.toLocaleString()}
           </div>
 
           <div className="modal-content">

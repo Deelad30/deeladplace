@@ -12,9 +12,7 @@ import Sidebar from "../components/common/Sidebar";
 import Table from "../components/common/Table";
 import Modals from "../components/common/Modals";
 
-import {
-  faArrowLeft
-} from "@fortawesome/free-solid-svg-icons";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 
 import {
   getRecipe, addRecipeItem, updateRecipeItem, deleteRecipeItem,
@@ -37,10 +35,10 @@ const RecipePage = () => {
   const { id: productId } = useParams();
   const navigate = useNavigate();
   const icon = {
-  fontSize: "20px",
-  color: "#D91F22", // Airbnb signature red
-  marginBottom: "18px",
-};
+    fontSize: "20px",
+    color: "#D91F22",
+    marginBottom: "18px",
+  };
 
   // --- Recipe / Ingredients
   const [recipeItems, setRecipeItems] = useState([]);
@@ -57,13 +55,18 @@ const RecipePage = () => {
   const [packagingModal, setPackagingModal] = useState(false);
   const [editingPackaging, setEditingPackaging] = useState(null);
   const [packForm, setPackForm] = useState({ packaging_id: "", qty: "" });
+  const [packagingLoading, setPackagingLoading] = useState(true);
 
   // --- Cost
   const [costResult, setCostResult] = useState(null);
+  const [computingCost, setComputingCost] = useState(false);
+  const [standardizingCost, setStandardizingCost] = useState(false);
 
   // --- Batch & Margin
   const [batchSize, setBatchSize] = useState(1);
   const [marginPercent, setMarginPercent] = useState(0);
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [settingsLoading, setSettingsLoading] = useState(true);
 
   // ----------------- Load Materials -----------------
   const loadMaterials = async () => {
@@ -108,6 +111,7 @@ const RecipePage = () => {
 
   // ----------------- Load Product Packaging -----------------
   const loadProductPackaging = async () => {
+    setPackagingLoading(true);
     try {
       const res = await getProductPackaging(productId);
       const mapped = (res.data.packaging || []).map(p => {
@@ -124,10 +128,12 @@ const RecipePage = () => {
     } catch {
       toast.error("Failed to load product packaging");
     }
+    setPackagingLoading(false);
   };
 
   // ----------------- Load Batch & Margin -----------------
   const loadProductSettings = async () => {
+    setSettingsLoading(true);
     try {
       const res = await getProductSettings(productId);
       if (res.data.settings) {
@@ -138,6 +144,7 @@ const RecipePage = () => {
       console.error(err);
       toast.error("Failed to load product settings");
     }
+    setSettingsLoading(false);
   };
 
   // ----------------- Initial Load -----------------
@@ -162,103 +169,112 @@ const RecipePage = () => {
   // ----------------- Handle Save Ingredient -----------------
   const handleSave = async () => {
     if (!formData.material_id || !formData.recipe_qty) return toast.error("Select material & enter qty");
+    const loadingToast = toast.loading(editLine ? "Updating ingredient..." : "Adding ingredient...");
     try {
       const body = { material_id: formData.material_id, recipe_qty: Number(formData.recipe_qty) };
       if (editLine) {
         await updateRecipeItem(editLine.id, body);
-        toast.success("Ingredient updated");
+        toast.success("Ingredient updated successfully", { id: loadingToast });
       } else {
         await addRecipeItem(productId, body);
-        toast.success("Ingredient added");
+        toast.success("Ingredient added successfully", { id: loadingToast });
       }
       setModalOpen(false);
       loadRecipe();
     } catch {
-      toast.error("Failed to save ingredient");
+      toast.error("Failed to save ingredient", { id: loadingToast });
     }
   };
 
   // ----------------- Handle Delete Ingredient -----------------
   const handleDelete = async row => {
     if (!window.confirm("Remove this ingredient?")) return;
+    const loadingToast = toast.loading("Removing ingredient...");
     try {
       await deleteRecipeItem(row.id);
-      toast.success("Ingredient removed");
+      toast.success("Ingredient removed successfully", { id: loadingToast });
       loadRecipe();
     } catch {
-      toast.error("Failed to delete ingredient");
+      toast.error("Failed to delete ingredient", { id: loadingToast });
     }
   };
 
   // ----------------- Handle Save Packaging -----------------
   const handleSavePackaging = async () => {
     if (!packForm.packaging_id || !packForm.qty) return toast.error("Select packaging & enter qty");
+    const loadingToast = toast.loading(editingPackaging ? "Updating packaging..." : "Adding packaging...");
     try {
       const body = { product_id: productId, packaging_id: packForm.packaging_id, qty: Number(packForm.qty) };
       if (editingPackaging) {
         await updateProductPackaging(editingPackaging.id, body);
-        toast.success("Packaging updated");
+        toast.success("Packaging updated successfully", { id: loadingToast });
       } else {
         await addPackagingToProduct(body);
-        toast.success("Packaging added");
+        toast.success("Packaging added successfully", { id: loadingToast });
       }
       setPackagingModal(false);
       loadProductPackaging();
     } catch {
-      toast.error("Failed to save packaging");
+      toast.error("Failed to save packaging", { id: loadingToast });
     }
   };
 
   // ----------------- Handle Delete Packaging -----------------
   const handleDeletePackaging = async row => {
     if (!window.confirm("Remove this packaging item?")) return;
+    const loadingToast = toast.loading("Removing packaging...");
     try {
       await deleteProductPackaging(row.id);
-      toast.success("Packaging removed");
+      toast.success("Packaging removed successfully", { id: loadingToast });
       loadProductPackaging();
     } catch {
-      toast.error("Delete failed");
+      toast.error("Delete failed", { id: loadingToast });
     }
   };
 
   // ----------------- Handle Compute Cost -----------------
   const handleComputeCost = async () => {
     if (!batchSize || batchSize <= 0) return toast.error("Enter a valid batch size before computing");
+    setComputingCost(true);
+    const loadingToast = toast.loading("Computing cost breakdown...");
     try {
       const res = await computeCost(productId, { batchQty: batchSize, marginPercent });
       setCostResult(res.data.cost);
-      console.log(res.data.cost);
-      
-      toast.success("Cost computed");
+      toast.success("Cost computed successfully!", { id: loadingToast });
     } catch {
-      toast.error("Failed to compute cost");
+      toast.error("Failed to compute cost", { id: loadingToast });
     }
+    setComputingCost(false);
   };
 
   const handleSaveStandardCost = async () => {
     if (!costResult) return toast.error("Compute cost first before saving standard cost");
+    setStandardizingCost(true);
+    const loadingToast = toast.loading("Standardizing cost...");
     try {
-      console.log(marginPercent);
-      
       await standardize(productId, { marginPercent });
-      toast.success("Standard cost saved successfully!");
+      toast.success("Standard cost saved successfully!", { id: loadingToast });
     } catch (err) {
       console.error(err);
-      toast.error("Failed to save standard cost");
+      toast.error("Failed to save standard cost", { id: loadingToast });
     }
+    setStandardizingCost(false);
   };
 
   // ----------------- Handle Save Batch & Margin -----------------
   const handleSaveBatchMargin = async () => {
     if (!batchSize || batchSize <= 0) return toast.error("Batch size must be greater than 0");
     if (marginPercent < 0 || marginPercent > 1) return toast.error("Margin must be between 0 and 1 (0.x)");
+    setSavingSettings(true);
+    const loadingToast = toast.loading("Saving settings...");
     try {
       await saveProductSettings(productId, { batch_qty: batchSize, margin_percent: marginPercent });
-      toast.success("Batch size & margin saved");
+      toast.success("Batch size & margin saved successfully", { id: loadingToast });
     } catch(err) {
       console.error(err);
-      toast.error("Failed to save batch size & margin");
+      toast.error("Failed to save batch size & margin", { id: loadingToast });
     }
+    setSavingSettings(false);
   };
 
   // ----------------- Table Columns -----------------
@@ -311,6 +327,37 @@ const RecipePage = () => {
     { name: "COGS", value: costResult.COGS * batchSize },
   ] : [];
 
+  // ----------------- Skeleton Components -----------------
+  const TablesSkeleton = () => (
+    <div className="skeleton-table">
+      <div className="skeleton-table-row skeleton-table-header">
+        <div style={{height: "34px", marginBottom: "12px"}} className="skeleton-cell"></div>
+      </div>
+      {[1, 2, ].map(i => (
+        <div key={i} className="skeleton-table-row">
+          <div style={{height: "34px", marginBottom: "12px"}} className="skeleton-cell"></div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const TableSkeleton = () => (
+    <div className="skeleton-table">
+      <div className="skeleton-table-row skeleton-table-header">
+        <div className="skeleton-cell"></div>
+        <div className="skeleton-cell"></div>
+        <div className="skeleton-cell"></div>
+      </div>
+      {[1, 2, 3, 4].map(i => (
+        <div key={i} className="skeleton-table-row">
+          <div className="skeleton-cell"></div>
+          <div className="skeleton-cell"></div>
+          <div className="skeleton-cell"></div>
+        </div>
+      ))}
+    </div>
+  );
+
   // ----------------- Render -----------------
   return (
     <div className="page-wrapper">
@@ -320,116 +367,253 @@ const RecipePage = () => {
 
         {/* Page Header */}
         <div className="page-header">
-          <div style={{display:"flex", justifyContent: "center"}} className="breadcrumb" onClick={() => navigate("/products")}>  <FontAwesomeIcon icon={faArrowLeft} onClick={() => navigate("/products")} style={icon} />  <span style={{display:"inline-block", fontSize:"15px"}}></span> Products</div>
+          <div style={{display:"flex", justifyContent: "center", cursor: "pointer"}} className="breadcrumb" onClick={() => navigate("/products")}>
+            <FontAwesomeIcon icon={faArrowLeft} style={icon} />
+            <span style={{display:"inline-block", fontSize:"15px"}}>Products</span>
+          </div>
           <h2 className="page-title">Recipe Setup</h2>
-          <button style={{ backgroundColor:"rgb(217, 31, 34)" }} className="btn-primary" onClick={() => { setEditLine(null); setFormData({ material_id: "", recipe_qty: "" }); setModalOpen(true); }}>+ Add Ingredient</button>
+          <div></div>
         </div>
 
         {/* Batch Size & Margin */}
-        <div className="card">
-          <h3>Batch & Margin</h3>
-          <div className="form-group">
-            <label>Batch Size</label>
-            <input type="number" value={batchSize} onChange={e => setBatchSize(Number(e.target.value))} min="1" />
+        {settingsLoading ? (
+          <TablesSkeleton />
+        ) : (
+          <div className="card">
+            <h3>Batch & Margin</h3>
+            <div className="form-group">
+              <label>Batch Size</label>
+              <input 
+                type="number" 
+                value={batchSize} 
+                onChange={e => setBatchSize(Number(e.target.value))} 
+                min="1"
+                disabled={savingSettings}
+              />
+            </div>
+            <div className="form-group">
+              <label>Margin % (0.x)</label>
+              <input 
+                type="number" 
+                value={marginPercent} 
+                onChange={e => setMarginPercent(Number(e.target.value))} 
+                step="0.01" 
+                min="0" 
+                max="1" 
+                placeholder="Enter 0.2 for 20%"
+                disabled={savingSettings}
+              />
+            </div>
+            <button 
+              style={{backgroundColor:"rgb(217, 31, 34)"}} 
+              className="btn-primary" 
+              onClick={handleSaveBatchMargin}
+              disabled={savingSettings}
+            >
+              {savingSettings ? (
+                <>
+                  Saving...
+                </>
+              ) : "Save Batch & Margin"}
+            </button>
           </div>
-          <div className="form-group">
-            <label>Margin % (0.x)</label>
-            <input type="number" value={marginPercent} onChange={e => setMarginPercent(Number(e.target.value))} step="0.01" min="0" max="1" placeholder="Enter 0.2 for 20%" />
-          </div>
-          <button style={{backgroundColor:"rgb(217, 31, 34)"}} className="btn-primary" onClick={handleSaveBatchMargin}>Save Batch & Margin</button>
-        </div>
+        )}
 
         {/* Ingredients Table */}
         <div className="card">
-          {loading ? <div className="loading">Loading...</div> : <Table columns={ingredientColumns} data={recipeItems} />}
+          <div className="section-header">
+            <h3>Ingredients</h3>
+            <button 
+              style={{ backgroundColor:"rgb(217, 31, 34)" }} 
+              className="btn-primary" 
+              onClick={() => { 
+                setEditLine(null); 
+                setFormData({ material_id: "", recipe_qty: "" }); 
+                setModalOpen(true); 
+              }}
+            >
+              + Add Ingredient
+            </button>
+          </div>
+          {loading ? <TableSkeleton /> : <Table columns={ingredientColumns} data={recipeItems} />}
         </div>
 
         {/* Packaging Table */}
         <div className="card">
           <div className="section-header">
             <h3>Packaging</h3>
-            <button style={{ backgroundColor:"rgb(217, 31, 34)" }} className="btn-primary" onClick={() => { setEditingPackaging(null); setPackForm({ packaging_id: "", qty: "" }); setPackagingModal(true); }}>+ Add Packaging</button>
+            <button 
+              style={{ backgroundColor:"rgb(217, 31, 34)" }} 
+              className="btn-primary" 
+              onClick={() => { 
+                setEditingPackaging(null); 
+                setPackForm({ packaging_id: "", qty: "" }); 
+                setPackagingModal(true); 
+              }}
+            >
+              + Add Packaging
+            </button>
           </div>
-          <Table columns={packagingColumns} data={productPackaging} />
+          {packagingLoading ? <TableSkeleton /> : <Table columns={packagingColumns} data={productPackaging} />}
         </div>
 
         {/* Cost Panel with Charts */}
+        <div className="costing-panel">
+          <button 
+            style={{ backgroundColor:"rgb(217, 31, 34)" }} 
+            className="btn-primary" 
+            onClick={handleComputeCost}
+            disabled={computingCost}
+          >
+            {computingCost ? (
+              <>
+                Computing...
+              </>
+            ) : "Compute Cost"}
+          </button>
 
-          {/* Cost Panel with Charts and List */}
-<div className="costing-panel">
-  <button style={{ backgroundColor:"rgb(217, 31, 34)" }} className="btn-primary" onClick={handleComputeCost}>Compute Cost</button>
+          {computingCost && !costResult && (
+            <div className="cost-results">
+              <div className="skeleton-title"></div>
+              <div className="skeleton-chart"></div>
+              <div className="skeleton-title"></div>
+              <div className="skeleton-chart"></div>
+              <div className="skeleton-cost-lines">
+                {[1,2,3,4,5,6,7,8,9,10,11,12,13,14].map(i => (
+                  <div key={i} className="skeleton-cost-line"></div>
+                ))}
+              </div>
+            </div>
+          )}
 
-  {costResult && (
-    <div className="cost-results">
-      <h3>Cost Breakdown (Per Unit)</h3>
+          {costResult && !computingCost && (
+            <div className="cost-results">
+              <h3>Cost Breakdown (Per Unit)</h3>
 
-      {/* Pie Chart */}
-      <ResponsiveContainer width="100%" height={300}>
-<PieChart>
-  <Pie
-    data={perUnitCostData}
-    dataKey="value"
-    nameKey="name"
-    cx="50%"
-    cy="50%"
-    outerRadius={100}
-    fill="#8884d8"
-    label={(entry) => `₦${round(entry.value, 2).toFixed(2)}`}
-    isAnimationActive={true}
-  >
-    {perUnitCostData.map((entry, index) => (
-      <Cell
-        key={`cell-${index}`}
-        fill={COLORS[index % COLORS.length]}
-      />
-    ))}
-  </Pie>
+              {/* Pie Chart */}
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={perUnitCostData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    fill="#8884d8"
+                    label={(entry) => `₦${round(entry.value, 2).toFixed(2)}`}
+                    isAnimationActive={true}
+                  >
+                    {perUnitCostData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <ReTooltip formatter={(value) => `₦${Number(value).toFixed(2)}`} />
+                  <ReLegend />
+                </PieChart>
+              </ResponsiveContainer>
 
-  <ReTooltip
-    formatter={(value) => `₦${Number(value).toFixed(2)}`}
-  />
+              {/* Bar Chart for Per Batch */}
+              <h3>Cost Breakdown (Per Batch)</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={perBatchCostData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <ReTooltip formatter={(value) => `₦${round(value.toFixed(2))}`} />
+                  <ReLegend />
+                  <Bar dataKey="value" fill="#82ca9d" isAnimationActive={true} />
+                </BarChart>
+              </ResponsiveContainer>
 
-  <ReLegend />
-</PieChart>
+              {/* Textual list of costs */}
+         <div className="cost-card">
+  <h3 className="cost-title">Cost Breakdown</h3>
 
-      </ResponsiveContainer>
+  <div className="cost-table-wrapper">
+    <table className="cost-table">
+      <thead>
+        <tr>
+          <th>Cost Item</th>
+          <th>Per Unit (₦)</th>
+          <th>Per Batch (₦)</th>
+        </tr>
+      </thead>
 
-      {/* Bar Chart for Per Batch */}
-      <h3>Cost Breakdown (Per Batch)</h3>
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={perBatchCostData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" />
-          <YAxis />
-          <ReTooltip formatter={(value) => `₦${round(value.toFixed(2))}`} />
-          <ReLegend />
-          <Bar dataKey="value" fill="#82ca9d" isAnimationActive={true} />
-        </BarChart>
-      </ResponsiveContainer>
+      <tbody>
+        <tr>
+          <td>Recipe Cost</td>
+          <td>{round(costResult.recipe_cost)}</td>
+          <td>{round(costResult.recipe_cost * batchSize)}</td>
+        </tr>
 
-      {/* Textual list of costs */}
-      <div className="cost-lines">
-        <div className="cost-line">{`Recipe Cost (per unit): ₦${round(costResult.recipe_cost)}`}</div>
-        <div className="cost-line">{`Recipe Cost (per batch): ₦${round(costResult.recipe_cost * batchSize)}`}</div>
-        <div className="cost-line">{`Packaging (per unit): ₦${round(costResult.packaging_cost)}`}</div>
-        <div className="cost-line">{`Packaging (per batch): ₦${round(costResult.packaging_cost * batchSize)}`}</div>
-        <div className="cost-line">{`Labour (per unit): ₦${round(costResult.labour_cost)}`}</div>
-        <div className="cost-line">{`Labour (per batch): ₦${round(costResult.labour_cost * batchSize)}`}</div>
-        <div className="cost-line">{`OPEX (per unit): ₦${round(costResult.opex_cost)}`}</div>
-        <div className="cost-line">{`OPEX (per batch): ₦${round(costResult.opex_cost * batchSize)}`}</div>
-        <div className="cost-line">{`COGS (per unit): ₦${round(costResult.COGS)}`}</div>
-        <div className="cost-line">{`COGS (per batch): ₦${round(costResult.COGS * batchSize)}`}</div>
-        <div className="cost-line">{`TCOP (per unit): ₦${round(costResult.TCOP)}`}</div>
-        <div className="cost-line">{`TCOP (per batch): ₦${round(costResult.TCOP * batchSize)}`}</div>
-        <div className="cost-line">{`Selling Price (per unit): ₦${round(costResult.selling_price || 0)}`}</div>
-        <div className="cost-line">{`Margin: ${(costResult.margin_percent ? (costResult.margin_percent * 100).toFixed(2) : "0")}%`}</div>
-      </div>
+        <tr>
+          <td>Packaging</td>
+          <td>{round(costResult.packaging_cost)}</td>
+          <td>{round(costResult.packaging_cost * batchSize)}</td>
+        </tr>
 
-      <button style={{ backgroundColor:"rgb(217, 31, 34)" }} className="btn-primary full-width" onClick={handleSaveStandardCost}>Save Standard Cost</button>
-    </div>
-  )}
+        <tr>
+          <td>Labour</td>
+          <td>{round(costResult.labour_cost)}</td>
+          <td>{round(costResult.labour_cost * batchSize)}</td>
+        </tr>
+
+        <tr>
+          <td>OPEX</td>
+          <td>{round(costResult.opex_cost)}</td>
+          <td>{round(costResult.opex_cost * batchSize)}</td>
+        </tr>
+
+        <tr className="highlight">
+          <td>COGS</td>
+          <td>{round(costResult.COGS)}</td>
+          <td>{round(costResult.COGS * batchSize)}</td>
+        </tr>
+
+        <tr className="highlight">
+          <td>TCOP</td>
+          <td>{round(costResult.TCOP)}</td>
+          <td>{round(costResult.TCOP * batchSize)}</td>
+        </tr>
+
+        <tr className="selling">
+          <td>Selling Price</td>
+          <td>{round(costResult.selling_price || 0)}</td>
+          <td>—</td>
+        </tr>
+
+        <tr className="margin">
+          <td>Margin</td>
+          <td colSpan="2">
+            {(costResult.margin_percent
+              ? (costResult.margin_percent * 100).toFixed(2)
+              : "0")}%
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 
+              <button 
+                style={{ backgroundColor:"rgb(217, 31, 34)" }} 
+                className="btn-primary full-width" 
+                onClick={handleSaveStandardCost}
+                disabled={standardizingCost}
+              >
+                {standardizingCost ? (
+                  <>
+                    Standardizing...
+                  </>
+                ) : "Save Standard Cost"}
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Ingredient Modal */}
         <Modals open={modalOpen} title={editLine ? "Edit Ingredient" : "Add Ingredient"} onClose={() => setModalOpen(false)}>
@@ -464,4 +648,4 @@ const RecipePage = () => {
   );
 };
 
-export default RecipePage;
+export default RecipePage;    

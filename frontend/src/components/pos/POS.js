@@ -220,6 +220,9 @@ const finishSale = async (options) => {
     (sum, item) => sum + Number(item.selling_price) * item.quantity + Number(item.commission || 0),
     0
   );
+  
+  console.log(options);
+  
 
   const saleObj = {
     items: cart.map(i => ({ ...i })),
@@ -227,7 +230,7 @@ const finishSale = async (options) => {
       type: options.payment_type,
       breakdown: options.payment_type === 'multiple' && Array.isArray(options.payment_breakdown)
         ? options.payment_breakdown.map(p => ({ method: p.method, amount: Number(p.amount) }))
-        : [{ method: options.payment_method || 'cash', amount: totalCartAmount }],
+        : [{ method: options.payment_type || 'cash', amount: totalCartAmount }],
       customer_type: options.customer_type
     },
     totals: calculateCartTotals(cart),
@@ -281,185 +284,183 @@ const finishSale = async (options) => {
 
 
     // Print: open a new window with receipt HTML + CSS optimized for 80mm and call print()
-  const openPrintWindow = (sale = lastSale) => {
-    
-    if (!sale || !sale.items || sale.items.length === 0) return;
+const openPrintWindow = (sale = lastSale) => {
+  console.log(sale);
+  
+  if (!sale || !sale.items || sale.items.length === 0) return;
 
-    const win = window.open('', 'PRINT', 'height=800,width=400');
-    const saleDate = new Date(sale.date || Date.now());
-    const formattedDate = saleDate.toLocaleString();
-    const itemsHtml = sale.items.map(item => {
-      console.log(item);
-      
-      const name = item.name || 'Item';      
-      const vendorName = getVendorName(item.vendor_id)  || 'Vendor';
-      const qty = item.quantity || 1;
+  const win = window.open('', 'PRINT', 'height=800,width=400');
+  const saleDate = new Date(sale.date || Date.now());
+  const formattedDate = saleDate.toLocaleString();
+  const itemsHtml = sale.items.map(item => {
+    const name = item.name || 'Item';      
+    const vendorName = getVendorName(item.vendor_id)  || 'Vendor';
+    const qty = item.quantity || 1;
     const price =
-  (Number(round(item.selling_price)) || 0) +
-  (Number(round(item.custom_commission)) || 0);
-      const lineTotal = (price * qty);
-      // item line (name on first line, vendor on second, qty & price on right)
-      return `
-        <div class="line-item">
-          <div class="item-left">
-            <div class="item-name">${escapeHtml(name)}</div>
-            <div style="margin-left: 1.5px;font-weight:600" class="item-vendor">vendor-${vendorName}</div>
-          </div>
-          <div class="item-right">
-            <div class="item-qty">x${qty}</div>
-            <div class="item-price">${currency(lineTotal)}</div>
-          </div>
+      (Number(round(item.selling_price)) || 0) +
+      (Number(item.custom_commission) || 0);
+    const lineTotal = (price * qty);
+    // item line (name on first line, vendor on second, qty & price on right)
+    return `
+      <div class="line-item">
+        <div class="item-left">
+          <div class="item-name">${escapeHtml(name)}</div>
+          <div style="margin-left: 1.5px;font-weight:600" class="item-vendor">vendor-${vendorName}</div>
         </div>
-      `;
-    }).join('');
+        <div class="item-right">
+          <div class="item-qty">x${qty}</div>
+          <div class="item-price">${currency(lineTotal)}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
 
-const paymentHtml = (sale.payment && Array.isArray(sale.payment.breakdown) && sale.payment.breakdown.length)
-  ? sale.payment.breakdown.map(p => {
-      const amtRounded = round(Number(p.amount)); // round first, make sure it’s a number
-      return `<div class="pay-row">
-                <div class="pay-method">${escapeHtml(capitalize(p.method))}</div>
-                <div class="pay-amt">${currency(amtRounded)}</div>
-              </div>`;
-    }).join('')
-  : `<div class="pay-row">
-        <div class="pay-method">${escapeHtml(capitalize(sale.payment?.type || 'Cash'))}</div>
-        <div class="pay-amt">${currency(round(sale.totals.total))}</div>
-      </div>`;
+  const paymentHtml = (sale.payment && Array.isArray(sale.payment.breakdown) && sale.payment.breakdown.length)
+    ? sale.payment.breakdown.map(p => {
+        const amtRounded = Number(sale.totals.total); // round first, make sure it's a number
+        return `<div class="pay-row">
+                  <div class="pay-method">${escapeHtml(capitalize(p.method))}</div>
+                  <div class="pay-amt">${currency(amtRounded)}</div>
+                </div>`;
+      }).join('')
+    : `<div class="pay-row">
+          <div class="pay-method">${escapeHtml(capitalize(sale.payment?.type))}</div>
+          <div class="pay-amt">${currency(sale.totals.total)}</div>
+        </div>`;
 
-    // Build HTML
-    const html = `
-      <html>
-        <head>
-          <title>Receipt</title>
-          <meta charset="utf-8" />
-         <style>
-  @page {
-    size: 80mm 100%;
-    margin: 0;
-  }
+  // Build HTML
+  const html = `
+    <html>
+      <head>
+        <title>Receipt</title>
+        <meta charset="utf-8" />
+       <style>
+@page {
+  size: 80mm 100%;
+  margin: 0;
+}
 
-  html, body {
-    width: 80mm;
-    margin: 0;
-    padding: 0;
-    font-family: "monospace", "Courier New", monospace;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-    overflow: visible !important;
-  }
+html, body {
+  width: 80mm;
+  margin: 0;
+  padding: 0;
+  font-family: "monospace", "Courier New", monospace;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+  overflow: visible !important;
+}
 
-  .receipt {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 6mm 4mm;
-    border-left: 1px dashed #444;
-    border-right: 1px dashed #444;
-  }
+.receipt {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6mm 4mm;
+  border-left: 1px dashed #444;
+  border-right: 1px dashed #444;
+}
 
-  .center { text-align:center; }
-  .logo-placeholder {
-    width: 80px;
-    border-radius: 6px;
-    display: inline-block;
-    margin-bottom: 6px;
-    line-height: 60px;
-  }
-  h2.store {
-    font-size: 12px;
-    margin: 4px 0;
-  }
-  .meta { font-size: 9px; margin-bottom: 6px;text-align:center; }
-  .sep { border-top: 1px dashed #444; margin: 4px 6px; }
-  .receipt-end-space {
+.center { text-align:center; }
+.logo-placeholder {
+  width: 80px;
+  border-radius: 6px;
+  display: inline-block;
+  margin-bottom: 6px;
+  line-height: 60px;
+}
+h2.store {
+  font-size: 12px;
+  margin: 4px 0;
+}
+.meta { font-size: 9px; margin-bottom: 6px;text-align:center; }
+.sep { border-top: 1px dashed #444; margin: 4px 6px; }
+.receipt-end-space {
   height: 20mm;
-  }
-  .totals .row {
+}
+.totals .row {
   font-weight: 700;
 }
 
 .totals .row div:last-child {
   font-size: 11px;
 }
-  
 
-  .line-item {
-    display:flex;
-    justify-content:space-between;
-    font-size: 10px;
-    margin-bottom: 4px;
-    white-space: nowrap;
-  }
+.line-item {
+  display:flex;
+  justify-content:space-between;
+  font-size: 10px;
+  margin-bottom: 4px;
+  white-space: nowrap;
+}
 
-  .item-left { text-align:left; max-width: 54mm; }
-  .item-right { text-align:right; min-width: 20mm; }
-  .item-name { font-weight: 600; }
-  .item-vendor { font-size: 9px; color: #444; }
+.item-left { text-align:left; max-width: 54mm; }
+.item-right { text-align:right; min-width: 20mm; }
+.item-name { font-weight: 600; }
+.item-vendor { font-size: 9px; color: #444; }
 
-  .totals { font-size: 10px; margin-top:6px; }
-  .totals .row { display:flex; justify-content:space-between; margin:2px 0; }
+.totals { font-size: 10px; margin-top:6px; }
+.totals .row { display:flex; justify-content:space-between; margin:2px 0; }
 
-  .payment { margin-top:8px; font-size: 10px; }
-  .pay-row { display:flex; justify-content:space-between; margin:2px 0; }
-  .payment {padding: 0px 6px}
-  .totals {padding: 0px 6px}
-  .line-item {padding: 0px 6px;}
+.payment { margin-top:8px; font-size: 10px; }
+.pay-row { display:flex; justify-content:space-between; margin:2px 0; }
+.payment {padding: 0px 6px}
+.totals {padding: 0px 6px}
+.line-item {padding: 0px 6px;}
 
-  .thankyou { margin-top:10px; text-align:center; font-size:10px; }
-  .small { font-size:9px; color:#333; }
+.thankyou { margin-top:10px; text-align:center; font-size:10px; }
+.small { font-size:9px; color:#333; }
 </style>
 
-        </head>
-        <body>
-          <div class="receipt">
-            <div class="center">
-              <div><img src="/logo.png" alt="deesoftwork-logo" class="logo-placeholder" /></div>
-              <di v class="meta">${formattedDate}</div>
-              <div style="margin-bottom:center;" class="meta"><span style="font-weight:700">Customer Type:</span> ${escapeHtml(capitalize(sale.payment?.customer_type || 'Walk-in'))}</div>
-            </div>
-
-            <div class="sep"></div>
-
-            ${itemsHtml}
-
-            <div class="sep"></div>
-
-            <div class="totals">
-
-              <div class="row" style="font-weight:700;"><div>TOTAL</div><div>${currency(round(sale.totals.total))}</div></div>
-            </div>
-
-            <div class="sep"></div>
-
-            <div class="payment">
-              <div style="font-weight:700; margin-bottom:4px;">PAYMENT</div>
-              ${paymentHtml}
-            </div>
-
-            <div class="sep"></div>
-
-            <div class="thankyou">
-              <div>Thank you for shopping!</div>
-              <div class="small">Powered by Deelad Softwork</div>
-              <div class="receipt-end-space"></div>
-            </div>
-
+      </head>
+      <body>
+        <div class="receipt">
+          <div class="center">
+            <div><img src="/logo.png" alt="deesoftwork-logo" class="logo-placeholder" /></div>
+            <div class="meta">${formattedDate}</div>
+            <div style="margin-bottom:6px;" class="meta"><span style="font-weight:700">Customer Type:</span> ${escapeHtml(capitalize(sale.payment?.customer_type || 'Walk-in'))}</div>
           </div>
-        </body>
-      </html>
-    `;
 
-    win.document.open();
-    win.document.write(html);
-    win.document.close();
+          <div class="sep"></div>
 
-    // Give the new window a tiny moment to render before printing
-    win.focus();
-    // print dialog will show
-    win.print();
+          ${itemsHtml}
 
-    // Optionally close after print. Some browsers block closing windows opened by script after print.
-    // win.close();
-  };
+          <div class="sep"></div>
+
+          <div class="totals">
+            <div class="row" style="font-weight:700;"><div>TOTAL</div><div>${currency(sale.totals.total)}</div></div>
+          </div>
+
+          <div class="sep"></div>
+
+          <div class="payment">
+            <div style="font-weight:700; margin-bottom:4px;">PAYMENT</div>
+            ${paymentHtml}
+          </div>
+
+          <div class="sep"></div>
+
+          <div class="thankyou">
+            <div>Thank you for shopping!</div>
+            <div class="small">Powered by Deelad Softwork</div>
+          </div>
+          
+          <div class="receipt-end-space"></div>
+
+        </div>
+      </body>
+    </html>
+  `;
+
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+
+  // Give the new window a tiny moment to render before printing
+  win.focus();
+  // print dialog will show
+  win.print();
+
+  // Optionally close after print. Some browsers block closing windows opened by script after print.
+  // win.close();
+};
 
   //Helpers 
     // Helpers

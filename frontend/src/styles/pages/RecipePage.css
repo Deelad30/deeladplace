@@ -41,6 +41,14 @@
   margin: 6px 0;
 }
 
+.spinner {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #d91f22; /* Updated color */
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+
 .cost-total {
   font-weight: 600;
   margin-top: 12px;
@@ -53,3 +61,55 @@
   border-radius: 8px;
   cursor: pointer;
 }
+
+/* ================= SHIMMER ================= */
+.shimmer {
+  position: relative;
+  overflow: hidden;
+  background: #e5e7eb;
+  border-radius: 10px;
+}
+
+.shimmer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 150%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,0.6),
+    transparent
+  );
+  animation: shimmer 1.4s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    left: 150%;
+  }
+}
+
+.shimmer-row {
+  height: 20px;
+  margin-bottom: 14px;
+}
+
+.shimmer-card {
+  height: 280px;
+}
+
+.shimmer-btn {
+  height: 44px;
+  width: 160px;
+}
+
+/* Disabled button UX */
+button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+   
+
