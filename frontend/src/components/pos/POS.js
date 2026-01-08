@@ -317,23 +317,24 @@ const openPrintWindow = (sale = lastSale) => {
   }).join('');
 console.log(sale);
 
-  const paymentHtml = (sale.payment && Array.isArray(sale.payment.breakdown) && sale.payment.breakdown.length)
-    ? sale.payment.breakdown.map(p => {
-      console.log(sale.totals.total);
-      console.log(p.amount);
-      console.log(p);
-      console.log(sale);
-            
-        const amtRounded = Number(round(p.amount) || 0);
-        return `<div class="pay-row">
-                  <div class="pay-method">${escapeHtml(capitalize(p.method))}</div>
-                  <div class="pay-amt">${currency(amtRounded)}</div>
-                </div>`;
-      }).join('')
-    : `<div class="pay-row">
-          <div class="pay-method">${escapeHtml(capitalize(sale.payment?.type))}</div>
-          <div class="pay-amt">${currency(sale.totals.total)}</div>
-        </div>`;
+const paymentHtml = (sale.payment && Array.isArray(sale.payment.breakdown) && sale.payment.breakdown.length > 0)
+  ? sale.payment.breakdown.map(p => {
+      // ✅ If multiple payments, use individual amounts. If single, use total
+      const isMultiple = sale.payment.breakdown.length > 1;
+      const amtRounded = isMultiple 
+        ? round(Number(p.amount || 0))           // Multiple: use individual amounts
+        : Number(sale.totals.total);      // Single: use total
+      
+      return `<div class="pay-row">
+                <div class="pay-method">${escapeHtml(capitalize(p.method))}</div>
+                <div class="pay-amt">${currency(amtRounded)}</div>
+              </div>`;
+    }).join('')
+  : `<div class="pay-row">
+        <div class="pay-method">${escapeHtml(capitalize(sale.payment?.type || 'Cash'))}</div>
+        <div class="pay-amt">${currency(round(sale.totals.total))}</div>
+      </div>`;
+
 
   const html = `
     <html>
@@ -454,10 +455,10 @@ h2.store {
 }
 
 .item-vendor { 
-  font-size: 10px;
+  font-size: 11px;
   color: #666;
   margin-left: 0;
-  font-weight: 600;
+  font-weight: 650;
 }
 
 .item-qty {
@@ -690,10 +691,6 @@ const handleCloseShift = async () => {
     toast.error("Failed to close shift");
   }
 };
-
-
-
-
   return (
     <div className="pos-container">
       <div className="pos-header">
