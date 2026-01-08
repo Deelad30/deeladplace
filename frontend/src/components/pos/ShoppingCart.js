@@ -2,10 +2,7 @@ import React from 'react';
 import { formatCurrency } from '../../utils/formatters';
 
 const ShoppingCart = ({ cart, onUpdateQuantity, onRemoveItem, totals, onContinue, processing, disabled }) => {
-    const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
-    console.log(totals);
-    
-  
+    const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;    
   return (
     <div className="shopping-cart">
       <h3>Current Order</h3>

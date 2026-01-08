@@ -19,7 +19,7 @@ const SaleOptionsModal = ({ visible, onClose, onFinish, totals }) => {
   };
 
 const handleFinish = () => {
-  const saleTotal = round(totals.total);
+  const saleTotal = totals.total;
 
   if (paymentType === "multiple") {
     const paymentBreakdown = [
@@ -36,7 +36,7 @@ const handleFinish = () => {
     }
 
     const totalPaid = paymentBreakdown.reduce((sum, p) => sum + p.amount, 0);
-
+    
     for (const p of paymentBreakdown) {
       if (p.amount > saleTotal) {
         showNotification(`${p.method} amount cannot exceed total sale.`, "error");
@@ -49,6 +49,8 @@ const handleFinish = () => {
     }
     console.log(totalPaid);
     console.log(saleTotal);
+    console.log(saleTotal);
+    
     
     
 

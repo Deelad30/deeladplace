@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import DashboardCard from "../common/DashboardCard";
 import { salesReport, profitSummary, expenseSummary } from "../../api/reports"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faDollarSign, faStore, faChartLine, faBriefcase, faSackDollar,faHandHoldingDollar, faChartPie, faReceipt, faArrowTrendUp, faCoins, faFileInvoiceDollar 
+import { faSackDollar,faHandHoldingDollar, faChartPie, faReceipt, faArrowTrendUp, faCoins, faFileInvoiceDollar 
 } from "@fortawesome/free-solid-svg-icons";
 import { formatCurrency } from "../../utils/formatters";
 import {
@@ -15,6 +14,7 @@ import "../../../src/styles/components/Dashboard.css";
 const COLORS = ["#22c55e", "#3b82f6", "#f59e0b", "#ef4444"];
 
 const Dashboard = () => {
+  const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
   const [summary, setSummary] = useState({ today: {}, this_month: {} });
   const [dailyData, setDailyData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,8 +27,6 @@ const Dashboard = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const isDemo = user.plan === "demo"
 
-  console.log(isDemo);
-  
 // Fetch function
 const fetchFinancialSummary = async () => {
   try {
@@ -254,8 +252,8 @@ const SkeletonCard = () => (
           <PieChart>
             <Pie
               data={[
-                { name: "Revenue", value: summary.this_month.revenue || 0 },
-                { name: "Commission", value: summary.this_month.commission || 0 }
+                { name: "Revenue", value: round(summary.this_month.revenue) || 0 },
+                { name: "Commission", value: round(summary.this_month.commission) || 0 }
               ]}
               dataKey="value"
               nameKey="name"
