@@ -21,5 +21,8 @@ router.get('/sales-summary',  auth, requireTenant, reports.getSalesSummary);
 router.get('/top-products',   auth, requireTenant, reports.getTopProducts);
 router.get('/payment-summary',auth, requireTenant, reports.getPaymentSummary);
 
+router.get('/profit-summary', auth, requireTenant, reports.getProfitSummary);
+router.get('/expense-summary', auth, requireTenant, reports.getExpenseSummary);
+
 module.exports = router;
 

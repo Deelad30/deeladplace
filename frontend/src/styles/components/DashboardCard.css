@@ -2,7 +2,7 @@
   background: #ffffff;
   border-radius: 12px;
   padding: 1.8rem 1.5rem;
-  border-left: 5px solid #22c55e;
+  border-left: 5px solid #ffffff;
   box-shadow: 0 10px 25px rgba(0,0,0,0.05);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
@@ -46,4 +46,24 @@
   justify-content: center;
   font-size: 1.6rem;
   color: white;
+}
+
+.dashboard-card-title {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+
+.dashboard-card-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.02em;
+}
+
+.dashboard-card-subtitle {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 0.25rem;
 }

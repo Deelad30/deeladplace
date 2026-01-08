@@ -368,3 +368,119 @@ exports.getPaymentSummary = async (req, res) => {
   }
 };
 
+exports.getProfitSummary = async (req, res) => {
+  try {
+    const tenantId = req.user.tenant_id;
+
+    // Today
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    // This Month
+    const monthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
+    const monthEnd = new Date(todayStart.getFullYear(), todayStart.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    // Convert to UTC ISO strings
+    const todayStartISO = todayStart.toISOString();
+    const todayEndISO = todayEnd.toISOString();
+    const monthStartISO = monthStart.toISOString();
+    const monthEndISO = monthEnd.toISOString();
+
+    const computeProfit = async (startISO, endISO) => {
+      const sql = `
+        SELECT
+          COALESCE(SUM((ps.qty * ps.selling_price) - (ps.qty * COALESCE(sc_latest.tcop,0))), 0) AS total_profit
+        FROM pos_sales ps
+        LEFT JOIN products p ON p.id = ps.product_id
+        LEFT JOIN LATERAL (
+          SELECT sc.tcop
+          FROM standard_costs sc
+          WHERE sc.product_id = p.id AND sc.tenant_id = ps.tenant_id
+          ORDER BY sc.created_at DESC
+          LIMIT 1
+        ) sc_latest ON true
+        WHERE ps.tenant_id = $1
+          AND ps.created_at >= $2::timestamptz
+          AND ps.created_at <= $3::timestamptz
+      `;
+      const { rows } = await db.query(sql, [tenantId, startISO, endISO]);
+      return Number(rows[0].total_profit || 0);
+    };
+
+    const todayProfit = await computeProfit(todayStartISO, todayEndISO);
+    const thisMonthProfit = await computeProfit(monthStartISO, monthEndISO);
+
+    res.json({
+      ok: true,
+      profit: {
+        today: todayProfit,
+        this_month: thisMonthProfit
+      }
+    });
+
+  } catch (err) {
+    console.error('getProfitSummary error', err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+};
+
+exports.getExpenseSummary = async (req, res) => {
+  try {
+    const tenantId = req.user.tenant_id;
+
+    // Helper to format JS Date into 'YYYY-MM-DD HH:MM:SS'
+    const formatDate = (d) => {
+      const pad = (n) => String(n).padStart(2, "0");
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    };
+
+    // Today
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    // This Month
+    const monthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
+    const monthEnd = new Date(todayStart.getFullYear(), todayStart.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    // Format as SQL-friendly strings
+    const todayStartStr = formatDate(todayStart);
+    const todayEndStr = formatDate(todayEnd);
+    const monthStartStr = formatDate(monthStart);
+    const monthEndStr = formatDate(monthEnd);
+
+    const computeExpense = async (startStr, endStr) => {
+      const sql = `
+        SELECT COALESCE(SUM(amount),0) AS total_expense
+        FROM expenses
+        WHERE tenant_id = $1
+          AND expense_date >= $2
+          AND expense_date <= $3
+      `;
+      const { rows } = await db.query(sql, [tenantId, startStr, endStr]);
+      return Number(rows[0].total_expense || 0);
+    };
+
+    const todayExpense = await computeExpense(todayStartStr, todayEndStr);
+    const thisMonthExpense = await computeExpense(monthStartStr, monthEndStr);
+
+    // Debugging: log results
+    console.log("Expense Summary:", { todayExpense, thisMonthExpense });
+
+    res.json({
+      ok: true,
+      expense: {
+        today: todayExpense,
+        this_month: thisMonthExpense
+      }
+    });
+
+  } catch (err) {
+    console.error('getExpenseSummary error', err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+};
+

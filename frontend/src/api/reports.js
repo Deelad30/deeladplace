@@ -8,3 +8,6 @@ export const salesOverview = (params) => api.get('/reports/sales-overview', { pa
 export const salesSummary = (params) => api.get('/reports/sales-summary', { params });
 export const topProducts = (params) => api.get('/reports/top-products', { params });
 export const paymentSummary = (params) => api.get('/reports/payment-summary', { params });
+
+export const profitSummary = () => api.get('/reports/profit-summary');
+export const expenseSummary = () => api.get('/reports/expense-summary');

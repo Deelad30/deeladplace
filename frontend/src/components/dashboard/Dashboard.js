@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import DashboardCard from "../common/DashboardCard";
-import { salesReport } from "../../api/reports"
+import { salesReport, profitSummary, expenseSummary } from "../../api/reports"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faDollarSign, faStore, faChartLine, faBriefcase } from "@fortawesome/free-solid-svg-icons";
+import { faDollarSign, faStore, faChartLine, faBriefcase, faSackDollar,faHandHoldingDollar, faChartPie, faReceipt, faArrowTrendUp, faCoins, faFileInvoiceDollar 
+} from "@fortawesome/free-solid-svg-icons";
 import { formatCurrency } from "../../utils/formatters";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -17,19 +18,43 @@ const Dashboard = () => {
   const [summary, setSummary] = useState({ today: {}, this_month: {} });
   const [dailyData, setDailyData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [financialSummary, setFinancialSummary] = useState({
+  profit: { today: 0, this_month: 0 },
+  expense: { today: 0, this_month: 0 }
+});
+
+  // Get user from localStorage
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const isDemo = user.plan === "demo"
+
+  console.log(isDemo);
+  
+// Fetch function
+const fetchFinancialSummary = async () => {
+  try {
+    const [profitRes, expenseRes] = await Promise.all([
+      profitSummary(),
+      expenseSummary()
+    ]);
+
+    setFinancialSummary({
+      profit: profitRes.data.profit,
+      expense: expenseRes.data.expense
+    });
+  } catch (err) {
+    console.error('Financial summary error:', err);
+  }
+};
 
   useEffect(() => {
+    fetchFinancialSummary();
     fetchSalesSummary();
      // eslint-disable-next-line 
   }, []);
 
 const fetchSalesSummary = async () => {
   try {
-    const { data } = await salesReport(); // ← NEW ENDPOINT
-
-    console.log(data);
-    
-
+    const { data } = await salesReport(); // ← NEW ENDPOINt
     const items = data.items; // all sales rows
 
     // Group by date
@@ -91,9 +116,6 @@ const fetchSalesSummary = async () => {
       today,
       this_month
     });
-    console.log(summary);
-    
-
   } catch (error) {
     console.error("Dashboard summary error:", error);
   } finally {
@@ -101,45 +123,114 @@ const fetchSalesSummary = async () => {
   }
 };
 
+const SkeletonCard = () => (
+  <div className="dashboard-card skeleton">
+    <div className="skeleton-icon" />
+    <div className="skeleton-content">
+      <div className="skeleton-line short" />
+      <div className="skeleton-line long" />
+    </div>
+  </div>
+);
 
-  if (loading) return <div>Loading dashboard...</div>;
 
   return (
+
+    
     <div className="dashboard">
+
+      <div className="dashboard-grid">
+  {loading ? (
+    Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
+  ) : (
+    <>
+      
       <div className="dashboard-grid">
       <DashboardCard
   title="Today's Revenue"
   value={summary.today.revenue}
   subtitle={`${summary.today.transactions} transactions`}
-  icon={faDollarSign}
+  icon={faSackDollar}
   color="#22c55e"
 />
 
+        {isDemo ? (
+          <>
+            {/* Show Commission for demo users */}
+            <DashboardCard
+              title="Today's Commission"
+              value={summary.today.commission}
+              subtitle="Hub earnings"
+              icon={faHandHoldingDollar}
+              color="#3b82f6"
+            />
+          </>
+        ):(
+        <>
+      <DashboardCard
+        title="Today's Product Profit"
+        value={financialSummary.profit.today}
+        subtitle="Product earnings"
+        icon={faChartPie}
+        color="#16a34a"
+      />
+        </>
+        )}
+
 <DashboardCard
-  title="Today's Commission"
-  value={summary.today.commission}
-  subtitle="Hub earnings"
-  icon={faStore}
-  color="#3b82f6"
+  title="Today's Expenses"
+  value={financialSummary.expense.today}
+  subtitle="Business costs"
+  icon={faReceipt}
+  color="#dc2626"
 />
+
 
 <DashboardCard
   title="This Month Revenue"
   value={summary.this_month.revenue}
   subtitle={`${summary.this_month.transactions} transactions`}
-  icon={faChartLine}
+  icon={faArrowTrendUp}
   color="#f59e0b"
 />
 
+        {isDemo ? (
+          <>
+            {/* Show Commission for demo users */}
+            <DashboardCard
+              title="This Month Commission"
+              value={summary.this_month.commission}
+              subtitle="Hub earnings"
+              icon={faHandHoldingDollar}
+              color="#ef4444"
+            /> 
+          </>
+        ):(
+        <>
 <DashboardCard
-  title="This Month Commission"
-  value={summary.this_month.commission}
-  subtitle="Hub earnings"
-  icon={faBriefcase}
-  color="#ef4444"
+  title="This Month Product Profit"
+  value={financialSummary.profit.this_month}
+  subtitle="Product earnings"
+  icon={faCoins}
+  color="#15803d"
+/>
+        </>
+        )}
+
+
+<DashboardCard
+  title="This Month Expenses"
+  value={financialSummary.expense.this_month}
+  subtitle="Business costs"
+  icon={faFileInvoiceDollar}
+  color="#b91c1c"
 />
 
+
       </div>
+    </>
+  )}
+</div>
 
       {/* Line Chart: Revenue & Commission over 30 days */}
       <div className="dashboard-chart">
