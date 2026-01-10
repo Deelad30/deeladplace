@@ -27,23 +27,38 @@ import PaystackCallback from "./pages/PaystackCallBack";
 
 import InviteUsers from "./pages/Users/InviteUsers";
 
-// SIC Pages
-import SICProductsPage from "./pages/SIC/SICProductsPage";
-import SICRawPage from "./pages/SIC/SICRawPage";
-
 // Costing & Recipe
 import CostingPage from "./pages/Costing";
-
-// Variance Pages
-import ProductVariancePage from "./pages/Variance/ProductVariance";
-import RawVariancePage from "./pages/Variance/RawVariance";
 
 import Unauthorized from "./pages/Unauthorized";
 
 import { Toaster } from "react-hot-toast";
 import "./App.css";
 
+const check = (Comp, name) => {
+  if (typeof Comp !== "function") {
+    console.error(`❌ ${name} is NOT a component`, Comp);
+  }
+};
+
 function App() {
+check(DashboardPage, "DashboardPage");
+check(POSPage, "POSPage");
+check(VendorsPage, "VendorsPage");
+check(ProductsDashboard, "ProductsDashboard");
+check(InventoryPage, "InventoryPage");
+check(ExpensesPage, "ExpensesPage");
+check(ReportsPage, "ReportsPage");
+check(InviteUsers, "InviteUsers");
+check(CostingPage, "CostingPage");
+check(RecipePage, "RecipePage");
+check(Stocks, "Stocks");
+check(Checkout, "Checkout");
+check(PaymentSuccess, "PaymentSuccess");
+check(PaystackCallback, "PaystackCallback");
+check(Unauthorized, "Unauthorized");
+check(LandingPage, "LandingPage");
+
   return (
     <AuthProvider>
       <Router>
@@ -196,25 +211,6 @@ function App() {
             }
           />
 
-          {/* SIC - PRODUCTS */}
-          <Route
-            path="/sic/products"
-            element={
-              <PrivateRoute requiredSection="sic_product">
-                <SICProductsPage />
-              </PrivateRoute>
-            }
-          />
-
-          {/* SIC - RAW MATERIALS */}
-          <Route
-            path="/sic/raw"
-            element={
-              <PrivateRoute requiredSection="sic_raw">
-                <SICRawPage />
-              </PrivateRoute>
-            }
-          />
 
           {/* RECIPE */}
           <Route
@@ -232,26 +228,6 @@ function App() {
             element={
               <PrivateRoute requiredSection="costing">
                 <CostingPage />
-              </PrivateRoute>
-            }
-          />
-
-          {/* VARIANCE - PRODUCTS */}
-          <Route
-            path="/variance/products"
-            element={
-              <PrivateRoute requiredSection="variance_products">
-                <ProductVariancePage />
-              </PrivateRoute>
-            }
-          />
-
-          {/* VARIANCE - RAW MATERIALS */}
-          <Route
-            path="/variance/raw"
-            element={
-              <PrivateRoute requiredSection="variance_raw">
-                <RawVariancePage />
               </PrivateRoute>
             }
           />
