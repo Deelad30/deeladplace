@@ -1,4 +1,5 @@
 const db =  require('../config/database');
+const logger = require('../utils/logger');
 
 exports.addPackagingToProduct = async (req, res) => {
   const tenantId = req.user.tenant_id;
@@ -18,7 +19,7 @@ exports.addPackagingToProduct = async (req, res) => {
 
     return res.json({ success: true, mapping: result.rows[0] });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to map packaging to product', { error: err.message, tenantId, productId: product_id });
     return res.status(500).json({ success: false, message: "Failed to map packaging to product" });
   }
 };
@@ -36,7 +37,7 @@ exports.getProductPackaging = async (req, res) => {
 
     return res.json({ success: true, packaging: result.rows });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to fetch product packaging', { error: err.message, tenantId, productId });
     return res.status(500).json({ success: false, message: "Failed to fetch product packaging" });
   }
 };
@@ -59,7 +60,7 @@ exports.deletePackagingMapping = async (req, res) => {
 
     return res.json({ success: true, message: "Packaging mapping deleted" });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to delete mapping', { error: err.message, tenantId, mappingId });
     return res.status(500).json({ success: false, message: "Failed to delete mapping" });
   }
 };
@@ -89,7 +90,7 @@ exports.updatePackagingMapping = async (req, res) => {
 
     return res.json({ success: true, mapping: result.rows[0] });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to update mapping', { error: err.message, tenantId, mappingId });
     return res.status(500).json({ success: false, message: "Failed to update mapping" });
   }
 };

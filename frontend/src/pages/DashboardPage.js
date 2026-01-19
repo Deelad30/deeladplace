@@ -1,25 +1,25 @@
 import React from 'react';
-import Header from '../components/common/Header';
-import Sidebar from '../components/common/Sidebar';
+import Layout from '../components/common/Layout';
 import Dashboard from '../components/dashboard/Dashboard';
-import QuickActions from '../components/dashboard/QuickActions';
+import WelcomeBanner from '../components/dashboard/WelcomeBanner';
+import ActionGrid from '../components/dashboard/ActionGrid';
 import '../../src/styles/pages/DashboardPage.css';
 
 const DashboardPage = () => {
   return (
-    <div className="dashboard-page">
-      <Header />
-      <div className="page-content">
-        <Sidebar />
-        <main className="main-content">
-          <div className="content-header">
-            <h1>Dashboard Overview</h1>
-          </div>
-          <QuickActions />
-          <Dashboard />
-        </main>
+    <Layout>
+      <WelcomeBanner />
+      
+      <div className="dashboard-section">
+        <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'var(--color-text-main)', marginBottom: '16px' }}>Overview</h3>
+        <Dashboard />
       </div>
-    </div>
+
+      <div className="dashboard-section">
+        <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'var(--color-text-main)', marginBottom: '16px' }}>Quick Actions</h3>
+        <ActionGrid />
+      </div>
+    </Layout>
   );
 };
 

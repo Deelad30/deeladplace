@@ -1,4 +1,5 @@
 const db = require('../config/database');
+const logger = require('../utils/logger');
 
 async function getProductSettings(req, res) {
   const productId = Number(req.params.id);
@@ -14,7 +15,7 @@ async function getProductSettings(req, res) {
 
     res.json({ ok: true, settings: result.rows[0] });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to load product settings', { error: err.message, tenantId, productId });
     res.status(500).json({ error: "Failed to load product settings" });
   }
 }
@@ -37,7 +38,7 @@ async function saveProductSettings(req, res) {
 
     res.json({ ok: true, product: result.rows[0] });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to save product settings', { error: err.message, tenantId, productId });
     res.status(500).json({ error: "Failed to save settings" });
   }
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import DashboardCard from "../common/DashboardCard";
+import StatCard from "../ui/StatCard";
 import { salesReport, profitSummary, expenseSummary } from "../../api/reports"
 import { faSackDollar,faHandHoldingDollar, faChartPie, faReceipt, faArrowTrendUp, faCoins, faFileInvoiceDollar 
 } from "@fortawesome/free-solid-svg-icons";
@@ -144,86 +144,83 @@ const SkeletonCard = () => (
     <>
       
       <div className="dashboard-grid">
-      <DashboardCard
-  title="Today's Revenue"
-  value={summary.today.revenue}
-  subtitle={`${summary.today.transactions} transactions`}
-  icon={faSackDollar}
-  color="#22c55e"
-/>
+      <StatCard
+        title="Today's Revenue"
+        value={formatCurrency(summary.today.revenue)}
+        subtitle={`${summary.today.transactions} transactions`}
+        icon={faSackDollar}
+        color="success"
+      />
 
         {isDemo ? (
           <>
-            {/* Show Commission for demo users */}
-            <DashboardCard
+            <StatCard
               title="Today's Commission"
-              value={summary.today.commission}
+              value={formatCurrency(summary.today.commission)}
               subtitle="Hub earnings"
               icon={faHandHoldingDollar}
-              color="#3b82f6"
+              color="primary"
             />
           </>
         ):(
         <>
-      <DashboardCard
+      <StatCard
         title="Today's Product Profit"
-        value={financialSummary.profit.today}
-        subtitle="Product earnings"
+        value={formatCurrency(financialSummary.profit.today)}
+        subtitle="Net Earnings"
         icon={faChartPie}
-        color="#16a34a"
+        color="success"
       />
         </>
         )}
 
-<DashboardCard
-  title="Today's Expenses"
-  value={financialSummary.expense.today}
-  subtitle="Business costs"
-  icon={faReceipt}
-  color="#dc2626"
-/>
+        <StatCard
+          title="Today's Expenses"
+          value={formatCurrency(financialSummary.expense.today)}
+          subtitle="Total Costs"
+          icon={faReceipt}
+          color="danger" // Red for expense
+        />
 
 
-<DashboardCard
-  title="This Month Revenue"
-  value={summary.this_month.revenue}
-  subtitle={`${summary.this_month.transactions} transactions`}
-  icon={faArrowTrendUp}
-  color="#f59e0b"
-/>
+        <StatCard
+          title="This Month Revenue"
+          value={formatCurrency(summary.this_month.revenue)}
+          subtitle={`${summary.this_month.transactions} transactions`}
+          icon={faArrowTrendUp}
+          color="warning"
+        />
 
         {isDemo ? (
           <>
-            {/* Show Commission for demo users */}
-            <DashboardCard
+            <StatCard
               title="This Month Commission"
-              value={summary.this_month.commission}
+              value={formatCurrency(summary.this_month.commission)}
               subtitle="Hub earnings"
               icon={faHandHoldingDollar}
-              color="#ef4444"
+              color="danger"
             /> 
           </>
         ):(
         <>
-<DashboardCard
-  title="This Month Product Profit"
-  value={financialSummary.profit.this_month}
-  subtitle="Product earnings"
-  icon={faCoins}
-  color="#15803d"
-/>
+        <StatCard
+          title="Month Product Profit"
+          value={formatCurrency(financialSummary.profit.this_month)}
+          subtitle="Net Earnings"
+          icon={faCoins}
+          color="success"
+        />
         </>
         )}
 
 
-<DashboardCard
-  title="This Month Expenses"
-  value={financialSummary.expense.this_month}
-  subtitle="Business costs"
-  icon={faFileInvoiceDollar}
-  color="#b91c1c"
-/>
-
+        <StatCard
+          title="This Month Expenses"
+          value={formatCurrency(financialSummary.expense.this_month)}
+          subtitle="Total Costs"
+          icon={faFileInvoiceDollar}
+          color="danger"
+        />
 
       </div>
     </>

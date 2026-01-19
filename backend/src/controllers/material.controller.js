@@ -1,4 +1,5 @@
 const materialService = require('../services/material.service');
+const logger = require('../utils/logger');
 
  async function getMaterials (req, res) {  
   try {

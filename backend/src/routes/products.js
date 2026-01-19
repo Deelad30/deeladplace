@@ -21,12 +21,14 @@ const auth = require('../middleware/auth.middleware');
 // -------------------------------------------------------------
 router.use(auth);
 
+const { validate } = require('../middleware/validation');
+
 // -------------------------------------------------------------
 //  PRODUCT CRUD
 // -------------------------------------------------------------
-router.post('/', createProduct);           // Create product
+router.post('/', validate('productCreate'), createProduct);           // Create product
 router.get('/all', getAllProducts);        // List all products
-router.put('/:id', updateProduct);         // Update product
+router.put('/:id', validate('productUpdate'), updateProduct);         // Update product
 router.delete('/:id', deleteProduct);      // Delete product
 
 // -------------------------------------------------------------

@@ -13,12 +13,16 @@ const SICRawReport = () => {
   const [loading, setLoading] = useState(true);
   const [rawSIC, setRawSIC] = useState([]);
   const [materials, setMaterials] = useState([]);
+  const [search, setSearch] = useState("");
   const [filters, setFilters] = useState({
-    startDate: "",
-    endDate: "",
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date().toISOString().split('T')[0],
     createdBy: "",
     materialId: "",
   });
+
+  const [auditMode, setAuditMode] = useState(false);
+  const round100 = (num) => Math.round((num || 0) / 100) * 100;
 
   // Load SIC data
   const loadSIC = async () => {
@@ -45,7 +49,7 @@ const SICRawReport = () => {
   useEffect(() => {
     const loadMaterials = async () => {
       try {
-        const res = await materialService.getAllMaterials(); // implement getAllMaterials in service
+        const res = await materialService.getAllMaterials(); 
         if (res.data.ok) {
         setMaterials(res.data.items || []);
         }
@@ -60,51 +64,95 @@ const SICRawReport = () => {
     loadSIC();
     // eslint-disable-next-line 
   }, []);
+
+  const filteredSIC = rawSIC.filter(r => 
+    (r.material_name || "").toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <div className="sic-container">
       <h2 className="page-title">Raw Materials SIC Report</h2>
 
       {/* Filters */}
       <div className="profit-filters">
-        <input type="date" onChange={e => setFilters(f => ({ ...f, startDate: e.target.value }))} />
-        <input type="date" onChange={e => setFilters(f => ({ ...f, endDate: e.target.value }))} />
-      <select
-  onChange={e => setFilters(f => ({ ...f, materialId: e.target.value }))}
->
-
+        <div className="filter-group">
+            <label>Pick Date:</label>
+            <input 
+                type="date" 
+                value={filters.startDate}
+                onChange={e => setFilters(f => ({ ...f, startDate: e.target.value, endDate: e.target.value }))} 
+            />
+        </div>
+        
+        <select
+          onChange={e => setFilters(f => ({ ...f, materialId: e.target.value }))}
+        >
           <option value="">All Materials</option>
           {materials.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
         </select>
-        <button onClick={loadSIC}>Apply</button>
+
+        <input 
+            type="text" 
+            placeholder="Search material..."
+            style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+        />
+
+        <button className="apply-btn" onClick={loadSIC}>Apply Filters</button>
+
+        <div className="audit-toggle-container">
+          <label className="switch">
+            <input 
+              type="checkbox" 
+              checked={auditMode} 
+              onChange={() => setAuditMode(!auditMode)} 
+            />
+            <span className="slider round"></span>
+          </label>
+          <span className="audit-label">Audit Mode {auditMode ? "ON" : "OFF"}</span>
+        </div>
       </div>
 
       {/* Export */}
       <div className="export-actions">
-        <button onClick={() => exportToCSV(rawSIC, "raw_sic.csv")}>CSV</button>
-        <button onClick={() => exportToPDF(rawSIC, "Raw SIC Report")}>PDF</button>
+        <button onClick={() => exportToCSV(filteredSIC, "raw_sic.csv")}>CSV</button>
+        <button onClick={() => exportToPDF(filteredSIC, "Raw SIC Report")}>PDF</button>
       </div>
 
-      {/* Bar Chart */}
       {/* Cards */}
       <div className="grid">
         {loading ? (
           <SkeletonCard height={150} />
         ) : (
-          rawSIC.map(r => (
-            <div style={{ height: "45vh" }} key={r.id} className="product-card">
-              <h4>{r.material_name || `ID: ${r.material_id}`}</h4>
-              <p>Submitted by: {r.submitted_by}</p>
-              <p>Issued: {r.issues_qty}</p>
-              <p>Waste: {r.waste_qty}</p>
-              <p>Closing: {r.closing_qty}</p>
-              <p>Expected: {r.expected_usage}</p>
-              <p>System: {r.system_usage}</p>
-              <strong className={r.variance >= 0 ? "profit" : "loss"}>
-                Variance: {r.variance} ({r.variance_value})
-              </strong>
-              {r.override_reason && <small>Override: {r.override_reason}</small>}
-            </div>
-          ))
+          filteredSIC.map(r => {
+            const variance = auditMode ? r.variance : Math.round(r.variance);
+            const varianceValue = auditMode ? r.variance_value : round100(r.variance_value);
+
+            return (
+              <div key={r.id} className={`product-card ${auditMode ? 'audit-border' : ''}`}>
+                <h4>{r.material_name || `ID: ${r.material_id}`}</h4>
+                <p>Submitted by: {r.submitted_by}</p>
+                <p>Opening: {r.opening_qty}</p>
+                <p>New Issues: {r.issues_qty}</p>
+                <p>Waste: {r.waste_qty}</p>
+                <p>Closing: {r.closing_qty}</p>
+                <hr />
+                <p>Actual Usage: <strong>{r.system_usage}</strong></p>
+                <p>Expected Usage: <strong>{r.expected_usage}</strong></p>
+                
+                <strong className={r.variance >= 0 ? "profit" : "loss"}>
+                  Variance: {variance} (₦{Number(varianceValue).toLocaleString(undefined, { maximumFractionDigits: auditMode ? 2 : 0 })})
+                </strong>
+                
+                <div className={`remark-badge ${r.variance < 0 ? 'over' : (r.variance > 0 ? 'under' : 'good')}`}>
+                    {r.variance < 0 ? 'Over usage / Missing' : (r.variance > 0 ? 'Under usage' : 'Good')}
+                </div>
+
+                {r.override_reason && <small>Override: {r.override_reason}</small>}
+              </div>
+            );
+          })
         )}
       </div>
     </div>

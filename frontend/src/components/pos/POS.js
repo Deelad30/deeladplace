@@ -215,9 +215,9 @@ const finishSale = async (options) => {
   setShowSaleOptions(false);
   setLoading(true);
 
-  // Total amount of cart including commissions
+  // Total amount of cart including commissions (USE ROUNDED PRICES & QTY MULTIPLICATION)
   const totalCartAmount = cart.reduce(
-    (sum, item) => sum + Number(item.selling_price) * item.quantity + Number(item.commission || 0),
+    (sum, item) => sum + (Number(round(item.selling_price)) + Number(item.commission || 0)) * item.quantity,
     0
   );
   
@@ -240,24 +240,24 @@ const finishSale = async (options) => {
   try {
     if (isOnline) {
       for (const item of cart) {
-        // Calculate individual item total including commission
-        const itemTotal = Number(item.selling_price) * item.quantity + Number(item.commission || 0);
+        // Calculate individual item total including commission (USE ROUNDED PRICES & QTY MULTIPLICATION)
+        const itemTotal = (Number(round(item.selling_price)) + Number(item.commission || 0)) * item.quantity;
         
-        // Proportional payment breakdown per item
+        // Proportional payment breakdown per item (ENSURE WHOLE NUMBERS)
         let itemPaymentBreakdown = [];
         if (options.payment_type === 'multiple' && Array.isArray(options.payment_breakdown)) {
           itemPaymentBreakdown = options.payment_breakdown.map(p => ({
             method: p.method,
-            amount: (Number(p.amount) / totalCartAmount) * itemTotal
+            amount: Math.round((Number(p.amount) / totalCartAmount) * itemTotal)
           }));
         } else {
-          itemPaymentBreakdown = [{ method: options.payment_method || 'cash', amount: itemTotal }];
+          itemPaymentBreakdown = [{ method: options.payment_type || 'cash', amount: itemTotal }];
         }
 
         await recordSale({
           product_id: item.id,
           qty: item.quantity,
-          selling_price: Number(item.selling_price),
+          selling_price: Number(round(item.selling_price)),
           commission: Number(item.commission || 0),
           vendor_id: item.vendor_id || selectedVendor,
           shift_id: currentShiftId,
@@ -663,20 +663,40 @@ const handleCloseShift = async () => {
 
     // Payment Summary
     const finalY = doc.lastAutoTable?.finalY + 10 || 60;
-    const grandTotal =
-      (round(paymentTotals.cash) || 0) +
-      (round(paymentTotals.transfer) || 0) +
-      (round(paymentTotals.card) || 0);
+    
+    // Use exact totals for the report (already rounded to whole numbers during sale)
+    const rCash = Number(paymentTotals.cash || 0);
+    const rTransfer = Number(paymentTotals.transfer || 0);
+    const rCard = Number(paymentTotals.card || 0);
+    
+    // Ensure grand total is a clean integer (Sum of Cash, Transfer, and Card)
+    const grandTotal = Math.round(rCash + rTransfer + rCard);
 
-    doc.setFontSize(12);
-    doc.text("Payment Summary:", 14, finalY);
-    doc.setFontSize(11);
-    doc.text(`Cash: ₦${Number(round(paymentTotals.cash)).toLocaleString()}`, 18, finalY + 6);
-    doc.text(`Transfer: ₦${Number(round(paymentTotals.transfer) || paymentTotals.transfer).toLocaleString()}`, 18, finalY + 12);
-    doc.text(`Card: ₦${Number(round(paymentTotals.card)).toLocaleString()}`, 18, finalY + 18);
+    doc.setFontSize(14);
+    doc.text("Payment Summary", 14, finalY);
 
-    doc.setFontSize(12);
-    doc.text(`Grand Total: ₦${grandTotal.toLocaleString()}`, 14, finalY + 28);
+
+
+autoTable(doc, {
+  startY: finalY + 5,
+  head: [[
+    { content: "Method", styles: { halign: 'left' } },
+    { content: "Amount (₦)", styles: { halign: 'right' } }
+  ]],
+  body: [
+    ["Cash", rCash.toLocaleString()],
+    ["Transfer", rTransfer.toLocaleString()],
+    ["Card", rCard.toLocaleString()],
+    [{ content: "Grand Total", styles: { fontStyle: 'bold' } }, { content: grandTotal.toLocaleString(), styles: { fontStyle: 'bold' } }]
+  ],
+  theme: 'striped',
+  styles: { fontSize: 11, cellPadding: 3 },
+  columnStyles: { 
+    0: { cellWidth: 60 },      
+    1: { halign: 'right' }  
+  },
+  margin: { left: 14, right: 14 }
+});
 
     // Save PDF
     doc.save(`shift_${currentShiftId}.pdf`);

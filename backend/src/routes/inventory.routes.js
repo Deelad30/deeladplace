@@ -8,4 +8,7 @@ router.post('/movement', auth, requireTenant, inv.createMovement);
 router.post('/issue-production', auth, requireTenant, inv.issueToProduction);
 router.post('/production', auth, requireTenant, inv.recordProduction);
 
+router.get('/ledger', auth, requireTenant, inv.getLedger);
+router.get('/balance', auth, requireTenant, inv.getStockBalance);
+
 module.exports = router;

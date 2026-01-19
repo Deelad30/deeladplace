@@ -1,4 +1,5 @@
 const db = require('../config/database');
+const logger = require('../utils/logger');
 
 exports.createPackaging = async (req, res) => {
   const tenantId = req.user.tenant_id;
@@ -17,7 +18,7 @@ exports.createPackaging = async (req, res) => {
 
     res.json({ success: true, packaging: result.rows[0] });
   } catch (err) {
-    console.error(err);
+    logger.error('Create packaging failed', { error: err.message, tenantId });
     res.status(500).json({ success: false, message: "Create packaging failed" });
   }
 };
@@ -33,7 +34,7 @@ exports.getPackaging = async (req, res) => {
 
     res.json({ success: true, packaging: result.rows });
   } catch (err) {
-    console.error(err);
+    logger.error('Fetch packaging failed', { error: err.message, tenantId });
     res.status(500).json({ success: false, message: "Fetch packaging failed" });
   }
 };
@@ -63,7 +64,7 @@ exports.updatePackaging = async (req, res) => {
 
     res.json({ success: true, packaging: result.rows[0] });
   } catch (err) {
-    console.error(err);
+    logger.error('Update packaging failed', { error: err.message, tenantId, packagingId });
     res.status(500).json({ success: false, message: "Update packaging failed" });
   }
 };
@@ -88,7 +89,7 @@ exports.deletePackaging = async (req, res) => {
 
     res.json({ success: true, message: "Packaging deleted" });
   } catch (err) {
-    console.error(err);
+    logger.error('Delete packaging failed', { error: err.message, tenantId, packagingId });
     res.status(500).json({ success: false, message: "Delete packaging failed" });
   }
 };

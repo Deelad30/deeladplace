@@ -3,11 +3,9 @@ import { postProductSic, listProductSic } from '../../api/sic';
 import { productService } from '../../services/productService';
 import { vendorService } from '../../services/vendorService';
 import toast from 'react-hot-toast';
-import { useApp } from '../../context/AppContext';
-import '../../styles/pages/SICSForm.css';
+import '../../styles/shared/PremiumShared.css';
 
 export default function ProductSICPage() {
-  const [products, setProducts] = useState([]);
   const [rows, setRows] = useState([]);
   const [filteredRows, setFilteredRows] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -18,24 +16,20 @@ export default function ProductSICPage() {
 
   const today = new Date().toISOString().split('T')[0];
 
-  // Fetch vendors
   const fetchVendors = useCallback(async () => {
     try {
       const res = await vendorService.getAllVendors();
       setVendors(res.data.vendors || []);
     } catch (err) {
-      console.error(err);
       toast.error('Failed to fetch vendors');
     }
   }, []);
 
-  // Load products and today's SIC
   const loadProducts = useCallback(async () => {
     try {
       setInitialLoading(true);
       const productRes = await productService.getAllProducts();
       const allProducts = productRes?.data?.products || productRes.products || [];
-      setProducts(allProducts);
 
       const sicRes = await listProductSic();
       const sicData = sicRes.data?.sic || [];
@@ -53,21 +47,19 @@ export default function ProductSICPage() {
           issues_qty: 0,
           waste_qty: 0,
           closing_qty: existing ? existing.closing_qty : 0,
-          duplicate: !!existing
+          duplicate: !!existing,
+          dirty: false
         };
       });
 
       setRows(newRows);
-      setFilteredRows(newRows);
     } catch (err) {
-      console.error(err);
       toast.error('Failed to load products.');
     } finally {
       setInitialLoading(false);
     }
   }, [today]);
 
-  // Filter rows based on search and vendor
   useEffect(() => {
     const q = search.trim().toLowerCase();
     setFilteredRows(
@@ -84,25 +76,26 @@ export default function ProductSICPage() {
     loadProducts();
   }, [fetchVendors, loadProducts]);
 
-  function handleChange(index, field, value) {
-    const updated = [...filteredRows];
-    updated[index][field] = Number(value);
-    setFilteredRows(updated);
+  function handleChange(realIndexInRows, field, value) {
+    const updated = [...rows];
+    updated[realIndexInRows][field] = Number(value);
+    updated[realIndexInRows].dirty = true;
+    setRows(updated);
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
+    const toSubmit = rows.filter(r => r.dirty);
+    if (toSubmit.length === 0) {
+      toast.error("No changes made to submit");
+      return;
+    }
+
     toast.loading('Submitting Product SIC...', { id: 'sic-submit' });
     setLoading(true);
 
     let successCount = 0;
-
-    for (const row of filteredRows) {
-      if (row.duplicate) {
-        toast.error(`${row.name}: SIC already submitted today`);
-        continue;
-      }
-
+    for (const row of toSubmit) {
       try {
         await postProductSic({
           product_id: row.product_id,
@@ -114,6 +107,8 @@ export default function ProductSICPage() {
           override_reason: null
         });
         successCount++;
+        row.dirty = false;
+        row.duplicate = true; 
       } catch (err) {
         const msg = err.response?.data?.message || 'Failed to submit row';
         toast.error(`${row.name}: ${msg}`);
@@ -121,121 +116,124 @@ export default function ProductSICPage() {
     }
 
     toast.dismiss('sic-submit');
+    setLoading(false);
 
     if (successCount > 0) {
-      toast.success(`Submitted ${successCount} Product SIC entries.`);
-      await loadProducts();
+      toast.success(`Successfully submitted ${successCount} entries.`);
+      setRows([...rows]);
     }
-
-    setLoading(false);
   }
 
   return (
-    <div className="sics-form-container">
-      <h2>Daily Product SIC</h2>
-
-      {/* Search + Vendor filter */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-        <input
-          type="text"
-          placeholder="Search products..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="sic-search"
-          style={{ flex: 1 }}
-        />
-        <select
-          value={selectedVendor}
-          onChange={e => setSelectedVendor(e.target.value)}
-          style={{ padding: '8px', minWidth: '200px', width: '60%', height: "46px", marginTop: "8px" }}
-        >
-          <option value="">All Vendors</option>
-          {vendors.map(v => (
-            <option key={v.id} value={v.id}>
-              {v.name}
-            </option>
-          ))}
-        </select>
+    <div className="premium-card">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <h2 style={{ fontSize: '20px', fontWeight: '800', margin: 0, color: '#1e293b' }}>Daily Product SIC</h2>
+            <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#64748b' }}>Record daily finished goods inventory</p>
+          </div>
+          
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <input
+                type="text"
+                placeholder="Search products..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="search-bar"
+                style={{ width: '250px' }}
+            />
+            <select
+                value={selectedVendor}
+                onChange={e => setSelectedVendor(e.target.value)}
+                className="filter-select"
+                style={{ width: '200px' }}
+            >
+                <option value="">All Vendors</option>
+                {vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+            </select>
+          </div>
       </div>
 
-      <form className="sics-form" onSubmit={handleSubmit}>
-        <table>
-          <thead>
-            <tr>
-              <th>Product</th>
-              <th>Unit</th>
-              <th>Opening</th>
-              <th>Produced</th>
-              <th>Waste</th>
-              <th>Closing</th>
-            </tr>
-          </thead>
-          <tbody>
-            {initialLoading ? (
-              [...Array(5)].map((_, i) => (
-                <tr key={i} className="skeleton-row">
-                  <td colSpan="6">
-                    <div className="skeleton-line" />
-                  </td>
+      <form onSubmit={handleSubmit}>
+        <div className="table-container" style={{ marginTop: '0', border: 'none', boxShadow: 'none' }}>
+           <div className="premium-table-wrapper">
+            <table className="premium-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Unit</th>
+                    <th style={{ minWidth: '100px' }}>Opening</th>
+                    <th style={{ minWidth: '100px' }}>Produced</th>
+                    <th style={{ minWidth: '100px' }}>Waste</th>
+                    <th style={{ minWidth: '100px' }}>Closing</th>
                 </tr>
-              ))
-            ) : filteredRows.length === 0 ? (
-              <tr>
-                <td colSpan="6" style={{ textAlign: 'center', opacity: 0.6 }}>
-                  No products found
-                </td>
-              </tr>
-            ) : (
-              filteredRows.map((r, index) => (
-                <tr key={r.product_id}>
-                  <td>{r.name}</td>
-                  <td>{r.unit}</td>
+            </thead>
+            <tbody>
+                {initialLoading ? (
+                  [...Array(5)].map((_, i) => (
+                    <tr key={i}>
+                      <td colSpan="6" style={{ padding: '0' }}>
+                        <div style={{ padding: '20px 24px', animation: 'pulse 1.5s infinite ease-in-out' }}>
+                            <div style={{ height: '20px', background: '#f1f5f9', borderRadius: '4px', width: '80%', marginBottom: '8px' }}></div>
+                            <div style={{ height: '14px', background: '#f1f5f9', borderRadius: '4px', width: '40%' }}></div>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : filteredRows.length === 0 ? (
+                <tr><td colSpan="6" className="empty-state">No products found</td></tr>
+                ) : (
+                filteredRows.map((r) => {
+                    const realIndex = rows.findIndex(at => at.product_id === r.product_id);
+                    return (
+                    <tr key={r.product_id} style={{ background: 'transparent' }}>
+                        <td style={{ fontWeight: '600' }}>{r.name}</td>
+                        <td style={{ color: '#64748b', fontSize: '13px' }}>{r.unit}</td>
+                        <td>
+                            <input 
+                                type="number" min="0" 
+                                className="premium-input" 
+                                style={{ padding: '8px', fontSize: '13px' }}
+                                value={r.opening_qty} onChange={e => handleChange(realIndex, 'opening_qty', e.target.value)} 
+                            />
+                        </td>
+                        <td>
+                            <input 
+                                type="number" min="0" 
+                                className="premium-input" 
+                                style={{ padding: '8px', fontSize: '13px' }}
+                                value={r.issues_qty} onChange={e => handleChange(realIndex, 'issues_qty', e.target.value)} 
+                            />
+                        </td>
+                        <td>
+                            <input 
+                                type="number" min="0" 
+                                className="premium-input" 
+                                style={{ padding: '8px', fontSize: '13px' }}
+                                value={r.waste_qty} onChange={e => handleChange(realIndex, 'waste_qty', e.target.value)} 
+                            />
+                        </td>
+                        <td>
+                            <input 
+                                type="number" min="0" 
+                                className="premium-input" 
+                                style={{ padding: '8px', fontSize: '13px' }}
+                                value={r.closing_qty} onChange={e => handleChange(realIndex, 'closing_qty', e.target.value)} 
+                            />
+                        </td>
+                    </tr>
+                    );
+                })
+                )}
+            </tbody>
+            </table>
+           </div>
+        </div>
 
-                  <td>
-                    <input
-                      type="number"
-                      min="0"
-                      value={r.opening_qty}
-                      disabled={r.duplicate}
-                      onChange={e => handleChange(index, 'opening_qty', e.target.value)}
-                    />
-                  </td>
-
-                  <td>
-                    <input
-                      type="number"
-                      min="0"
-                      value={r.issues_qty}
-                      onChange={e => handleChange(index, 'issues_qty', e.target.value)}
-                    />
-                  </td>
-
-                  <td>
-                    <input
-                      type="number"
-                      min="0"
-                      value={r.waste_qty}
-                      onChange={e => handleChange(index, 'waste_qty', e.target.value)}
-                    />
-                  </td>
-
-                  <td>
-                    <input
-                      type="number"
-                      min="0"
-                      value={r.closing_qty}
-                      onChange={e => handleChange(index, 'closing_qty', e.target.value)}
-                    />
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-
-        <button type="submit" disabled={loading}>
-          {loading ? 'Submitting...' : 'Submit Product SIC'}
-        </button>
+        <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
+             <button type="submit" disabled={loading} className="submit-btn" style={{ width: 'auto', minWidth: '200px' }}>
+                {loading ? 'Submitting...' : 'Submit Records'}
+            </button>
+        </div>
       </form>
     </div>
   );

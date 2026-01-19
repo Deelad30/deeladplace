@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { LayoutProvider } from "./context/LayoutContext";
 import PrivateRoute from "./components/auth/PrivateRoute";
   
 import { Navigate } from "react-router-dom";
@@ -13,6 +14,8 @@ import AcceptInvite from "./pages/AcceptInvite";
 import DashboardPage from "./pages/DashboardPage";
 import POSPage from "./pages/POSPage";
 import VendorsPage from "./pages/VendorsPage";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaystackCallback from "./pages/PaystackCallBack";
 import RecipePage from './pages/RecipePage';
 import LandingPage from "./pages/LandingPage";
 import ProductsDashboard from "./pages/ProductsDashboard";
@@ -21,9 +24,6 @@ import ExpensesPage from "./pages/ExpensesPage";
 import ReportsPage from "./pages/ReportPage";
 import Checkout from "./pages/Checkout";
 import Stocks from "./pages/Stocks";
-
-import PaymentSuccess from "./pages/PaymentSuccess";
-import PaystackCallback from "./pages/PaystackCallBack";
 
 import InviteUsers from "./pages/Users/InviteUsers";
 
@@ -35,36 +35,15 @@ import Unauthorized from "./pages/Unauthorized";
 import { Toaster } from "react-hot-toast";
 import "./App.css";
 
-const check = (Comp, name) => {
-  if (typeof Comp !== "function") {
-    console.error(`❌ ${name} is NOT a component`, Comp);
-  }
-};
 
 function App() {
-check(DashboardPage, "DashboardPage");
-check(POSPage, "POSPage");
-check(VendorsPage, "VendorsPage");
-check(ProductsDashboard, "ProductsDashboard");
-check(InventoryPage, "InventoryPage");
-check(ExpensesPage, "ExpensesPage");
-check(ReportsPage, "ReportsPage");
-check(InviteUsers, "InviteUsers");
-check(CostingPage, "CostingPage");
-check(RecipePage, "RecipePage");
-check(Stocks, "Stocks");
-check(Checkout, "Checkout");
-check(PaymentSuccess, "PaymentSuccess");
-check(PaystackCallback, "PaystackCallback");
-check(Unauthorized, "Unauthorized");
-check(LandingPage, "LandingPage");
-
   return (
     <AuthProvider>
-      <Router>
-        <Toaster position="top-right" />
+      <LayoutProvider>
+        <Router>
+          <Toaster position="top-right" />
 
-        <Routes>
+          <Routes>
           {/* PUBLIC ROUTES */}
           <Route path="/login" element={<Login />} />
           <Route path="/accept-invite" element={<AcceptInvite />} />
@@ -107,14 +86,6 @@ check(LandingPage, "LandingPage");
 
 
           {/* MAIN DASHBOARD */}
-          <Route
-            path="/dashboard"
-            element={
-              <PrivateRoute requiredSection="dashboard">
-                <DashboardPage />
-              </PrivateRoute>
-            }
-          />
           <Route
             path="/dashboard"
             element={
@@ -233,6 +204,7 @@ check(LandingPage, "LandingPage");
           />
         </Routes>
       </Router>
+      </LayoutProvider>
     </AuthProvider>
   );
 }

@@ -1,92 +1,137 @@
-/* ---------- Modern Sidebar ---------- */
+/* ---------- Modern Sidebar (Premium Dark) ---------- */
 .sidebar {
-  width: 250px;
+  width: 70px; /* Mini Width (Icon Only) */
   height: 100vh;
-  background: #ffffff;
-  border-right: 1px solid #e5e7eb;
+  background: #ffe2e2;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
   position: fixed;
   top: 0;
   left: 0;
-  padding-top: 80px; /* adjust if you have a top navbar */
-  transition: width 0.3s ease;
+  padding-top: var(--header-height);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1050;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Hide overflow text when mini */
+}
+
+/* Hover to Expand */
+.sidebar:hover {
+  width: var(--sidebar-width); /* Expand to full width */
+}
+
+/* Desktop Closed State (Removed - using hover now) */
+
+/* Mobile Drawer Logic */
+@media (max-width: 900px) {
+    .sidebar {
+        width: var(--sidebar-width);
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+    .sidebar.open {
+        transform: translateX(0);
+        box-shadow: 20px 0 50px rgba(0,0,0,0.3);
+    }
+}
+
+.sidebar-nav {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 24px 12px; /* Reduced padding for mini mode */
 }
 
 .sidebar-nav ul {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .sidebar-nav li a {
   display: flex;
   align-items: center;
-  padding: 1rem 1.7rem;
+  padding: 12px; /* Uniform padding for icons */
   text-decoration: none;
-  color: #374151;
-  border-left: 3px solid transparent;
+  color: #000;
+  border-radius: var(--radius-md);
   font-size: 0.95rem;
   font-weight: 500;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap; /* Prevent text wrap */
 }
 
 /* Hover */
 .sidebar-nav li a:hover {
-  background: #f5fef7;
-  border-left-color: #e2c6c6;
-  color: #000;
+  background: rgba(255, 255, 255, 0.05); /* Subtle white tint */
+  color: #d91f22; /* Text turns red on hover */
 }
 
-/* Active */
 .sidebar-nav li a.active {
-  background: #f5fef7;
-  border-left-color: #d91f22;
-  color: #000;
+  background: rgba(217, 31, 34, 0.1); 
+  color: #d91f22;
   font-weight: 600;
+}
+
+/* ICON STYLING */
+.sidebar-nav li a .icon {
+  width: 24px;
+  font-size: 1.1rem;
+  min-width: 24px; /* Ensure icon doesn't shrink */
+  text-align: center;
+  margin-right: 16px; /* Gap between icon and text */
+}
+
+/* LABEL VISIBILITY (Hide in mini mode, Show on Hover) */
+.sidebar-nav li a .label {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  transform: translateX(10px);
+}
+
+.sidebar:hover .sidebar-nav li a .label {
+  opacity: 1;
+  transform: translateX(0);
+  transition-delay: 0.1s; /* Slight delay so it doesn't flash */
+}
+
+/* Mobile: Always show labels since it's full width */
+@media (max-width: 900px) {
+  .sidebar-nav li a .label {
+      opacity: 1;
+      transform: none;
+  }
+}
+
+
+/* Active State - Brand Red */
+.sidebar-nav li a.active {
+  background: #ff9f9f;
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(217, 31, 34, 0.4); /* Glow effect */
 }
 
 /* Icon Styling */
 .sidebar-nav .icon {
-  margin-right: 0.85rem;
-  font-size: 1.2rem;
-  transition: transform 0.3s ease, opacity 0.3s ease;
+  width: 20px;
+  margin-right: 12px;
+  font-size: 1.1rem;
+  text-align: center;
+  transition: transform 0.3s ease;
 }
 
-/* Icon Micro-Animation */
-.animated-icon:hover {
-  transform: translateX(4px) scale(1.05);
-  opacity: 0.9;
+.sidebar-nav li a:hover .icon {
+    transform: scale(1.1);
 }
 
-/* ---------- Responsive Sidebar ---------- */
-
-@media (max-width: 1024px) {
-  .sidebar {
-    width: 220px;
-  }
-}
-
-@media (max-width: 768px) {
-  .sidebar {
-    width: 70px;
-  }
-
-  .sidebar-nav li a {
-    justify-content: center;
-    padding: 1rem;
-  }
-
-  .sidebar-nav .label {
-    display: none;
-  }
-
-  .sidebar-nav .icon {
-    margin: 0;
-  }
-}
-
-@media (max-width: 480px) {
-  .sidebar {
-    position: fixed;
-    width: 60px;
-  }
+/* Bottom Actions (Logout etc) if any */
+.sidebar-footer {
+    padding: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
 }

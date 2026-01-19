@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { postRawSic, listRawSic } from '../../api/sic';
+import { postRawSic, listRawSic, getLatestRawSic } from '../../api/sic';
 import { rawMaterialsService } from '../../services/rawMaterialsService';
 import toast from 'react-hot-toast';
-import '../../styles/pages/SICSForm.css';
+import '../../styles/shared/PremiumShared.css'; 
 
 export default function RawSICPage() {
   const [materials, setMaterials] = useState([]);
@@ -19,51 +19,53 @@ export default function RawSICPage() {
     // eslint-disable-next-line
   }, []);
 
-useEffect(() => {
-  const q = search.trim();
-
-  if (!q) {
-    setFilteredRows(rows);
-  } else {
-    setFilteredRows(
-      rows.filter(r =>
-        r.name.toLowerCase().includes(q.toLowerCase())
-      )
-    );
-  }
-}, [search, rows]);
-
+  useEffect(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) {
+      setFilteredRows(rows);
+    } else {
+      setFilteredRows(
+        rows.filter(r => r.name.toLowerCase().includes(q))
+      );
+    }
+  }, [search, rows]);
 
   async function loadMaterials() {
     try {
       setInitialLoading(true);
-
       const data = await rawMaterialsService.getAll();
-      setMaterials(data.materials);
-
+      
       const todaySIC = await listRawSic();
       const todayMap = new Map(
-        todaySIC.data.sic?.map(s => [s.material_id, s]) || []
+        todaySIC.data.sic?.filter(s => s.date === today).map(s => [s.material_id, s]) || []
+      );
+
+      const latestRes = await getLatestRawSic();
+      const latestMap = new Map(
+        latestRes.data.sic?.map(s => [s.material_id, s]) || []
       );
 
       const preparedRows = data.materials.map(m => {
-        const existing = todayMap.get(m.id);
+        const existingToday = todayMap.get(m.id);
+        const historical = latestMap.get(m.id);
+
         return {
           material_id: m.id,
           name: m.name,
           unit: m.measurement_unit,
           date: today,
-          opening_qty: existing ? existing.opening_qty : 0,
-          issues_qty: 0,
-          waste_qty: 0,
-          closing_qty: existing ? existing.closing_qty : 0,
-          duplicate: !!existing
+          opening_qty: existingToday 
+            ? existingToday.opening_qty 
+            : (historical ? historical.closing_qty : 0),
+          issues_qty: existingToday ? existingToday.issues_qty : 0,
+          waste_qty: existingToday ? existingToday.waste_qty : 0,
+          closing_qty: existingToday ? existingToday.closing_qty : 0, 
+          duplicate: !!existingToday,
+          dirty: false
         };
       });
 
       setRows(preparedRows);
-      setFilteredRows(preparedRows);
-
     } catch (err) {
       toast.error('Failed to load raw materials.');
       console.error(err);
@@ -72,26 +74,27 @@ useEffect(() => {
     }
   }
 
-  function handleChange(index, field, value) {
-    const updated = [...filteredRows];
-    updated[index][field] = Number(value);
-    setFilteredRows(updated);
+  function handleChange(realIndexInRows, field, value) {
+    const updated = [...rows];
+    updated[realIndexInRows][field] = Number(value);
+    updated[realIndexInRows].dirty = true;
+    setRows(updated);
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
+    const toSubmit = rows.filter(r => r.dirty);
+
+    if (toSubmit.length === 0) {
+      toast.error("No changes made to submit");
+      return;
+    }
 
     toast.loading('Submitting Raw SIC...', { id: 'sic-submit' });
     setLoading(true);
-
     let successCount = 0;
 
-    for (const row of filteredRows) {
-      if (row.duplicate) {
-        toast.error(`${row.name}: SIC already submitted today`);
-        continue;
-      }
-
+    for (const row of toSubmit) {
       try {
         await postRawSic({
           material_id: row.material_id,
@@ -104,6 +107,8 @@ useEffect(() => {
         });
 
         successCount++;
+        row.dirty = false;
+        row.duplicate = true; 
       } catch (err) {
         const msg = err.response?.data?.message || 'Failed to submit row';
         toast.error(`${row.name}: ${msg}`);
@@ -111,109 +116,112 @@ useEffect(() => {
     }
 
     toast.dismiss('sic-submit');
+    setLoading(false);
 
     if (successCount > 0) {
-      toast.success(`Submitted ${successCount} SIC entries.`);
-      loadMaterials();
+      toast.success(`Successfully submitted ${successCount} entries.`);
+      setRows([...rows]); // trigger re-render
     }
-
-    setLoading(false);
   }
 
   return (
-    <div className="sics-form-container">
-      <h2>Daily Raw Material SIC</h2>
+    <div className="premium-card">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <h2 style={{ fontSize: '20px', fontWeight: '800', margin: 0, color: '#1e293b' }}>Daily Raw Material SIC</h2>
+            <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#64748b' }}>Record daily stock inventory checks</p>
+          </div>
+          
+          <input
+            type="text"
+            placeholder="Search material..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="search-bar"
+            style={{ width: '100%', maxWidth: '300px' }}
+          />
+      </div>
 
-      {/* 🔍 Case-Sensitive Exact Search */}
-      <input
-        type="text"
-        placeholder="Search material (case-sensitive, exact)"
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-        className="sic-search"
-      />
-
-      <form className="sics-form" onSubmit={handleSubmit}>
-        <table>
-          <thead>
-            <tr>
-              <th>Material</th>
-              <th>Unit</th>
-              <th>Opening</th>
-              <th>Issues</th>
-              <th>Waste</th>
-              <th>Closing</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {initialLoading ? (
-              [...Array(5)].map((_, i) => (
-                <tr key={i} className="skeleton-row">
-                  <td colSpan="6">
-                    <div className="skeleton-line" />
-                  </td>
+      <form onSubmit={handleSubmit}>
+        <div className="table-container" style={{ marginTop: '0', border: 'none', boxShadow: 'none' }}>
+           <div className="premium-table-wrapper">
+            <table className="premium-table">
+            <thead>
+                <tr>
+                <th>Material</th>
+                <th>Unit</th>
+                <th style={{ minWidth: '100px' }}>Opening</th>
+                <th style={{ minWidth: '100px' }}>Issues</th>
+                <th style={{ minWidth: '100px' }}>Waste</th>
+                <th style={{ minWidth: '100px' }}>Closing</th>
                 </tr>
-              ))
-            ) : (
-              filteredRows.map((r, index) => (
-                <tr key={r.material_id}>
-                  <td>{r.name}</td>
-                  <td>{r.unit}</td>
-
-                  <td>
-                    <input
-                      type="number"
-                      min="0"
-                      value={r.opening_qty}
-                      disabled={r.duplicate}
-                      onChange={(e) =>
-                        handleChange(index, 'opening_qty', e.target.value)
-                      }
-                    />
-                  </td>
-
-                  <td>
-                    <input
-                      type="number"
-                      min="0"
-                      value={r.issues_qty}
-                      onChange={(e) =>
-                        handleChange(index, 'issues_qty', e.target.value)
-                      }
-                    />
-                  </td>
-
-                  <td>
-                    <input
-                      type="number"
-                      min="0"
-                      value={r.waste_qty}
-                      onChange={(e) =>
-                        handleChange(index, 'waste_qty', e.target.value)
-                      }
-                    />
-                  </td>
-
-                  <td>
-                    <input
-                      type="number"
-                      min="0"
-                      value={r.closing_qty}
-                      onChange={(e) =>
-                        handleChange(index, 'closing_qty', e.target.value)
-                      }
-                    />
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-
-        <button type="submit" disabled={loading}>
-          {loading ? 'Submitting...' : 'Submit Raw SIC'}
-        </button>
+            </thead>
+            <tbody>
+                {initialLoading ? (
+                  [...Array(5)].map((_, i) => (
+                    <tr key={i}>
+                      <td colSpan="6" style={{ padding: '0' }}>
+                        <div style={{ padding: '20px 24px', animation: 'pulse 1.5s infinite ease-in-out' }}>
+                            <div style={{ height: '20px', background: '#f1f5f9', borderRadius: '4px', width: '80%', marginBottom: '8px' }}></div>
+                            <div style={{ height: '14px', background: '#f1f5f9', borderRadius: '4px', width: '40%' }}></div>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                filteredRows.map((r) => {
+                    // Find index in main 'rows' array
+                    const realIndex = rows.findIndex(at => at.material_id === r.material_id);
+                    return (
+                    <tr key={r.material_id} style={{ background: r.duplicate ? '#f0fdf4' : 'transparent' }}>
+                        <td style={{ fontWeight: '600' }}>{r.name}</td>
+                        <td style={{ color: '#64748b', fontSize: '13px' }}>{r.unit}</td>
+                        <td>
+                            <input 
+                                type="number" min="0" 
+                                className="premium-input" 
+                                style={{ padding: '8px', fontSize: '13px' }}
+                                value={r.opening_qty} onChange={e => handleChange(realIndex, 'opening_qty', e.target.value)} 
+                            />
+                        </td>
+                        <td>
+                            <input 
+                                type="number" min="0" 
+                                className="premium-input" 
+                                style={{ padding: '8px', fontSize: '13px' }}
+                                value={r.issues_qty} onChange={e => handleChange(realIndex, 'issues_qty', e.target.value)} 
+                            />
+                        </td>
+                        <td>
+                            <input 
+                                type="number" min="0" 
+                                className="premium-input" 
+                                style={{ padding: '8px', fontSize: '13px' }}
+                                value={r.waste_qty} onChange={e => handleChange(realIndex, 'waste_qty', e.target.value)} 
+                            />
+                        </td>
+                        <td>
+                            <input 
+                                type="number" min="0" 
+                                className="premium-input" 
+                                style={{ padding: '8px', fontSize: '13px' }}
+                                value={r.closing_qty} onChange={e => handleChange(realIndex, 'closing_qty', e.target.value)} 
+                            />
+                        </td>
+                    </tr>
+                    );
+                })
+                )}
+            </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
+            <button type="submit" disabled={loading} className="submit-btn" style={{ width: 'auto', minWidth: '200px' }}>
+                {loading ? 'Submitting...' : 'Submit Records'}
+            </button>
+        </div>
       </form>
     </div>
   );

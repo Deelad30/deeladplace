@@ -1,64 +1,34 @@
-.open-form-btn {
-  background-color: #d91f22;;
-  color: white;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: 0.2s ease;
-}
+/* Expenses Page Specific Styles */
 
-/* Tabs container */
-.tabs {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
-  margin-top: 20px;
-}
-
-/* Tab buttons */
-.tab-btn {
-  padding: 10px 20px;
-  background: #f5f5f5;
-  border: none;
-  border-radius: 8px 8px 0 0;
-  cursor: pointer;
-  font-weight: 600;
-  transition: 0.2s;
-}
-
-.tab-btn:hover {
-  background: #e0e0e0;
-}
-
-/* Active tab */
-.tab-btn.active {
-  background: #d91f22;;
-  color: #fff;
-}
-
-.modal-content-this {
-  background: #fff;
-  padding: 25px;
-  border-radius: 12px;
-  max-width: 800px;
-  width:35%;
+/* Modal Content Premium Style */
+.modal-content-premium {
+  background: white;
+  padding: 2rem;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 600px;
   position: relative;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-  animation: slideDown 0.3s ease-out;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  animation: slideUp 0.3s ease-out;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
-/* Tab content wrapper */
-.tab-content {
-  background: #fff;
-  padding: 20px;
-  border-radius: 0 12px 12px 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+.close-modal-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  color: #666;
+  cursor: pointer;
+  z-index: 10;
+  transition: color 0.2s;
 }
 
-.open-form-btn:hover {
-  background-color: #d91f22;;
+.close-modal-btn:hover {
+  color: #d91f22;
 }
 
 .modal-overlay {
@@ -67,38 +37,18 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0,0,0,0.5);
+  background: rgba(0,0,0,0.5);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  backdrop-filter: blur(2px);
 }
 
-.modal-content {
-  background: #fff;
-  padding: 25px;
-  border-radius: 12px;
-  max-width: 600px;
-  width: 90%;
-  position: relative;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-  animation: slideDown 0.3s ease-out;
-}
-
-.close-btn {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  background: transparent;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-}
-
-@keyframes slideDown {
+@keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(-20px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -106,9 +56,178 @@
   }
 }
 
-@media (max-width: 600px) {
-  .modal-content {
-    width: 95%;
-    padding: 20px;
+/* Mobile Responsiveness for Expenses Page */
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
   }
+
+  .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .primary-btn {
+    width: 90%;
+    text-align: center;
+    padding: 12px;
+  }
+
+  .modal-content-premium {
+    width: 95%;
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+  
+  .tabs {
+    overflow-x: auto;
+    padding-bottom: 5px;
+  }
+  
+  .tab-pill {
+    white-space: nowrap;
+  }
+}
+
+/* Responsive Table/Card Visibility */
+@media (min-width: 769px) {
+  .premium-card-list {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .premium-table-wrapper {
+    display: none; /* Hide table on mobile to prevent overflow */
+  }
+  
+  .premium-card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
+
+/* Secondary Buttons (Export, etc) */
+.secondary-btn {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.secondary-btn:hover {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.filter_btn button {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter_btn button:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+/* Pagination Styling */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+}
+
+.pagination button {
+  background: white;
+  border: 1px solid #e5e7eb;
+  padding: 8px 12px;
+  border-radius: 6px;
+  color: #374151;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.pagination button.active {
+  background: #d91f22;
+  color: white;
+  border-color: #d91f22;
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Additional Button Styles */
+.danger-btn {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.danger-btn:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.icon-btn.edit {
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.icon-btn.edit:hover {
+  background: #dcfce7;
+}
+
+.icon-btn.delete {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.icon-btn.delete:hover {
+  background: #fee2e2;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.card-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+  justify-content: flex-end;
 }

@@ -1,4 +1,5 @@
 const Compute = require('../services/compute.service');
+const logger = require('../utils/logger');
 
 async function compute(req, res) {
   const tenantId = req.user.tenant_id;
@@ -19,7 +20,7 @@ async function compute(req, res) {
       cost
     });
   } catch (err) {
-    console.error('compute error:', err);
+    logger.error('compute error', { error: err.message, tenantId, productId });
     res.status(500).json({ error: "Costing failed" });
   }
 }

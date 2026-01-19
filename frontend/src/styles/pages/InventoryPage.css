@@ -1,69 +1,99 @@
-/* ---- Tabs Container ---- */
+/* ---- Inventory/Costing Page Premium Styles ---- */
+
+.page-container {
+    padding: 32px;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+/* Header */
+.content-header h1 {
+    font-size: 28px;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 24px;
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+}
+
+/* ---- Premium Tabs Container ---- */
 .inventory-tabs {
-  display: flex;
-  gap: 12px;
-  margin: 20px 0;
-  padding-bottom: 8px;
-  border-bottom: 2px solid #e5e7eb; /* light gray */
+    display: flex;
+    gap: 8px;
+    margin-bottom: 32px;
+    padding: 6px;
+    background: #f1f5f9;
+    border-radius: 16px;
+    width: fit-content;
+    border: 1px solid #e2e8f0;
 }
 
 /* ---- Tab Buttons ---- */
 .tab-button {
-  background: none;
-  border: none;
-  padding: 10px 18px;
-  font-size: 15px;
-  font-weight: 500;
-  cursor: pointer;
-  position: relative;
-  color: #6b7280; /* cool gray */
-  transition: color 0.25s ease, transform 0.2s ease;
+    background: transparent;
+    border: none;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #64748b;
+    border-radius: 12px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
 }
 
 .tab-button:hover {
-  color: #1f2937; /* darker */
-  transform: translateY(-1px);
+    color: #334155;
+    background: rgba(255, 255, 255, 0.5);
 }
 
 /* ---- Active Tab ---- */
 .tab-button.active {
-  color: #1f2937;
-  font-weight: 600;
-}
-
-.tab-button.active::after {
-  content: "";
-  position: absolute;
-  bottom: -10px;
-  left: 0;
-  height: 3px;
-  width: 100%;
-  background-color: #1f2937;
-  border-radius: 2px;
-  animation: tab-slide 0.3s ease;
-}
-
-/* ---- Animation ---- */
-@keyframes tab-slide {
-  from {
-    width: 0;
-    opacity: 0;
-  }
-  to {
-    width: 100%;
-    opacity: 1;
-  }
+    background: white;
+    color: #d91f22;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 /* ---- Content Wrapper ---- */
 .inventory-content {
-  margin-top: 15px;
+    background: white;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    min-height: 400px;
 }
 
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .page-container {
+        padding: 16px;
+    }
 
-h1{
-      margin-bottom: 20px;
-    font-size: 1.8rem;
-    font-weight: 600;
-    color: #1a1a1a;
+    .content-header h1 {
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+
+    .inventory-tabs {
+        width: 100%;
+        overflow-x: auto;
+        padding: 4px;
+        border-radius: 12px;
+        gap: 4px;
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+        scrollbar-width: none; /* Firefox */
+    }
+    
+    .inventory-tabs::-webkit-scrollbar {
+        display: none; /* Chrome/Safari */
+    }
+
+    .tab-button {
+        padding: 10px 16px;
+        font-size: 13px;
+        flex-shrink: 0;
+    }
 }

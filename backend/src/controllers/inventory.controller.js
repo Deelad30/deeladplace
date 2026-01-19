@@ -1,6 +1,6 @@
-// inventory.controller.js
 const db = require('../config/database');
 const stockService = require('../services/stock.service');
+const logger = require('../utils/logger');
 
 async function createMovement(req, res) {
   const tenantId = req.user.tenant_id;
@@ -12,7 +12,10 @@ async function createMovement(req, res) {
     qty,
     vendor_id = null,
     reference = null,
-    cost_per_unit = null
+    cost_per_unit = null,
+    source = null,
+    destination = null,
+    notes = null
   } = req.body;
 
   // ✅ Validate required fields
@@ -34,11 +37,16 @@ async function createMovement(req, res) {
       costPerUnit: cost_per_unit,
       vendorId: vendor_id,
       reference,
-      createdBy: userId
+      createdBy: userId,
+      source,
+      destination,
+      notes
     });
 
     // 2️⃣ Determine stock delta: inbound positive, outbound negative
-    const inboundTypes = ['in', 'vendor_delivery', 'purchase'];
+    // 'in' or 'vendor_delivery' or 'purchase' => inbound
+    // 'out' or 'issue' or 'waste' => outbound
+    const inboundTypes = ['in', 'vendor_delivery', 'purchase', 'inbound'];
     const delta = inboundTypes.includes(movement_type) ? Number(qty) : -Number(qty);
 
     // 3️⃣ Update stock balance
@@ -50,11 +58,41 @@ async function createMovement(req, res) {
       cost_per_unit !== null ? cost_per_unit : undefined
     );
 
-    // 4️⃣ Return full info
+    // 4️⃣ Check for Low Stock & Email (Async, don't block response)
+    (async () => {
+        try {
+            if (item_type === 'material') {
+                const itemRes = await db.query('SELECT name, min_stock_level, measurement_unit FROM raw_materials WHERE id = $1', [item_id]);
+                const item = itemRes.rows[0];
+                
+                if (item && Number(stock.qty) <= Number(item.min_stock_level)) {
+                     // Fetch user email (Assuming current user is admin/notifiable, or fetch tenant owner)
+                     // For now, let's send to the current user as a confirmation/alert
+                     const userRes = await db.query('SELECT email, name FROM users WHERE id = $1', [userId]);
+                     const user = userRes.rows[0];
+                     
+                     if (user && user.email) {
+                         const emailService = require('../utils/emailService');
+                         await emailService.sendLowStockAlert(
+                             user, 
+                             { name: item.name, unit: item.measurement_unit }, 
+                             Number(stock.qty), 
+                             Number(item.min_stock_level)
+                         );
+                         logger.info('Low stock email sent', { item: item.name, email: user.email });
+                     }
+                }
+            }
+        } catch (emailErr) {
+            logger.error('Failed to send low stock alert', { error: emailErr.message });
+        }
+    })();
+
+    // 5️⃣ Return full info
     res.json({ success: true, movement, stock });
 
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to create stock movement', { error: err.message, tenantId, userId });
     res.status(500).json({ success: false, message: 'Failed to create stock movement' });
   }
 }
@@ -104,7 +142,7 @@ async function issueToProduction(req, res) {
 
     res.json({ success: true, items: results });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to issue materials to production', { error: err.message, tenantId, userId });
     res.status(500).json({ success: false, message: 'Failed to issue raw materials to production' });
   }
 }
@@ -170,7 +208,7 @@ async function recordProduction(req, res) {
     });
 
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to record production', { error: err.message, tenantId, userId, product_id });
     res.status(500).json({ success: false, message: 'Failed to record production' });
   }
 }
@@ -181,4 +219,66 @@ async function recordProduction(req, res) {
 
 
 
-module.exports = { createMovement, issueToProduction, recordProduction };
+async function getLedger(req, res) {
+  const tenantId = req.user.tenant_id;
+  
+  try {
+    const query = `
+      SELECT 
+        sm.*,
+        rm.name as item_name,
+        rm.measurement_unit,
+        u.name as created_by_name
+      FROM stock_movements sm
+      LEFT JOIN raw_materials rm ON sm.item_id = rm.id AND sm.item_type = 'material'
+      LEFT JOIN users u ON sm.created_by = u.id
+      WHERE sm.tenant_id = $1
+      ORDER BY sm.created_at DESC
+      LIMIT 100
+    `;
+    
+    const result = await db.query(query, [tenantId]);
+    res.json({ success: true, movements: result.rows });
+  } catch (err) {
+    logger.error('Failed to fetch ledger', { error: err.message, tenantId });
+    res.status(500).json({ success: false, message: 'Failed to fetch ledger' });
+  }
+}
+
+async function getStockBalance(req, res) {
+  const tenantId = req.user.tenant_id;
+  
+  try {
+    const query = `
+      SELECT 
+        rm.id,
+        rm.name,
+        rm.measurement_unit,
+        rm.min_stock_level,
+        COALESCE(sb.qty, 0) as current_stock,
+        COALESCE(sb.average_cost, 0) as average_cost,
+        sb.updated_at
+      FROM raw_materials rm
+      LEFT JOIN stock_balance sb 
+        ON rm.id = sb.item_id 
+        AND sb.item_type = 'material' 
+        AND sb.tenant_id = rm.tenant_id
+      WHERE rm.tenant_id = $1
+      ORDER BY rm.name ASC
+    `;
+    
+    const result = await db.query(query, [tenantId]);
+    
+    const stockItems = result.rows.map(item => ({
+      ...item,
+      is_low_stock: Number(item.current_stock) <= Number(item.min_stock_level || 0)
+    }));
+
+    res.json({ success: true, stock: stockItems });
+  } catch (err) {
+    logger.error('Failed to fetch stock balance', { error: err.message, tenantId });
+    res.status(500).json({ success: false, message: 'Failed to fetch stock balance' });
+  }
+}
+
+module.exports = { createMovement, issueToProduction, recordProduction, getLedger, getStockBalance };

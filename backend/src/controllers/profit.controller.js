@@ -1,4 +1,5 @@
 const db = require("../config/database");
+const logger = require('../utils/logger');
 
 /**
  * PRODUCT PROFITABILITY
@@ -13,9 +14,13 @@ exports.getProductProfitability = async (req, res) => {
     let values = [tenantId];
     let idx = 2;
 
-    if (startDate && endDate) {
-      filters.push(`ps.created_at BETWEEN $${idx++} AND $${idx++}`);
-      values.push(startDate, endDate);
+    if (startDate) {
+      filters.push(`DATE(ps.created_at) >= $${idx++}`);
+      values.push(startDate);
+    }
+    if (endDate) {
+      filters.push(`DATE(ps.created_at) <= $${idx++}`);
+      values.push(endDate);
     }
 
     if (productId) {
@@ -39,9 +44,9 @@ exports.getProductProfitability = async (req, res) => {
         p.name AS product_name,
         SUM(ps.qty) AS total_qty,
         SUM(ps.qty * ps.selling_price) AS total_sales,
-        sc_latest.tcop AS cost_per_unit,
-        SUM(ps.qty * sc_latest.tcop) AS total_cost,
-        SUM(ps.qty * ps.selling_price) - SUM(ps.qty * sc_latest.tcop) AS gross_profit
+        COALESCE(sc_latest.tcop, 0) AS cost_per_unit,
+        SUM(ps.qty * COALESCE(sc_latest.tcop, 0)) AS total_cost,
+        SUM(ps.qty * ps.selling_price) - SUM(ps.qty * COALESCE(sc_latest.tcop, 0)) AS gross_profit
       FROM pos_sales ps
       JOIN products p ON p.id = ps.product_id
       LEFT JOIN LATERAL (
@@ -61,7 +66,7 @@ exports.getProductProfitability = async (req, res) => {
     res.json({ ok: true, items: rows });
 
   } catch (err) {
-    console.error(err);
+    logger.error("getProductProfitability error", { error: err.message, tenantId });
     res.status(500).json({ ok: false, error: err.message });
   }
 };
@@ -80,36 +85,63 @@ exports.getNetProfit = async (req, res) => {
     let values = [tenantId];
     let idx = 2;
 
-    if (startDate && endDate) {
-      salesFilter.push(`created_at BETWEEN $${idx} AND $${idx + 1}`);
-      expenseFilter.push(`expense_date BETWEEN $${idx} AND $${idx + 1}`);
-      values.push(startDate, endDate);
-      idx += 2;
+    if (startDate) {
+      salesFilter.push(`DATE(created_at) >= $${idx}`);
+      expenseFilter.push(`DATE(expense_date) >= $${idx}`);
+      values.push(startDate);
+      idx++;
+    }
+    if (endDate) {
+      salesFilter.push(`DATE(created_at) <= $${idx}`);
+      expenseFilter.push(`DATE(expense_date) <= $${idx}`);
+      values.push(endDate);
+      idx++;
     }
 
     const sql = `
-      WITH sales AS (
-        SELECT COALESCE(SUM(qty * selling_price), 0) AS total_sales
-        FROM pos_sales
-        WHERE ${salesFilter.join(" AND ")}
+      WITH product_profit AS (
+        SELECT 
+          COALESCE(SUM(ps.qty * ps.selling_price) - SUM(ps.qty * COALESCE(sc_latest.tcop, 0)), 0) AS total_product_profit,
+          COALESCE(SUM(ps.qty * ps.selling_price), 0) AS total_sales
+        FROM pos_sales ps
+        JOIN products p ON p.id = ps.product_id
+        LEFT JOIN LATERAL (
+          SELECT sc.tcop
+          FROM standard_costs sc
+          WHERE sc.product_id = p.id
+            AND sc.tenant_id = ps.tenant_id
+          ORDER BY sc.created_at DESC
+          LIMIT 1
+        ) sc_latest ON true
+        WHERE ps.tenant_id = $1
+          ${startDate ? `AND DATE(ps.created_at) >= $2` : ""}
+          ${endDate ? `AND DATE(ps.created_at) <= ${startDate ? "$3" : "$2"}` : ""}
       ),
       expenses AS (
         SELECT COALESCE(SUM(amount), 0) AS total_expenses
         FROM expenses
-        WHERE ${expenseFilter.join(" AND ")}
+        WHERE tenant_id = $1
+          ${startDate ? `AND DATE(expense_date) >= $2` : ""}
+          ${endDate ? `AND DATE(expense_date) <= ${startDate ? "$3" : "$2"}` : ""}
       )
       SELECT
-        s.total_sales,
+        pp.total_sales,
+        pp.total_product_profit,
         e.total_expenses,
-        (s.total_sales - e.total_expenses) AS net_profit
-      FROM sales s, expenses e;
+        (pp.total_product_profit - e.total_expenses) AS net_profit
+      FROM product_profit pp, expenses e;
     `;
+
+    // Note: Net Profit is now Gross Profit - Expenses
+    // This assumes "Expenses" are OPEX/Labour and don't include COGS already.
+    // If expenses include COGS, this would double count. 
+    // Usually, "Cumulative Net Profit" = Gross Profit - OPEX.
 
     const { rows } = await db.query(sql, values);
     res.json({ ok: true, summary: rows[0] });
 
   } catch (err) {
-    console.error(err);
+    logger.error("getNetProfit error", { error: err.message, tenantId });
     res.status(500).json({ ok: false, error: err.message });
   }
 };

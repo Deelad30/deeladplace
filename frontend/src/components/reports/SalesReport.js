@@ -2,14 +2,16 @@
 import React, { useEffect, useState } from 'react';
 import { salesService } from '../../services/salesService';
 import { vendorService } from '../../services/vendorService';
+import { getUsers } from '../../api/users';
 import { toast, Toaster } from 'react-hot-toast';
 
 import KPISection from './components/KPISection';
-import RevenueChart from './components/RevenueChart';
-import CommissionChart from './components/CommissionChart';
+import SalesTrendsChart from './components/SalesTrendsChart';
+import VendorProductChart from './components/VendorProductChart';
 import TopProductsChart from './components/TopProductsChart';
 import PaymentBreakdownChart from './components/PaymentBreakdownChart';
 import SalesTable from './components/SalesTable';
+import VendorPerformanceChart from './components/VendorPerformanceChart';
 import FiltersBar from './components/FiltersBar';
 import LoadingState from './components/LoadingState';
 // Add at the top
@@ -21,10 +23,12 @@ const SalesReport = () => {
   const [overview, setOverview] = useState({});
   const [summary, setSummary] = useState([]);
   const [topProducts, setTopProducts] = useState([]);
+  const [vendorPerformance, setVendorPerformance] = useState([]);
   const [paymentSummary, setPaymentSummary] = useState({});
-  const [filters, setFilters] = useState({ start: null, end: null, vendor_id: null, payment_type: null });
+  const [filters, setFilters] = useState({ start: null, end: null, vendor_id: null, payment_type: null, user_id: null });
   const [loading, setLoading] = useState(true);
   const [vendors, setVendors] = useState([]);
+  const [users, setUsers] = useState([]);
 
   // Fetch vendors once
   useEffect(() => {
@@ -36,7 +40,16 @@ const SalesReport = () => {
         console.error('Failed to load vendors', err);
       }
     };
+    const fetchUsers = async () => {
+      try {
+        const res = await getUsers();
+        if (res.data?.users) setUsers(res.data.users);
+      } catch (err) {
+        console.error('Failed to load users', err);
+      }
+    };
     fetchVendors();
+    fetchUsers();
   }, []);
 
   // Fetch sales data
@@ -55,18 +68,21 @@ const fetchAll = async (localFilters = {}) => {
 
     if (localFilters.vendor_id) params.vendor_id = localFilters.vendor_id;
     if (localFilters.payment_type) params.payment_type = localFilters.payment_type;
+    if (localFilters.user_id) params.user_id = localFilters.user_id;
 
-    const [overviewRes, summaryRes, topRes, paymentRes] = await Promise.all([
+    const [overviewRes, summaryRes, topRes, paymentRes, performanceRes] = await Promise.all([
       salesService.getOverview(params),
       salesService.getSalesSummary(params),
       salesService.getTopProducts({ ...params, limit: 8 }),
-      salesService.getPaymentSummary(params)
+      salesService.getPaymentSummary(params),
+      salesService.getVendorPerformance(params)
     ]);
 
     setOverview(overviewRes.overview || overviewRes);
     setSummary(summaryRes.summary || []);
     setTopProducts(topRes.top_products || []);
     setPaymentSummary(paymentRes.payment_summary || {});
+    setVendorPerformance(performanceRes.vendor_performance || []);
     console.log(topProducts);
     
   } catch (err) {
@@ -101,43 +117,81 @@ const onApplyFilters = (newFilters) => {
     // eslint-disable-next-line
   }, []);
 
+  const [auditMode, setAuditMode] = useState(false);
+
   return (
     <div style={{ marginTop: "-50px" }} className="reports-container">
-      <div className="expense-report-container">
+      <div className="expense-report-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2 className="report-title">Sales Report</h2>
+        
+        <div className="audit-toggle-container" style={{ marginLeft: 0 }}>
+          <label className="switch">
+            <input 
+              type="checkbox" 
+              checked={auditMode} 
+              onChange={() => setAuditMode(!auditMode)} 
+            />
+            <span className="slider round"></span>
+          </label>
+          <span className="audit-label">Audit Mode {auditMode ? "ON" : "OFF"}</span>
+        </div>
       </div>
 
       <Toaster position="top-right" />
 
       <div className="reports-inner">
-        <FiltersBar onApply={onApplyFilters} vendors={vendors} current={filters} />
+        <FiltersBar onApply={onApplyFilters} vendors={vendors} users={users} current={filters} />
 
         {loading ? (
           <LoadingState />
         ) : (
           <>
-            <KPISection overview={overview} />
+            <KPISection overview={overview} auditMode={auditMode} />
 
-            <div className="charts-row" style={{ marginTop: 6 }}>
+            {/* Top Trends Row */}
+            <div className="charts-row" style={{ marginTop: 6, display: 'grid', gridTemplateColumns: filters.vendor_id ? '1.5fr 1fr' : '1fr', gap: 16 }}>
               <div className="chart-card">
-                <div className="chart-title">Revenue (last 30 days)</div>
-                <RevenueChart data={summary} />
+                <div className="chart-title">Sales Trends (Revenue & Commission)</div>
+                <SalesTrendsChart data={summary} />
+              </div>
+              
+              {filters.vendor_id && (
+                <div className="chart-card">
+                  <div className="chart-title">Product Breakdown (Units Sold)</div>
+                  <VendorProductChart data={topProducts} auditMode={auditMode} />
+                </div>
+              )}
+            </div>
+
+            {/* Performance & Products Row */}
+            <div 
+              className="insights-row" 
+              style={{ 
+                marginTop: 12, 
+                display: 'grid', 
+                gridTemplateColumns: filters.vendor_id ? '1fr 1fr' : '1fr', 
+                gap: 16 
+              }}
+            >
+              <div className="chart-card">
+                <div className="chart-title">
+                  {filters.vendor_id ? 'Vendor Revenue Performance' : 'Overall Vendor Revenue Comparison'}
+                </div>
+                <VendorPerformanceChart data={vendorPerformance} />
               </div>
 
               <div className="chart-card">
-                <div className="chart-title">Commission (last 30 days)</div>
-                <CommissionChart data={summary} />
+                <div className="chart-title">
+                  {filters.vendor_id ? 'Vendor Top Selling Products' : 'Overall Top Selling Products'}
+                </div>
+                <TopProductsChart data={topProducts} />
               </div>
             </div>
 
-            <div className="insights-row" style={{ marginTop: 12 }}>
+            {/* Secondary Insights Row */}
+            <div className="insights-row" style={{ marginTop: 12, display: 'grid', gridTemplateColumns: '1fr', gap: 16 }}>
               <div className="chart-card">
-                <div className="chart-title">Top Products</div>
-                <TopProductsChart data={topProducts} />
-              </div>
-
-              <div className="chart-card">
-                <div className="chart-title">Payment Breakdown</div>
+                <div className="chart-title">Payment Breakdown Summary</div>
                 <PaymentBreakdownChart data={paymentSummary} />
               </div>
             </div>
@@ -183,7 +237,7 @@ const onApplyFilters = (newFilters) => {
 </div>
 
 
-              <SalesTable vendors={vendors} filters={filters} />
+              <SalesTable vendors={vendors} filters={filters} auditMode={auditMode} />
             </div>
           </>
         )}

@@ -1,4 +1,5 @@
 const db = require('../config/database');
+const logger = require('../utils/logger');
 
 // CREATE Stock Item
 exports.createStockItem = async (req, res) => {
@@ -19,7 +20,7 @@ exports.createStockItem = async (req, res) => {
 
     res.status(201).json({ success: true, stockItem: result.rows[0] });
   } catch (err) {
-    console.error(err);
+    logger.error("Failed to create stock item", { error: err.message, tenantId });
     res.status(500).json({ success: false, message: "Failed to create stock item" });
   }
 };
@@ -35,7 +36,7 @@ exports.getStockItems = async (req, res) => {
     );
     res.json({ success: true, stockItems: result.rows });
   } catch (err) {
-    console.error(err);
+    logger.error("Failed to fetch stock items", { error: err.message, tenantId });
     res.status(500).json({ success: false, message: "Failed to fetch stock items" });
   }
 };
@@ -70,7 +71,7 @@ exports.updateStockItem = async (req, res) => {
 
     res.json({ success: true, stockItem: result.rows[0] });
   } catch (err) {
-    console.error(err);
+    logger.error("Failed to update stock item", { error: err.message, tenantId, stockId: id });
     res.status(500).json({ success: false, message: "Failed to update stock item" });
   }
 };
@@ -92,7 +93,7 @@ exports.deleteStockItem = async (req, res) => {
 
     res.json({ success: true, message: "Stock item deleted" });
   } catch (err) {
-    console.error(err);
+    logger.error("Failed to delete stock item", { error: err.message, tenantId, stockId: id });
     res.status(500).json({ success: false, message: "Failed to delete stock item" });
   }
 };
@@ -133,7 +134,7 @@ exports.adjustStockQuantity = async (req, res) => {
 
     res.json({ success: true, stockItem: result.rows[0] });
   } catch (err) {
-    console.error(err);
+    logger.error("Failed to adjust stock quantity", { error: err.message, tenantId, stockId: id });
     res.status(500).json({ success: false, message: "Failed to adjust stock quantity" });
   }
 };

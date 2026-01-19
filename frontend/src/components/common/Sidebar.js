@@ -21,7 +21,7 @@ import {
 
 import "../../styles/components/Sidebar.css";
 
-const Sidebar = ({ isOpen, closeSidebar }) => {
+const Sidebar = ({ isOpen, closeSidebar, isDesktopOpen = true }) => {
   const { user } = useAuth();
   const location = useLocation();
 
@@ -50,13 +50,7 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
 
   return (
     <>
-      {/* Mobile overlay */}
-      <div
-        className={`mobile-sidebar-overlay ${isOpen ? "active" : ""}`}
-        onClick={closeSidebar}
-      />
-
-      <aside className={`sidebar ${isOpen ? "open" : ""}`}>
+      <aside className={`sidebar ${isOpen ? "open" : ""} ${!isDesktopOpen ? "desktop-closed" : ""}`}>
         <nav className="sidebar-nav">
           <ul>
             {menuItems.map((item) => {

@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import Header from '../components/common/Header';
-import Sidebar from '../components/common/Sidebar';
+import Layout from '../components/common/Layout';
 import IssueToProduction from '../components/stocks/IssueToProduction';
 import RecordProduction from '../components/stocks/RecordProduction';
-import StockList from '../components/stocks/StockList'
-import '../../src/styles/pages/InventoryPage.css';
+// import StockList from '../components/stocks/StockList'; // Deprecated existing list
+import StockLedgerView from '../components/inventory/StockLedgerView';
+import '../styles/shared/PremiumShared.css';
 
 const Stocks = () => {
-  const [activeTab, setActiveTab] = useState('issues-to-production');
+  // Forced Rebuild 
+  const [activeTab, setActiveTab] = useState('stocks'); // Default to stocks for visibility
 
   const renderContent = () => {
     switch (activeTab) {
@@ -16,40 +17,35 @@ const Stocks = () => {
       case 'record-production':
         return <RecordProduction />;
       case 'stocks':
-        return <StockList />;
+        return <StockLedgerView />;
       default:
-        return <IssueToProduction />;
+        return <StockLedgerView />;
     }
   };
 
   return (
-    <div className="inventory-page">
-      <Header />
-      <div className="page-content">
-        <Sidebar />
-
-        <main className="main-content">
-
-          <div className="content-header">
-            <h1>Stocks Movement</h1>
+    <Layout>
+      <div className="page-container">
+          <div className="page-header">
+            <h1 className="page-title">Stocks Movement</h1>
           </div>
 
           {/* ---- TABS ---- */}
-          <div className="inventory-tabs">
+          <div className="premium-tabs">
             <button
-              className={`tab-button ${activeTab === 'issues-to-production' ? 'active' : ''}`}
+              className={`tab-btn ${activeTab === 'issues-to-production' ? 'active' : ''}`}
               onClick={() => setActiveTab('issues-to-production')}
             >
               Issue Production
             </button>
             <button
-              className={`tab-button ${activeTab === 'record-production' ? 'active' : ''}`}
+              className={`tab-btn ${activeTab === 'record-production' ? 'active' : ''}`}
               onClick={() => setActiveTab('record-production')}   
             >
             Record Production
             </button>
             <button
-              className={`tab-button ${activeTab === 'stocks' ? 'active' : ''}`}
+              className={`tab-btn ${activeTab === 'stocks' ? 'active' : ''}`}
               onClick={() => setActiveTab('stocks')}   
             >
             Stocks
@@ -57,13 +53,11 @@ const Stocks = () => {
           </div>
 
           {/* ---- ACTIVE COMPONENT ---- */}
-          <div className="inventory-content">
+          <div>
             {renderContent()}
           </div>
-
-        </main>
       </div>
-    </div>
+    </Layout>
   );
 };
 

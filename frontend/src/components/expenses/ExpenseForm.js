@@ -89,42 +89,47 @@ const handleSubmit = async (e) => {
 
 
   return (
-    <div className="expense-form-card">
-      <h2>Add New Expense</h2>
+    <div className="expense-form-container">
+      <h2 className="form-title">{editExpense ? "Edit Expense" : "Add New Expense"}</h2>
 
-      <form className="expense-form" onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>Description *</label>
-          <input
-            type="text"
-            name="description"
-            placeholder="e.g. Office supplies"
-            value={formData.description}
-            onChange={handleChange}
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Vendor *</label>
-          <select
-            name="vendor_id"
-            value={formData.vendor_id}
-            onChange={handleChange}
-          >
-            <option value="">Select Vendor</option>
-            {vendors.map(v => (
-              <option key={v.id} value={v.id}>{v.name}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="form-row">
+      <form className="premium-form" onSubmit={handleSubmit}>
+        <div className="form-section">
           <div className="form-group">
-            <label>Amount *</label>
+            <label>Description *</label>
             <input
+              className="premium-input"
+              type="text"
+              name="description"
+              placeholder="e.g. Office supplies"
+              value={formData.description}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Vendor *</label>
+            <select
+              className="premium-input"
+              name="vendor_id"
+              value={formData.vendor_id}
+              onChange={handleChange}
+            >
+              <option value="">Select Vendor</option>
+              {vendors.map(v => (
+                <option key={v.id} value={v.id}>{v.name}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="form-grid">
+          <div className="form-group">
+            <label>Amount (₦) *</label>
+            <input
+              className="premium-input"
               type="number"
               name="amount"
-              placeholder="e.g. 5000"
+              placeholder="0.00"
               value={formData.amount}
               onChange={handleChange}
             />
@@ -132,7 +137,7 @@ const handleSubmit = async (e) => {
 
           <div className="form-group">
             <label>Category *</label>
-            <select name="category" value={formData.category} onChange={handleChange}>
+            <select className="premium-input" name="category" value={formData.category} onChange={handleChange}>
               <option value="">Select category</option>
               <option value="Food">Food</option>
               <option value="Fuel">Fuel</option>
@@ -144,29 +149,33 @@ const handleSubmit = async (e) => {
           </div>
         </div>
 
-        <div className="form-group">
-          <label>Supplier</label>
-          <input
-            type="text"
-            name="supplier"
-            placeholder="e.g. Stationery Shop"
-            value={formData.supplier}
-            onChange={handleChange}
-          />
+        <div className="form-grid">
+          <div className="form-group">
+            <label>Supplier</label>
+            <input
+              className="premium-input"
+              type="text"
+              name="supplier"
+              placeholder="e.g. Stationery Shop"
+              value={formData.supplier}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Expense Date</label>
+            <input
+              className="premium-input"
+              type="date"
+              name="expense_date"
+              value={formData.expense_date}
+              onChange={handleChange}
+            />
+          </div>
         </div>
 
-        <div className="form-group">
-          <label>Expense Date</label>
-          <input
-            type="date"
-            name="expense_date"
-            value={formData.expense_date}
-            onChange={handleChange}
-          />
-        </div>
-
-        <button className="submit-btn" type="submit">
-          Add Expense
+        <button className="primary-btn full-width" type="submit">
+          {editExpense ? "Update Expense" : "Add Expense"}
         </button>
       </form>
     </div>

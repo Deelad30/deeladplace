@@ -239,3 +239,109 @@
   background: #9ca3af;
   cursor: not-allowed;
 }
+
+/* Premium Touches */
+.product-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.product-card:active {
+  transform: scale(0.98);
+}
+
+.product-info h4 {
+  font-family: 'Inter', sans-serif;
+  letter-spacing: -0.01em;
+}
+
+@media (max-width: 1024px) {
+  .pos-container {
+    padding: 1rem; /* Reduced padding */
+  }
+
+  .pos-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .pos-header h2 {
+    font-size: 1.5rem;
+    margin: 0;
+  }
+  
+  .pos-header button {
+    width: 100%;
+    padding: 12px;
+  }
+
+  .pos-content {
+    grid-template-columns: 1fr;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+
+  /* Order: Search (in header) -> Cart -> Products */
+  .cart-section {
+    order: 1;
+    margin-bottom: 20px;
+  }
+
+  .products-section {
+    order: 2;
+  }
+
+  .product-grid {
+    /* 1 Column for Mobile as requested */
+    grid-template-columns: 1fr !important;
+    gap: 10px;
+    height: auto !important;
+    overflow-y: visible !important;
+    max-height: 600px;
+    margin-right: 0 !important;
+  }
+  
+  .product-card {
+    padding: 0.5rem;
+    gap: 0.5rem; /* Explicit gap between sections */
+    justify-content: flex-start; /* Pack content to top, don't stretch */
+    height: auto !important; /* Ensure it wraps content */
+  }
+  
+  .product-info h4 {
+    font-size: 0.9rem;
+    margin-bottom: 0px; /* Removed margin */
+    line-height: 1.2;
+  }
+  
+  .product-pricing {
+    gap: 0px; /* Remove gap between price and commission */
+  }
+  
+  .price {
+    font-size: 1rem;
+    margin-bottom: 0px;
+  }
+  
+  .commission {
+    font-size: 0.7rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  .add-to-cart-btn {
+    padding: 0.5rem; /* Reduced padding */
+    font-weight: 600;
+    margin-top: 0.25rem; /* Drastically reduced from 1rem */
+    font-size: 0.9rem;
+  }
+  
+  .search-wrapper {
+    max-width: 100%;
+    margin-bottom: 1rem;
+  }
+}
+

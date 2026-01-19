@@ -8,36 +8,45 @@ const webhookRoutes = require('./src/routes/webhook');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const rateLimit = require('express-rate-limit');
+const logger = require('./src/utils/logger');
 
+// CORS Configuration - Only allow requests from configured client
+app.use(cors({
+  origin: process.env.NODE_ENV === 'development'
+    ? [process.env.CLIENT_URL, 'http://localhost:3000'].filter(Boolean)
+    : process.env.CLIENT_URL,
+  credentials: true
+}));
 
-// Middleware
-app.use(cors());
+// Rate Limiting
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: process.env.NODE_ENV === 'development' ? 10000 : 100, // Higher limit for dev
+  message: {
+    success: false,
+    message: 'Too many requests from this IP, please try again after 15 minutes'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Apply rate limiter to all API routes
+app.use('/api/', apiLimiter);
+
+// Structured Logging with Morgan + Winston
+const morganFormat = process.env.NODE_ENV === 'production' ? 'combined' : 'dev';
+app.use(require('morgan')(morganFormat, {
+  stream: {
+    write: (message) => logger.info(message.trim())
+  }
+}));
 app.use(express.json());
-
 
 app.use('/api/paystack', paystackRoutes);
 app.use('/api/paystack/webhook', webhookRoutes);
-// Add this before your other routes
-app.get('/api/test-email', async (req, res) => {
-  try {
-    await emailService.sendWelcomeEmail({
-      name: 'Test User',
-      email: 'deeladplacesoftwork@gmail.com', // Your email
-      role: 'admin'
-    });
-    res.json({ success: true, message: 'Test email sent successfully' });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
 
 app.get('/health', (req, res) => res.status(200).json({ status: 'ok' }));
-if (process.env.NODE_ENV === 'production') {
-  app.use(require('morgan')('combined'));
-} else {
-  app.use(require('morgan')('dev'));
-}
 
 
 // Import routes
@@ -64,9 +73,13 @@ const posRoutes = require('./src/routes/pos.routes');
 const standardRoutes = require('./src/routes/standard.routes');
 const stocksRoutes = require('./src/routes/stocksRoutes');
 const reportsRoutes = require('./src/routes/reports.routes');
+const userRoutes = require('./src/routes/userRoutes');
+const productLabourRoutes = require('./src/routes/productLabour.routes');
+const productOpexRoutes = require('./src/routes/productOpex.routes');
 
 
 // Use routes
+app.use('/api/users', userRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/opex', opexRoutes);
 app.use('/api/vendors', vendorRoutes);
@@ -91,7 +104,9 @@ app.use('/api/sic', sicRoutes);
 app.use('/api/inventory', invRoutes);
 app.use('/api/pos', posRoutes);
 app.use('/api/standard', standardRoutes);
-app.use('/api/stocks', stocksRoutes)
+app.use('/api/stocks', stocksRoutes);
+app.use('/api/product-labour', productLabourRoutes);
+app.use('/api/product-opex', productOpexRoutes);
 
 
 // 404 handler
@@ -104,7 +119,13 @@ app.use('*', (req, res) => {
 
 // Error handling middleware
 app.use((error, req, res, next) => {
-  console.error('Server Error:', error);
+  logger.error('Server Error', { 
+    error: error.message, 
+    stack: error.stack,
+    path: req.path,
+    method: req.method
+  });
+
   res.status(500).json({
     success: false,
     message: 'Internal server error'
@@ -112,6 +133,9 @@ app.use((error, req, res, next) => {
 });
 
 // Start server
-app.listen(process.env.PORT || 3000, '0.0.0.0');
+const server = app.listen(PORT, '0.0.0.0', () => {
+  logger.info(`Server running on port ${PORT}`, { env: process.env.NODE_ENV });
+});
+
 
 module.exports = app;

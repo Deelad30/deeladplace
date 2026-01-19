@@ -14,24 +14,40 @@ const PrivateRoute = ({ requiredSection = null, children = null }) => {
   // Not logged in → redirect to login
   if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
 
-  // Map role_id → role string
-  const role = (user.role || ROLE_MAP[user.role_id] || "staff").toLowerCase();
+  // 1. Resolve Role Robustly
+  const rawRole = (ROLE_MAP[user.role_id] || user.role || "staff")
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '_');
+  
+  const role = rawRole;
   const perms = ROLE_PERMISSIONS[role] || {};
 
-  // User inactive → logout and redirect
+  // 2. User inactive → logout and redirect
   if (user.status !== "active") {
     toast.error("Your account has been deactivated");
     logout();
-    return null; // logout already redirects
+    return null; 
   }
 
-  // Role-based access check
+  // 3. Role-based access check
   if (requiredSection && !perms[requiredSection]) {
-    toast.error("You are not authorized to access this page");
+    // SILENCE TOAST IF: we are currently at /login or just redirected from it
+    // Or if we're on the root path
+    const isTransitioning = 
+        location.pathname === "/login" || 
+        location.pathname === "/" || 
+        location.pathname === "/dashboard"; // Ignore if momentarily landing on dashboard
+
+    if (!isTransitioning) {
+       toast.error("Unauthorized access redirected", { id: 'auth-error' });
+    }
+
     return <Navigate to={ROLE_DEFAULT_ROUTE[role] || "/"} replace />;
   }
 
-  // Default landing page if user visits "/"
+  // 4. Default landing page if user visits "/"
   if (location.pathname === "/") {
     return <Navigate to={ROLE_DEFAULT_ROUTE[role] || "/"} replace />;
   }

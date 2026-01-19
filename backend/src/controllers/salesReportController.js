@@ -1,62 +1,22 @@
-
 const db = require('../config/database');
+const { buildSalesFilters } = require('../utils/filterBuilder');
+const logger = require('../utils/logger');
 
-function buildDateFilterParams(startDate, endDate) {
-  // returns SQL snippet and params array indexes will be used by caller
-  // We'll use $1 for tenantId in caller, so this returns text using $2 and $3
-  const conditions = [];
-  if (startDate) conditions.push(`ps.created_at >= $2::timestamptz`);
-  if (endDate) conditions.push(`ps.created_at <= $3::timestamptz`);
-  const where = conditions.length ? `AND ${conditions.join(' AND ')}` : '';
-  return where;
-}
 
 exports.getSalesPaginated = async (req, res) => {
+  const tenantId = req.user.tenant_id;
   try {
-    const tenantId = req.user.tenant_id;
-
-    let { page = 1, limit = 20, start, end, vendor_id, payment_type } = req.query;
+    let { page = 1, limit = 20, start, end, startDate, endDate, vendor_id, payment_type, user_id } = req.query;
+    start = start || startDate;
+    end = end || endDate;
     page = Number(page);
     limit = Number(limit);
 
     const offset = (page - 1) * limit;
 
-    const params = [tenantId];
-    let paramIndex = 2;
-    const filters = [];
-
-    // --------------------------------------------------
-    // DATE FILTER FIX: Expand date range to full days
-    // --------------------------------------------------
-    if (start) {
-      const startTimestamp = `${start} 00:00:00`;
-      params.push(startTimestamp);
-      filters.push(`ps.created_at >= $${paramIndex++}::timestamptz`);
-    }
-
-    if (end) {
-      const endTimestamp = `${end} 23:59:59.999`;
-      params.push(endTimestamp);
-      filters.push(`ps.created_at <= $${paramIndex++}::timestamptz`);
-    }
-
-    // --------------------------------------------------
-    // Vendor filter
-    // --------------------------------------------------
-    if (vendor_id) {
-      params.push(vendor_id);
-      filters.push(`ps.vendor_id = $${paramIndex++}`);
-    }
-
-    // --------------------------------------------------
-    // Payment filter
-    // --------------------------------------------------
-    if (payment_type) {
-      params.push(payment_type);
-      filters.push(`ps.payment_method = $${paramIndex++}`);
-    }
-
-    const whereSql = filters.length ? `AND ${filters.join(" AND ")}` : "";
+    // Build filters using shared utility
+    const filterResult = buildSalesFilters(tenantId, { start, end, vendor_id, payment_type, user_id });
+    const { params, whereSql, paramIndex } = filterResult;
 
     // --------------------------------------------------
     // COUNT QUERY
@@ -102,19 +62,20 @@ exports.getSalesPaginated = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("getSalesPaginated error", err);
+    logger.error("getSalesPaginated error", { error: err.message, tenantId });
     return res.status(500).json({ ok: false, message: err.message });
   }
 };
 
 
 exports.getSalesReport = async (req, res) => {
+  const tenantId = req.user.tenant_id;
   try {
-    const tenantId = req.user.tenant_id;
-    let { start, end } = req.query;
+    let { start, end, startDate, endDate } = req.query;
+    start = start || startDate;
+    end = end || endDate;
 
-    if (start) start = `${start} 00:00:00`;
-    if (end) end = `${end} 23:59:59.999`;
+    const { params, whereSql } = buildSalesFilters(tenantId, { start, end });
 
     const sql = `
       SELECT
@@ -137,20 +98,16 @@ exports.getSalesReport = async (req, res) => {
       LEFT JOIN users u ON u.id = ps.user_id
 
       WHERE ps.tenant_id = $1
-        AND ($2::timestamptz IS NULL OR ps.created_at >= $2)
-        AND ($3::timestamptz IS NULL OR ps.created_at <= $3)
-
+      ${whereSql}
       ORDER BY ps.created_at DESC
     `;
 
-    const params = [tenantId, start || null, end || null];
     const result = await db.query(sql, params);
-
     res.json({ ok: true, items: result.rows });
 
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ ok: false, message: e.message });
+  } catch (err) {
+    logger.error("getSalesReport error", { error: err.message, tenantId });
+    res.status(500).json({ ok: false, message: err.message });
   }
 };
 
@@ -163,28 +120,17 @@ exports.getSalesReport = async (req, res) => {
  * Response: { ok: true, overview: { total_revenue, total_commission, total_transactions, average_order_value } }
  */
 exports.getSalesOverview = async (req, res) => {
+  const tenantId = req.user.tenant_id;
   try {
-    const tenantId = req.user.tenant_id;
     // Accept either naming convention
-    let { start, end, startDate, endDate, vendor_id, payment_type } = req.query;
+    let { start, end, startDate, endDate, vendor_id, payment_type, user_id } = req.query;
 
     start = start || startDate;
     end = end || endDate;
 
-    // Normalize to full day
-    if (start) start = `${start} 00:00:00`;
-    if (end)   end   = `${end} 23:59:59.999`;
+    // Build filters using shared utility
+    const { params, whereSql } = buildSalesFilters(tenantId, { start, end, vendor_id, payment_type, user_id });
 
-    let paramIndex = 2;
-    const filters = [];
-    const params = [tenantId];
-
-    if (start) { params.push(start); filters.push(`ps.created_at >= $${paramIndex++}::timestamptz`); }
-    if (end)   { params.push(end);   filters.push(`ps.created_at <= $${paramIndex++}::timestamptz`); }
-    if (vendor_id) { params.push(vendor_id); filters.push(`ps.vendor_id = $${paramIndex++}`); }
-    if (payment_type) { params.push(payment_type); filters.push(`ps.payment_method = $${paramIndex++}`); }
-
-    const whereSql = filters.length ? `AND ${filters.join(' AND ')}` : '';
 
     const sql = `
       SELECT
@@ -200,18 +146,19 @@ exports.getSalesOverview = async (req, res) => {
 
     const result = await db.query(sql, params);
     const row = result.rows[0] || {};
+const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
 
     return res.json({
       ok: true,
       overview: {
-        total_revenue: Number(row.total_revenue || 0),
+        total_revenue: Number(row.total_revenue) + Number(row.total_commission || 0),
         total_commission: Number(row.total_commission || 0),
         total_transactions: Number(row.total_transactions || 0),
         average_order_value: Number(row.average_order_value || 0),
       }
     });
   } catch (err) {
-    console.error('getSalesOverview error', err);
+    logger.error('getSalesOverview error', { error: err.message, tenantId });
     return res.status(500).json({ ok: false, message: err.message });
   }
 };
@@ -224,23 +171,15 @@ exports.getSalesOverview = async (req, res) => {
  * Response: { ok: true, summary: [{ date, total_revenue, total_commission, total_transactions }] }
  */
 exports.getSalesSummary = async (req, res) => {
+  const tenantId = req.user.tenant_id;
   try {
-    const tenantId = req.user.tenant_id;
-    let { start, end, vendor_id, payment_type } = req.query;
+    let { start, end, startDate, endDate, vendor_id, payment_type, user_id } = req.query;
+    start = start || startDate;
+    end = end || endDate;
 
-    if (start) start = `${start} 00:00:00`;
-    if (end)   end   = `${end} 23:59:59.999`;
+    // Build filters using shared utility
+    const { params, whereSql } = buildSalesFilters(tenantId, { start, end, vendor_id, payment_type, user_id });
 
-    let paramIndex = 2;
-    const filters = [];
-    const params = [tenantId];
-
-    if (start) { params.push(start); filters.push(`ps.created_at >= $${paramIndex++}::timestamptz`); }
-    if (end)   { params.push(end);   filters.push(`ps.created_at <= $${paramIndex++}::timestamptz`); }
-    if (vendor_id) { params.push(vendor_id); filters.push(`ps.vendor_id = $${paramIndex++}`); }
-    if (payment_type) { params.push(payment_type); filters.push(`ps.payment_method = $${paramIndex++}`); }
-
-    const whereSql = filters.length ? `AND ${filters.join(" AND ")}` : "";
 
     const sql = `
       SELECT
@@ -261,7 +200,7 @@ exports.getSalesSummary = async (req, res) => {
     res.json({ ok: true, summary: rows.rows });
 
   } catch (e) {
-    console.error(e);
+    logger.error("getSalesSummary error", { error: e.message, tenantId });
     res.status(500).json({ ok: false, message: e.message });
   }
 };
@@ -275,23 +214,15 @@ exports.getSalesSummary = async (req, res) => {
  * Response: { ok: true, top_products: [{ product_id, product_name, total_revenue, total_qty }] }
  */
 exports.getTopProducts = async (req, res) => {
+  const tenantId = req.user.tenant_id;
   try {
-    const tenantId = req.user.tenant_id;
-    let { start, end, vendor_id, payment_type, limit = 8 } = req.query;
+    let { start, end, startDate, endDate, vendor_id, payment_type, user_id, limit = 8 } = req.query;
+    start = start || startDate;
+    end = end || endDate;
 
-    if (start) start = `${start} 00:00:00`;
-    if (end)   end   = `${end} 23:59:59.999`;
+    // Build filters using shared utility
+    const { params, whereSql, paramIndex } = buildSalesFilters(tenantId, { start, end, vendor_id, payment_type, user_id });
 
-    let paramIndex = 2;
-    const filters = [];
-    const params = [tenantId];
-
-    if (start) { params.push(start); filters.push(`ps.created_at >= $${paramIndex++}::timestamptz`); }
-    if (end)   { params.push(end);   filters.push(`ps.created_at <= $${paramIndex++}::timestamptz`); }
-    if (vendor_id) { params.push(vendor_id); filters.push(`ps.vendor_id = $${paramIndex++}`); }
-    if (payment_type) { params.push(payment_type); filters.push(`ps.payment_method = $${paramIndex++}`); }
-
-    const whereSql = filters.length ? `AND ${filters.join(" AND ")}` : "";
 
     const sql = `
       SELECT
@@ -314,7 +245,39 @@ exports.getTopProducts = async (req, res) => {
     res.json({ ok: true, top_products: result.rows });
 
   } catch (e) {
-    console.error(e);
+    logger.error("getTopProducts error", { error: e.message, tenantId });
+    res.status(500).json({ ok: false, message: e.message });
+  }
+};
+
+
+/**
+ * GET /api/reports/vendor-performance
+ * Returns total sales revenue per vendor.
+ */
+exports.getVendorPerformance = async (req, res) => {
+  const tenantId = req.user.tenant_id;
+  try {
+    const { whereSql, params, paramIndex } = buildSalesFilters(tenantId, req.query);
+
+    const sql = `
+      SELECT 
+        v.id AS vendor_id,
+        COALESCE(v.name, 'Unknown') AS vendor_name,
+        SUM(ps.qty * (ps.selling_price + ps.commission)) AS total_revenue
+      FROM pos_sales ps
+      LEFT JOIN vendors v ON v.id = ps.vendor_id
+      WHERE ps.tenant_id = $1
+      ${whereSql}
+      GROUP BY v.id, v.name
+      ORDER BY total_revenue DESC
+    `;
+
+    const result = await db.query(sql, params);
+    res.json({ ok: true, vendor_performance: result.rows });
+
+  } catch (e) {
+    logger.error("getVendorPerformance error", { error: e.message, tenantId });
     res.status(500).json({ ok: false, message: e.message });
   }
 };
@@ -327,22 +290,14 @@ exports.getTopProducts = async (req, res) => {
  * Response: { ok: true, payment_summary: { cash, pos, transfer, card, multiple, other } }
  */
 exports.getPaymentSummary = async (req, res) => {
+  const tenantId = req.user.tenant_id;
   try {
-    const tenantId = req.user.tenant_id;
-    let { start, end, vendor_id } = req.query;
+    let { start, end, startDate, endDate, vendor_id, user_id } = req.query;
+    start = start || startDate;
+    end = end || endDate;
 
-    if (start) start = `${start} 00:00:00`;
-    if (end)   end   = `${end} 23:59:59.999`;
-
-    let paramIndex = 2;
-    const filters = [];
-    const params = [tenantId];
-
-    if (start) { params.push(start); filters.push(`ps.created_at >= $${paramIndex++}::timestamptz`); }
-    if (end)   { params.push(end);   filters.push(`ps.created_at <= $${paramIndex++}::timestamptz`); }
-    if (vendor_id) { params.push(vendor_id); filters.push(`ps.vendor_id = $${paramIndex++}`); }
-
-    const whereSql = filters.length ? `AND ${filters.join(" AND ")}` : "";
+    // Build filters using shared utility (no payment_type filter for this endpoint)
+    const { params, whereSql } = buildSalesFilters(tenantId, { start, end, vendor_id, user_id });
 
     const sql = `
       SELECT ps.payment_method, SUM(ps.qty * ps.selling_price) AS amount
@@ -363,14 +318,14 @@ exports.getPaymentSummary = async (req, res) => {
     res.json({ ok: true, payment_summary: summary });
 
   } catch (e) {
-    console.error(e);
+    logger.error("getPaymentSummary error", { error: e.message, tenantId });
     res.status(500).json({ ok: false, message: e.message });
   }
 };
 
 exports.getProfitSummary = async (req, res) => {
+  const tenantId = req.user.tenant_id;
   try {
-    const tenantId = req.user.tenant_id;
 
     // Today
     const todayStart = new Date();
@@ -421,14 +376,14 @@ exports.getProfitSummary = async (req, res) => {
     });
 
   } catch (err) {
-    console.error('getProfitSummary error', err);
+    logger.error('getProfitSummary error', { error: err.message, tenantId });
     res.status(500).json({ ok: false, message: err.message });
   }
 };
 
 exports.getExpenseSummary = async (req, res) => {
+  const tenantId = req.user.tenant_id;
   try {
-    const tenantId = req.user.tenant_id;
 
     // Helper to format JS Date into 'YYYY-MM-DD HH:MM:SS'
     const formatDate = (d) => {
@@ -467,8 +422,8 @@ exports.getExpenseSummary = async (req, res) => {
     const todayExpense = await computeExpense(todayStartStr, todayEndStr);
     const thisMonthExpense = await computeExpense(monthStartStr, monthEndStr);
 
-    // Debugging: log results
-    console.log("Expense Summary:", { todayExpense, thisMonthExpense });
+    // Logging result
+    logger.info("Expense Summary", { todayExpense, thisMonthExpense, tenantId });
 
     res.json({
       ok: true,
@@ -479,7 +434,7 @@ exports.getExpenseSummary = async (req, res) => {
     });
 
   } catch (err) {
-    console.error('getExpenseSummary error', err);
+    logger.error('getExpenseSummary error', { error: err.message, tenantId });
     res.status(500).json({ ok: false, message: err.message });
   }
 };

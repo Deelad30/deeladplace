@@ -1,6 +1,5 @@
 import React from 'react';
-import Header from '../components/common/Header';
-import Sidebar from '../components/common/Sidebar';
+import Layout from '../components/common/Layout';
 import POS from '../components/pos/POS';
 import { AppProvider } from '../context/AppContext';
 import '../../src/styles/components/PricingSection.css';
@@ -8,15 +7,9 @@ import '../../src/styles/components/PricingSection.css';
 const POSPage = () => {
   return (
     <AppProvider>
-      <div className="pos-page">
-        <Header />
-        <div className="page-content">
-          <Sidebar />
-          <main className="main-content">
+      <Layout>
             <POS />
-          </main>
-        </div>
-      </div>
+      </Layout>
     </AppProvider>
   );
 };

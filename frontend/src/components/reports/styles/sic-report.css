@@ -171,6 +171,7 @@
   padding: 1rem 1.25rem;
   box-shadow: 0 2px 14px rgba(0, 0, 0, 0.05);
   transition: transform 0.2s, box-shadow 0.2s;
+  height: 50vh;
 }
 
 .product-card:hover {
@@ -246,6 +247,93 @@
 
   .grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================
+  AUDIT MODE UI
+========================== */
+.audit-toggle-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f0f4ff;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  margin-left: auto;
+}
+
+.audit-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4d70ff;
+}
+
+.audit-hint {
+  display: block;
+  font-size: 0.75rem;
+  color: #4d70ff;
+  font-weight: 600;
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.audit-border {
+  border: 1px solid #4d70ff !important;
+  box-shadow: 0 0 10px rgba(77, 112, 255, 0.15) !important;
+}
+
+/* Switch Styling */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 20px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #4d70ff;
+}
+
+input:checked + .slider:before {
+  transform: translateX(16px);
+}
+
+@media (max-width: 768px) {
+  .audit-toggle-container {
+    margin-left: 0;
+    width: fit-content;
   }
 }
 

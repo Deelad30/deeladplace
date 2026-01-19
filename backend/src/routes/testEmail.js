@@ -2,6 +2,8 @@
 const express = require("express");
 const router = express.Router();
 const emailService = require("../utils/emailService");
+const logger = require("../utils/logger");
+
 router.get("/test-email", async (req, res) => {
   try {
     await emailService.sendMail({
@@ -12,7 +14,7 @@ router.get("/test-email", async (req, res) => {
 
     res.json({ ok: true, message: "Test email sent successfully" });
   } catch (error) {
-    console.error("Email test failed:", error);
+    logger.error("Email test failed", { error: error.message });
     res.status(500).json({ ok: false, error: error.message });
   }
 });

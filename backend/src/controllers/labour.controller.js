@@ -1,4 +1,5 @@
 const db = require('../config/database');
+const logger = require('../utils/logger');
 
 // CREATE LABOUR
 exports.createLabour = async (req, res) => {
@@ -24,7 +25,7 @@ exports.createLabour = async (req, res) => {
 
     res.json({ success: true, labour: result.rows[0] });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to create labour record', { error: err.message, tenantId });
     res.status(500).json({ success: false, message: "Failed to create labour record" });
   }
 };
@@ -39,7 +40,7 @@ exports.getLabour = async (req, res) => {
     );
     res.json({ success: true, labour: result.rows });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to fetch labour records', { error: err.message, tenantId });
     res.status(500).json({ success: false, message: "Failed to fetch labour records" });
   }
 };
@@ -69,7 +70,7 @@ exports.updateLabour = async (req, res) => {
 
     res.json({ success: true, labour: result.rows[0] });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to update labour record', { error: err.message, tenantId, labourId });
     res.status(500).json({ success: false, message: "Failed to update labour record" });
   }
 };
@@ -91,7 +92,7 @@ exports.deleteLabour = async (req, res) => {
 
     res.json({ success: true, message: "Labour record deleted" });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to delete labour record', { error: err.message, tenantId, labourId });
     res.status(500).json({ success: false, message: "Failed to delete labour record" });
   }
 };

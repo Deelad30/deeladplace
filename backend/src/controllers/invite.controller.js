@@ -1,8 +1,8 @@
-// src/controllers/invite.controller.js
 const db = require('../config/database');
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
 const emailService = require('../utils/emailService');
+const logger = require('../utils/logger');
 
 /**
  * ============================
@@ -84,7 +84,7 @@ async function inviteUser(req, res) {
 
     res.json({ ok: true, message: "Invite sent successfully" });
   } catch (err) {
-    console.error("Invite Error:", err);
+    logger.error("Invite Error", { error: err.message, tenantId: inviter?.tenant_id, inviterId: inviter?.userId, email });
     res.status(500).json({ error: "Internal server error" });
   }
 }
@@ -216,7 +216,7 @@ async function acceptInvite(req, res) {
     });
 
   } catch (err) {
-    console.error("Accept Invite Error:", err);
+    logger.error("Accept Invite Error", { error: err.message, token });
     return res.status(500).json({ error: "Internal server error" });
   }
 }
@@ -243,7 +243,7 @@ async function getUserInvites(req, res) {
 
     res.json({ ok: true, invites: invitesRes.rows });
   } catch (err) {
-    console.error("Get Invites Error:", err);
+    logger.error("Get Invites Error", { error: err.message, tenantId: req.user?.tenant_id });
     res.status(500).json({ error: "Internal server error" });
   }
 }
@@ -292,7 +292,7 @@ async function cancelInvite(req, res) {
 
     res.json({ ok: true, message: 'User access revoked and invite cancelled' });
   } catch (err) {
-    console.error("Cancel Invite Error:", err);
+    logger.error("Cancel Invite Error", { error: err.message, tenantId: user?.tenant_id, inviteId: id });
     res.status(500).json({ error: 'Internal server error' });
   }
 }
@@ -318,7 +318,7 @@ async function deleteInvite(req, res) {
 
     res.json({ ok: true, message: 'Cancelled invite deleted successfully' });
   } catch (err) {
-    console.error("Delete Invite Error:", err);
+    logger.error("Delete Invite Error", { error: err.message, tenantId: user?.tenant_id, inviteId: id });
     res.status(500).json({ error: 'Internal server error' });
   }
 }

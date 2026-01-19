@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import Header from '../components/common/Header';
-import Sidebar from '../components/common/Sidebar';
+import Layout from '../components/common/Layout';
 import SICSForm from '../components/inventory/SICSForm';
-import StockList from '../components/stocks/StockList';
+import StockLedgerView from '../components/inventory/StockLedgerView';
 import ProductSICPage from '../components/inventory/ProductSIC';
-import '../../src/styles/pages/InventoryPage.css';
+import '../../src/styles/shared/PremiumShared.css'; // Use Shared Premium Styles
 
 const Stocks = () => {
   const roleId = JSON.parse(localStorage.getItem('user'))?.role_id;
@@ -33,38 +32,19 @@ const Stocks = () => {
      // eslint-disable-next-line
   }, [roleId, activeTab]);
 
-  // ---- CONTENT RENDER ----
-  const renderContent = () => {
-    if (!allowedTabs.includes(activeTab)) return null;
-
-    switch (activeTab) {
-      case 'issues-to-production':
-        return <StockList />;
-      case 'record-production':
-        return <SICSForm />;
-      case 'stocks':
-        return <ProductSICPage />;
-      default:
-        return null;
-    }
-  };
-
   return (
-    <div className="inventory-page">
-      <Header />
-      <div className="page-content">
-        <Sidebar />
+    <Layout>
+      <div className="page-container">
+        {/* ---- HEADER ---- */}
+        <div className="page-header">
+            <h1 className="page-title">Manage Your Inventory</h1>
+        </div>
 
-        <main className="main-content">
-          <div className="content-header">
-            <h1>Manage Your Inventory</h1>
-          </div>
-
-          {/* ---- TABS ---- */}
-          <div className="inventory-tabs">
+        {/* ---- TABS ---- */}
+        <div className="premium-tabs">
             {allowedTabs.includes('issues-to-production') && (
               <button
-                className={`tab-button ${
+                className={`tab-btn ${
                   activeTab === 'issues-to-production' ? 'active' : ''
                 }`}
                 onClick={() => setActiveTab('issues-to-production')}
@@ -75,7 +55,7 @@ const Stocks = () => {
 
             {allowedTabs.includes('record-production') && (
               <button
-                className={`tab-button ${
+                className={`tab-btn ${
                   activeTab === 'record-production' ? 'active' : ''
                 }`}
                 onClick={() => setActiveTab('record-production')}
@@ -86,7 +66,7 @@ const Stocks = () => {
 
             {allowedTabs.includes('stocks') && (
               <button
-                className={`tab-button ${
+                className={`tab-btn ${
                   activeTab === 'stocks' ? 'active' : ''
                 }`}
                 onClick={() => setActiveTab('stocks')}
@@ -94,15 +74,16 @@ const Stocks = () => {
                 SIC Product
               </button>
             )}
-          </div>
+        </div>
 
-          {/* ---- ACTIVE COMPONENT ---- */}
-          <div className="inventory-content">
-            {renderContent()}
-          </div>
-        </main>
+        {/* ---- ACTIVE COMPONENT ---- */}
+        <div> {/* Removed nested inventory-content class to let children handle their own containers/cards */}
+            {activeTab === 'issues-to-production' && <StockLedgerView />}
+            {activeTab === 'record-production' && <SICSForm />}
+            {activeTab === 'stocks' && <ProductSICPage />}
+        </div>
       </div>
-    </div>
+    </Layout>
   );
 };
 

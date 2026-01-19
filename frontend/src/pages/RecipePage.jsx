@@ -7,12 +7,9 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer
 } from "recharts";
 
-import Header from "../components/common/Header";
-import Sidebar from "../components/common/Sidebar";
-import Table from "../components/common/Table";
-import Modals from "../components/common/Modals";
-
-import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import Layout from "../components/common/Layout";
+import Modal from "../components/common/Modal"; // Standard Modal
+import { faArrowLeft, faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
 
 import {
   getRecipe, addRecipeItem, updateRecipeItem, deleteRecipeItem,
@@ -26,19 +23,23 @@ import {
 } from "../api/packagingMap.services";
 
 import { getProductSettings, saveProductSettings } from "../api/products";
+import { getLabour } from "../api/labour";
+import { getOpex } from "../api/opex";
+import { 
+  getProductLabour, addLabourToProduct, updateProductLabour, deleteProductLabour 
+} from "../api/productLabour.services";
+import { 
+  getProductOpex, addOpexToProduct, updateProductOpex, deleteProductOpex 
+} from "../api/productOpex.services";
 
-import "../styles/pages/RecipePage.css";
+import "../styles/shared/PremiumShared.css"; // Shared Premium Styles
+import "../styles/pages/RecipePage.css"; // Keep specific chart styles if any, but override basics
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#A28BFE", "#FF6666"];
 
 const RecipePage = () => {
   const { id: productId } = useParams();
   const navigate = useNavigate();
-  const icon = {
-    fontSize: "20px",
-    color: "#D91F22",
-    marginBottom: "18px",
-  };
 
   // --- Recipe / Ingredients
   const [recipeItems, setRecipeItems] = useState([]);
@@ -68,6 +69,25 @@ const RecipePage = () => {
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsLoading, setSettingsLoading] = useState(true);
 
+  // --- Product Labour
+  const [labourList, setLabourList] = useState([]);
+  const [productLabour, setProductLabour] = useState([]);
+  const [labourModal, setLabourModal] = useState(false);
+  const [editingLabour, setEditingLabour] = useState(null);
+  const [labourForm, setLabourForm] = useState({ labour_id: "", amount: "" });
+  const [labourLoading, setLabourLoading] = useState(true);
+
+  // --- Product Opex
+  const [opexList, setOpexList] = useState([]);
+  const [productOpex, setProductOpex] = useState([]);
+  const [opexModal, setOpexModal] = useState(false);
+  const [editingOpex, setEditingOpex] = useState(null);
+  const [opexForm, setOpexForm] = useState({ opex_id: "", amount: "" });
+  const [opexLoading, setOpexLoading] = useState(true);
+  
+  // Track action loading state for modals
+  const [actionLoading, setActionLoading] = useState(false);
+
   // ----------------- Load Materials -----------------
   const loadMaterials = async () => {
     try {
@@ -85,6 +105,24 @@ const RecipePage = () => {
       setPackagingList(res.data.packaging || []);
     } catch {
       toast.error("Failed to load packaging list");
+    }
+  };
+
+  const loadLabourList = async () => {
+    try {
+      const res = await getLabour();
+      setLabourList(res.data.labour || []);
+    } catch {
+      toast.error("Failed to load labour list");
+    }
+  };
+
+  const loadOpexList = async () => {
+    try {
+      const res = await getOpex();
+      setOpexList(res.data.opex || []);
+    } catch {
+      toast.error("Failed to load opex list");
     }
   };
 
@@ -131,6 +169,28 @@ const RecipePage = () => {
     setPackagingLoading(false);
   };
 
+  const loadProductLabour = async () => {
+    setLabourLoading(true);
+    try {
+      const res = await getProductLabour(productId);
+      setProductLabour(res.data.labour || []);
+    } catch {
+      toast.error("Failed to load product labour");
+    }
+    setLabourLoading(false);
+  };
+
+  const loadProductOpex = async () => {
+    setOpexLoading(true);
+    try {
+      const res = await getProductOpex(productId);
+      setProductOpex(res.data.opex || []);
+    } catch {
+      toast.error("Failed to load product opex");
+    }
+    setOpexLoading(false);
+  };
+
   // ----------------- Load Batch & Margin -----------------
   const loadProductSettings = async () => {
     setSettingsLoading(true);
@@ -152,83 +212,155 @@ const RecipePage = () => {
     async function init() {
       await loadMaterials();
       await loadPackagingList();
+      await loadLabourList();
+      await loadOpexList();
       await loadProductSettings();
+      await loadRecipe();
+      await loadProductPackaging();
+      await loadProductLabour();
+      await loadProductOpex();
     }
     init();
     // eslint-disable-next-line
   }, [productId]);
 
   // Load recipe & packaging after supporting arrays exist
-  useEffect(() => { if (materials.length) loadRecipe(); },
-  // eslint-disable-next-line
-  [materials]);
-  useEffect(() => { if (packagingList.length) loadProductPackaging(); },
-  // eslint-disable-next-line
-  [packagingList]);
+  useEffect(() => { if (materials.length) loadRecipe(); }, [materials]);
+  useEffect(() => { if (packagingList.length) loadProductPackaging(); }, [packagingList]);
 
   // ----------------- Handle Save Ingredient -----------------
   const handleSave = async () => {
     if (!formData.material_id || !formData.recipe_qty) return toast.error("Select material & enter qty");
-    const loadingToast = toast.loading(editLine ? "Updating ingredient..." : "Adding ingredient...");
+    setActionLoading(true);
     try {
       const body = { material_id: formData.material_id, recipe_qty: Number(formData.recipe_qty) };
       if (editLine) {
         await updateRecipeItem(editLine.id, body);
-        toast.success("Ingredient updated successfully", { id: loadingToast });
+        toast.success("Ingredient updated");
       } else {
         await addRecipeItem(productId, body);
-        toast.success("Ingredient added successfully", { id: loadingToast });
+        toast.success("Ingredient added");
       }
       setModalOpen(false);
       loadRecipe();
     } catch {
-      toast.error("Failed to save ingredient", { id: loadingToast });
+      toast.error("Failed to save ingredient");
+    } finally {
+        setActionLoading(false);
     }
   };
 
   // ----------------- Handle Delete Ingredient -----------------
   const handleDelete = async row => {
     if (!window.confirm("Remove this ingredient?")) return;
-    const loadingToast = toast.loading("Removing ingredient...");
     try {
       await deleteRecipeItem(row.id);
-      toast.success("Ingredient removed successfully", { id: loadingToast });
+      toast.success("Ingredient removed");
       loadRecipe();
     } catch {
-      toast.error("Failed to delete ingredient", { id: loadingToast });
+      toast.error("Failed to delete ingredient");
     }
   };
 
   // ----------------- Handle Save Packaging -----------------
   const handleSavePackaging = async () => {
     if (!packForm.packaging_id || !packForm.qty) return toast.error("Select packaging & enter qty");
-    const loadingToast = toast.loading(editingPackaging ? "Updating packaging..." : "Adding packaging...");
+    setActionLoading(true);
     try {
       const body = { product_id: productId, packaging_id: packForm.packaging_id, qty: Number(packForm.qty) };
       if (editingPackaging) {
         await updateProductPackaging(editingPackaging.id, body);
-        toast.success("Packaging updated successfully", { id: loadingToast });
+        toast.success("Packaging updated");
       } else {
         await addPackagingToProduct(body);
-        toast.success("Packaging added successfully", { id: loadingToast });
+        toast.success("Packaging added");
       }
       setPackagingModal(false);
       loadProductPackaging();
     } catch {
-      toast.error("Failed to save packaging", { id: loadingToast });
+      toast.error("Failed to save packaging");
+    } finally {
+        setActionLoading(false);
     }
   };
 
   // ----------------- Handle Delete Packaging -----------------
   const handleDeletePackaging = async row => {
     if (!window.confirm("Remove this packaging item?")) return;
-    const loadingToast = toast.loading("Removing packaging...");
     try {
       await deleteProductPackaging(row.id);
-      toast.success("Packaging removed successfully", { id: loadingToast });
+      toast.success("Packaging removed");
       loadProductPackaging();
     } catch {
-      toast.error("Delete failed", { id: loadingToast });
+      toast.error("Delete failed");
+    }
+  };
+
+  // ----------------- Handle Product Labour -----------------
+  const handleSaveLabour = async (e) => {
+    e?.preventDefault();
+    if (!labourForm.labour_id || !labourForm.amount) return toast.error("Select labour & enter amount");
+    setActionLoading(true);
+    try {
+      const body = { product_id: productId, labour_id: labourForm.labour_id, amount: Number(labourForm.amount) };
+      if (editingLabour) {
+        await updateProductLabour(editingLabour.id, body);
+        toast.success("Labour updated");
+      } else {
+        await addLabourToProduct(body);
+        toast.success("Labour added");
+      }
+      setLabourModal(false);
+      loadProductLabour();
+    } catch {
+      toast.error("Failed to save labour mapping");
+    } finally {
+        setActionLoading(false);
+    }
+  };
+
+  const handleDeleteLabour = async row => {
+    if (!window.confirm("Remove this labour association?")) return;
+    try {
+      await deleteProductLabour(row.id);
+      toast.success("Labour removed");
+      loadProductLabour();
+    } catch {
+      toast.error("Delete failed");
+    }
+  };
+
+  // ----------------- Handle Product Opex -----------------
+  const handleSaveOpex = async (e) => {
+    e?.preventDefault();
+    if (!opexForm.opex_id || !opexForm.amount) return toast.error("Select opex & enter amount");
+    setActionLoading(true);
+    try {
+      const body = { product_id: productId, opex_id: opexForm.opex_id, amount: Number(opexForm.amount) };
+      if (editingOpex) {
+        await updateProductOpex(editingOpex.id, body);
+        toast.success("Opex updated");
+      } else {
+        await addOpexToProduct(body);
+        toast.success("Opex added");
+      }
+      setOpexModal(false);
+      loadProductOpex();
+    } catch {
+      toast.error("Failed to save opex mapping");
+    } finally {
+        setActionLoading(false);
+    }
+  };
+
+  const handleDeleteOpex = async row => {
+    if (!window.confirm("Remove this opex association?")) return;
+    try {
+      await deleteProductOpex(row.id);
+      toast.success("Opex removed");
+      loadProductOpex();
+    } catch {
+      toast.error("Delete failed");
     }
   };
 
@@ -236,13 +368,12 @@ const RecipePage = () => {
   const handleComputeCost = async () => {
     if (!batchSize || batchSize <= 0) return toast.error("Enter a valid batch size before computing");
     setComputingCost(true);
-    const loadingToast = toast.loading("Computing cost breakdown...");
     try {
       const res = await computeCost(productId, { batchQty: batchSize, marginPercent });
       setCostResult(res.data.cost);
-      toast.success("Cost computed successfully!", { id: loadingToast });
+      toast.success("Cost computed successfully!");
     } catch {
-      toast.error("Failed to compute cost", { id: loadingToast });
+      toast.error("Failed to compute cost");
     }
     setComputingCost(false);
   };
@@ -250,13 +381,12 @@ const RecipePage = () => {
   const handleSaveStandardCost = async () => {
     if (!costResult) return toast.error("Compute cost first before saving standard cost");
     setStandardizingCost(true);
-    const loadingToast = toast.loading("Standardizing cost...");
     try {
       await standardize(productId, { marginPercent });
-      toast.success("Standard cost saved successfully!", { id: loadingToast });
+      toast.success("Standard cost saved successfully!");
     } catch (err) {
       console.error(err);
-      toast.error("Failed to save standard cost", { id: loadingToast });
+      toast.error("Failed to save standard cost");
     }
     setStandardizingCost(false);
   };
@@ -266,51 +396,17 @@ const RecipePage = () => {
     if (!batchSize || batchSize <= 0) return toast.error("Batch size must be greater than 0");
     if (marginPercent < 0 || marginPercent > 1) return toast.error("Margin must be between 0 and 1 (0.x)");
     setSavingSettings(true);
-    const loadingToast = toast.loading("Saving settings...");
     try {
       await saveProductSettings(productId, { batch_qty: batchSize, margin_percent: marginPercent });
-      toast.success("Batch size & margin saved successfully", { id: loadingToast });
+      toast.success("Batch size & margin saved successfully");
     } catch(err) {
       console.error(err);
-      toast.error("Failed to save batch size & margin", { id: loadingToast });
+      toast.error("Failed to save batch size & margin");
     }
     setSavingSettings(false);
   };
 
-  // ----------------- Table Columns -----------------
-  const ingredientColumns = [
-    { key: "material_name", label: "Material" },
-    { key: "recipe_qty", label: "Qty/Batch" },
-    {
-      key: "actions",
-      label: "Actions",
-      render: row => (
-        <div className="actions-cell">
-          <button className="btn-light" onClick={() => { setEditLine(row); setFormData({ material_id: row.material_id, recipe_qty: row.recipe_qty }); setModalOpen(true); }}>Edit</button>
-          <button className="btn-danger" onClick={() => handleDelete(row)}>Delete</button>
-        </div>
-      )
-    }
-  ];
-
-  const packagingColumns = [
-    { key: "packaging_name", label: "Packaging" },
-    { key: "qty", label: "Qty" },
-    { key: "cost_per_unit", label: "Cost/Unit" },
-    { key: "total_cost", label: "Total" },
-    {
-      key: "actions",
-      label: "Actions",
-      render: row => (
-        <div className="actions-cell">
-          <button className="btn-light" onClick={() => { setEditingPackaging(row); setPackForm({ packaging_id: row.packaging_id, qty: row.qty }); setPackagingModal(true); }}>Edit</button>
-          <button className="btn-danger" onClick={() => handleDeletePackaging(row)}>Delete</button>
-        </div>
-      )
-    }
-  ];
-
-  // ----------------- Prepare Chart Data -----------------
+  // ----------------- Chart Data -----------------
   const perUnitCostData = costResult ? [
     { name: "Recipe", value: costResult.recipe_cost },
     { name: "Packaging", value: costResult.packaging_cost },
@@ -327,325 +423,419 @@ const RecipePage = () => {
     { name: "COGS", value: costResult.COGS * batchSize },
   ] : [];
 
-  // ----------------- Skeleton Components -----------------
-  const TablesSkeleton = () => (
-    <div className="skeleton-table">
-      <div className="skeleton-table-row skeleton-table-header">
-        <div style={{height: "34px", marginBottom: "12px"}} className="skeleton-cell"></div>
-      </div>
-      {[1, 2, ].map(i => (
-        <div key={i} className="skeleton-table-row">
-          <div style={{height: "34px", marginBottom: "12px"}} className="skeleton-cell"></div>
-        </div>
-      ))}
-    </div>
-  );
-
-  const TableSkeleton = () => (
-    <div className="skeleton-table">
-      <div className="skeleton-table-row skeleton-table-header">
-        <div className="skeleton-cell"></div>
-        <div className="skeleton-cell"></div>
-        <div className="skeleton-cell"></div>
-      </div>
-      {[1, 2, 3, 4].map(i => (
-        <div key={i} className="skeleton-table-row">
-          <div className="skeleton-cell"></div>
-          <div className="skeleton-cell"></div>
-          <div className="skeleton-cell"></div>
-        </div>
-      ))}
-    </div>
-  );
 
   // ----------------- Render -----------------
   return (
-    <div className="page-wrapper">
-      <Header />
-      <Sidebar />
-      <main className="content-area">
+    <Layout>
+      <div className="page-container">
+        {actionLoading && <div className="loading-overlay"><div className="spinner"></div></div>}
 
         {/* Page Header */}
         <div className="page-header">
-          <div style={{display:"flex", justifyContent: "center", cursor: "pointer"}} className="breadcrumb" onClick={() => navigate("/products")}>
-            <FontAwesomeIcon icon={faArrowLeft} style={icon} />
-            <span style={{display:"inline-block", fontSize:"15px"}}>Products</span>
-          </div>
-          <h2 className="page-title">Recipe Setup</h2>
-          <div></div>
+           <div style={{display:'flex', alignItems:'center', gap:'12px'}}>
+              <div 
+                 onClick={() => navigate("/products")}
+                 style={{cursor:'pointer', padding:'8px', background:'#f1f5f9', borderRadius:'50%', width:'32px', height:'32px', display:'flex', alignItems:'center', justifyContent:'center'}}
+              >
+                 <FontAwesomeIcon icon={faArrowLeft} color="#64748b" />
+              </div>
+              <h2 className="page-title">Recipe Setup</h2>
+           </div>
         </div>
 
-        {/* Batch Size & Margin */}
-        {settingsLoading ? (
-          <TablesSkeleton />
-        ) : (
-          <div className="card">
-            <h3>Batch & Margin</h3>
-            <div className="form-group">
-              <label>Batch Size</label>
-              <input 
-                type="number" 
-                value={batchSize} 
-                onChange={e => setBatchSize(Number(e.target.value))} 
-                min="1"
+        {/* Batch Size & Margin Card */}
+        <div className="premium-card" style={{marginBottom:'24px'}}>
+             <h3 style={{fontSize:'18px', fontWeight:'700', color:'#1e293b', marginBottom:'20px'}}>Batch & Margin Configuration</h3>
+             <div className="form-grid">
+                 <div className="form-group">
+                    <label className="premium-label">Batch Size</label>
+                    <input 
+                        className="premium-input"
+                        type="number" 
+                        value={batchSize} 
+                        onChange={e => setBatchSize(Number(e.target.value))} 
+                        min="1"
+                        disabled={savingSettings}
+                    />
+                 </div>
+                 <div className="form-group">
+                    <label className="premium-label">Margin % (0.x)</label>
+                    <input 
+                        className="premium-input"
+                        type="number" 
+                        value={marginPercent} 
+                        onChange={e => setMarginPercent(Number(e.target.value))} 
+                        step="0.01" 
+                        min="0" 
+                        max="1" 
+                        placeholder="e.g. 0.2"
+                        disabled={savingSettings}
+                    />
+                 </div>
+             </div>
+             <button 
+                className="premium-btn primary"
+                style={{marginTop:'20px'}}
+                onClick={handleSaveBatchMargin} 
                 disabled={savingSettings}
-              />
-            </div>
-            <div className="form-group">
-              <label>Margin % (0.x)</label>
-              <input 
-                type="number" 
-                value={marginPercent} 
-                onChange={e => setMarginPercent(Number(e.target.value))} 
-                step="0.01" 
-                min="0" 
-                max="1" 
-                placeholder="Enter 0.2 for 20%"
-                disabled={savingSettings}
-              />
-            </div>
-            <button 
-              style={{backgroundColor:"rgb(217, 31, 34)"}} 
-              className="btn-primary" 
-              onClick={handleSaveBatchMargin}
-              disabled={savingSettings}
-            >
-              {savingSettings ? (
-                <>
-                  Saving...
-                </>
-              ) : "Save Batch & Margin"}
-            </button>
-          </div>
-        )}
+             >
+                {savingSettings ? "Saving Settings..." : "Save Configuration"}
+             </button>
+        </div>
 
         {/* Ingredients Table */}
-        <div className="card">
-          <div className="section-header">
-            <h3>Ingredients</h3>
-            <button 
-              style={{ backgroundColor:"rgb(217, 31, 34)" }} 
-              className="btn-primary" 
-              onClick={() => { 
-                setEditLine(null); 
-                setFormData({ material_id: "", recipe_qty: "" }); 
-                setModalOpen(true); 
-              }}
-            >
-              + Add Ingredient
-            </button>
-          </div>
-          {loading ? <TableSkeleton /> : <Table columns={ingredientColumns} data={recipeItems} />}
+        <div className="premium-card" style={{marginBottom:'24px'}}>
+            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px'}}>
+                <h3 style={{fontSize:'18px', fontWeight:'700', color:'#1e293b'}}>Ingredients</h3>
+                <button 
+                    className="premium-btn primary"
+                    onClick={() => { setEditLine(null); setFormData({ material_id: "", recipe_qty: "" }); setModalOpen(true); }}
+                >+ Add Ingredient</button>
+            </div>
+            
+            <div className="table-container" style={{marginTop:'0', border:'none', boxShadow:'none'}}>
+               <div className="premium-table-wrapper">
+                  <table className="premium-table">
+                     <thead>
+                        <tr>
+                            <th>Material</th>
+                            <th>Qty/Batch</th>
+                            <th style={{textAlign:'right'}}>Actions</th>
+                        </tr>
+                     </thead>
+                     <tbody>
+                        {recipeItems.length === 0 ? (
+                            <tr><td colSpan="3" className="empty-state">No ingredients added yet.</td></tr>
+                        ) : (
+                            recipeItems.map(item => (
+                                <tr key={item.id}>
+                                    <td style={{fontWeight:'600'}}>{item.material_name}</td>
+                                    <td>{item.recipe_qty}</td>
+                                    <td style={{textAlign:'right'}}>
+                                        <div className="actions-cell">
+                                            <button className="item-action-btn edit" onClick={() => { setEditLine(item); setFormData({ material_id: item.material_id, recipe_qty: item.recipe_qty }); setModalOpen(true); }}>Edit</button>
+                                            <button className="item-action-btn delete" onClick={() => handleDelete(item)}>Delete</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                     </tbody>
+                  </table>
+               </div>
+            </div>
         </div>
 
         {/* Packaging Table */}
-        <div className="card">
-          <div className="section-header">
-            <h3>Packaging</h3>
-            <button 
-              style={{ backgroundColor:"rgb(217, 31, 34)" }} 
-              className="btn-primary" 
-              onClick={() => { 
-                setEditingPackaging(null); 
-                setPackForm({ packaging_id: "", qty: "" }); 
-                setPackagingModal(true); 
-              }}
-            >
-              + Add Packaging
-            </button>
-          </div>
-          {packagingLoading ? <TableSkeleton /> : <Table columns={packagingColumns} data={productPackaging} />}
+        <div className="premium-card" style={{marginBottom:'24px'}}>
+            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px'}}>
+                <h3 style={{fontSize:'18px', fontWeight:'700', color:'#1e293b'}}>Packaging</h3>
+                <button 
+                    className="premium-btn primary"
+                    onClick={() => { setEditingPackaging(null); setPackForm({ packaging_id: "", qty: "" }); setPackagingModal(true); }}
+                >+ Add Packaging</button>
+            </div>
+            
+            <div className="table-container" style={{marginTop:'0', border:'none', boxShadow:'none'}}>
+               <div className="premium-table-wrapper">
+                  <table className="premium-table">
+                     <thead>
+                        <tr>
+                            <th>Packaging</th>
+                            <th>Qty</th>
+                            <th>Cost/Unit</th>
+                            <th>Total</th>
+                            <th style={{textAlign:'right'}}>Actions</th>
+                        </tr>
+                     </thead>
+                     <tbody>
+                        {productPackaging.length === 0 ? (
+                            <tr><td colSpan="5" className="empty-state">No packaging added yet.</td></tr>
+                        ) : (
+                            productPackaging.map(p => (
+                                <tr key={p.id}>
+                                    <td style={{fontWeight:'600'}}>{p.packaging_name}</td>
+                                    <td>{p.qty}</td>
+                                    <td>₦{p.cost_per_unit}</td>
+                                    <td>₦{p.total_cost}</td>
+                                    <td style={{textAlign:'right'}}>
+                                        <div className="actions-cell">
+                                            <button className="item-action-btn edit" onClick={() => { setEditingPackaging(p); setPackForm({ packaging_id: p.packaging_id, qty: p.qty }); setPackagingModal(true); }}>Edit</button>
+                                            <button className="item-action-btn delete" onClick={() => handleDeletePackaging(p)}>Delete</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                     </tbody>
+                  </table>
+               </div>
+            </div>
         </div>
 
-        {/* Cost Panel with Charts */}
-        <div className="costing-panel">
-          <button 
-            style={{ backgroundColor:"rgb(217, 31, 34)" }} 
-            className="btn-primary" 
-            onClick={handleComputeCost}
-            disabled={computingCost}
-          >
-            {computingCost ? (
-              <>
-                Computing...
-              </>
-            ) : "Compute Cost"}
-          </button>
+        {/* Labour & Opex Tables (Grid) */}
+        <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(500px, 1fr))', gap:'24px', marginBottom:'24px'}}>
+             {/* Labour */}
+             <div className="premium-card">
+                 <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px'}}>
+                    <h3 style={{fontSize:'18px', fontWeight:'700', color:'#1e293b'}}>Direct Labour</h3>
+                    <button 
+                        className="premium-btn primary"
+                        onClick={() => { setEditingLabour(null); setLabourForm({ labour_id: "", amount: "" }); setLabourModal(true); }}
+                    >+ Add</button>
+                 </div>
+                 <div className="table-container" style={{marginTop:'0', border:'none', boxShadow:'none'}}>
+                 <div className="premium-table-wrapper">
+                    <table className="premium-table">
+                        <thead>
+                            <tr>
+                                <th>Labour Item</th>
+                                <th>Amount/Batch</th>
+                                <th style={{textAlign:'right'}}>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {productLabour.length === 0 ? (
+                                <tr><td colSpan="3" className="empty-state">No labour costs.</td></tr>
+                            ) : (
+                                productLabour.map(l => (
+                                    <tr key={l.id}>
+                                        <td style={{fontWeight:'600'}}>{l.labour_name}</td>
+                                        <td>₦{Number(l.amount).toLocaleString()}</td>
+                                        <td style={{textAlign:'right'}}>
+                                            <div className="actions-cell">
+                                                <button className="item-action-btn edit" onClick={() => { setEditingLabour(l); setLabourForm({ labour_id: l.labour_id, amount: l.amount }); setLabourModal(true); }}>Edit</button>
+                                                <button className="item-action-btn delete" onClick={() => handleDeleteLabour(l)}>Delete</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                 </div>
+                 </div>
+             </div>
 
-          {computingCost && !costResult && (
-            <div className="cost-results">
-              <div className="skeleton-title"></div>
-              <div className="skeleton-chart"></div>
-              <div className="skeleton-title"></div>
-              <div className="skeleton-chart"></div>
-              <div className="skeleton-cost-lines">
-                {[1,2,3,4,5,6,7,8,9,10,11,12,13,14].map(i => (
-                  <div key={i} className="skeleton-cost-line"></div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {costResult && !computingCost && (
-            <div className="cost-results">
-              <h3>Cost Breakdown (Per Unit)</h3>
-
-              {/* Pie Chart */}
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={perUnitCostData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    fill="#8884d8"
-                    label={(entry) => `₦${round(entry.value, 2).toFixed(2)}`}
-                    isAnimationActive={true}
-                  >
-                    {perUnitCostData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <ReTooltip formatter={(value) => `₦${Number(value).toFixed(2)}`} />
-                  <ReLegend />
-                </PieChart>
-              </ResponsiveContainer>
-
-              {/* Bar Chart for Per Batch */}
-              <h3>Cost Breakdown (Per Batch)</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={perBatchCostData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <ReTooltip formatter={(value) => `₦${round(value.toFixed(2))}`} />
-                  <ReLegend />
-                  <Bar dataKey="value" fill="#82ca9d" isAnimationActive={true} />
-                </BarChart>
-              </ResponsiveContainer>
-
-              {/* Textual list of costs */}
-         <div className="cost-card">
-  <h3 className="cost-title">Cost Breakdown</h3>
-
-  <div className="cost-table-wrapper">
-    <table className="cost-table">
-      <thead>
-        <tr>
-          <th>Cost Item</th>
-          <th>Per Unit (₦)</th>
-          <th>Per Batch (₦)</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        <tr>
-          <td>Recipe Cost</td>
-          <td>{round(costResult.recipe_cost)}</td>
-          <td>{round(costResult.recipe_cost * batchSize)}</td>
-        </tr>
-
-        <tr>
-          <td>Packaging</td>
-          <td>{round(costResult.packaging_cost)}</td>
-          <td>{round(costResult.packaging_cost * batchSize)}</td>
-        </tr>
-
-        <tr>
-          <td>Labour</td>
-          <td>{round(costResult.labour_cost)}</td>
-          <td>{round(costResult.labour_cost * batchSize)}</td>
-        </tr>
-
-        <tr>
-          <td>OPEX</td>
-          <td>{round(costResult.opex_cost)}</td>
-          <td>{round(costResult.opex_cost * batchSize)}</td>
-        </tr>
-
-        <tr className="highlight">
-          <td>COGS</td>
-          <td>{round(costResult.COGS)}</td>
-          <td>{round(costResult.COGS * batchSize)}</td>
-        </tr>
-
-        <tr className="highlight">
-          <td>TCOP</td>
-          <td>{round(costResult.TCOP)}</td>
-          <td>{round(costResult.TCOP * batchSize)}</td>
-        </tr>
-
-        <tr className="selling">
-          <td>Selling Price</td>
-          <td>{round(costResult.selling_price || 0)}</td>
-          <td>—</td>
-        </tr>
-
-        <tr className="margin">
-          <td>Margin</td>
-          <td colSpan="2">
-            {(costResult.margin_percent
-              ? (costResult.margin_percent * 100).toFixed(2)
-              : "0")}%
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-              <button 
-                style={{ backgroundColor:"rgb(217, 31, 34)" }} 
-                className="btn-primary full-width" 
-                onClick={handleSaveStandardCost}
-                disabled={standardizingCost}
-              >
-                {standardizingCost ? (
-                  <>
-                    Standardizing...
-                  </>
-                ) : "Save Standard Cost"}
-              </button>
-            </div>
-          )}
+             {/* Opex */}
+             <div className="premium-card">
+                 <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px'}}>
+                    <h3 style={{fontSize:'18px', fontWeight:'700', color:'#1e293b'}}>Direct Opex</h3>
+                    <button 
+                        className="premium-btn primary"
+                        onClick={() => { setEditingOpex(null); setOpexForm({ opex_id: "", amount: "" }); setOpexModal(true); }}
+                    >+ Add</button>
+                 </div>
+                 <div className="table-container" style={{marginTop:'0', border:'none', boxShadow:'none'}}>
+                 <div className="premium-table-wrapper">
+                    <table className="premium-table">
+                        <thead>
+                            <tr>
+                                <th>Opex Item</th>
+                                <th>Amount/Batch</th>
+                                <th style={{textAlign:'right'}}>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {productOpex.length === 0 ? (
+                                <tr><td colSpan="3" className="empty-state">No Opex costs.</td></tr>
+                            ) : (
+                                productOpex.map(o => (
+                                    <tr key={o.id}>
+                                        <td style={{fontWeight:'600'}}>{o.opex_name}</td>
+                                        <td>₦{Number(o.amount).toLocaleString()}</td>
+                                        <td style={{textAlign:'right'}}>
+                                            <div className="actions-cell">
+                                                <button className="item-action-btn edit" onClick={() => { setEditingOpex(o); setOpexForm({ opex_id: o.opex_id, amount: o.amount }); setOpexModal(true); }}>Edit</button>
+                                                <button className="item-action-btn delete" onClick={() => handleDeleteOpex(o)}>Delete</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                 </div>
+                 </div>
+             </div>
         </div>
 
+        {/* Cost Analysis Panel */}
+        <div className="premium-card" style={{borderLeft:'4px solid #d91f22'}}>
+             <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'24px'}}>
+                 <h3 style={{fontSize:'20px', fontWeight:'800', color:'#1e293b'}}>Cost Analysis</h3>
+                 <button 
+                    className="premium-btn primary"
+                    onClick={handleComputeCost}
+                    disabled={computingCost}
+                 >
+                    {computingCost ? "Computing..." : "Compute Cost"}
+                 </button>
+             </div>
+
+             {costResult && !computingCost && (
+                <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(300px, 1fr))', gap:'32px'}}>
+                    <div>
+                        <h4 style={{marginBottom:'16px', color:'#64748b'}}>Breakdown Per Unit (Pie)</h4>
+                        <ResponsiveContainer width="100%" height={300}>
+                            <PieChart>
+                                <Pie data={perUnitCostData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} fill="#8884d8" label={({value}) => `₦${round(value).toLocaleString()}`}>
+                                    {perUnitCostData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                                </Pie>
+                                <ReTooltip formatter={(value) => `₦${Number(value).toLocaleString()}`} />
+                                <ReLegend />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+
+                    <div>
+                        <h4 style={{marginBottom:'16px', color:'#64748b'}}>Breakdown Per Batch (Bar)</h4>
+                        <ResponsiveContainer width="100%" height={300}>
+                            <BarChart data={perBatchCostData}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="name" />
+                                <YAxis />
+                                <ReTooltip formatter={(value) => `₦${round(value).toLocaleString()}`} />
+                                <Bar dataKey="value" fill="#82ca9d" />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+
+                    <div style={{gridColumn:'1 / -1'}}>
+                         <div className="table-container" style={{border:'none', boxShadow:'none', background:'#f8fafc', padding:'20px', borderRadius:'12px'}}>
+                            <table className="premium-table" style={{background:'transparent'}}>
+                                <thead>
+                                    <tr>
+                                        <th>Cost Component</th>
+                                        <th>Per Unit (₦)</th>
+                                        <th>Per Batch (₦)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Recipe Cost</td>
+                                        <td>{round(costResult.recipe_cost).toLocaleString()}</td>
+                                        <td>{round(costResult.recipe_cost * batchSize).toLocaleString()}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Packaging Cost</td>
+                                        <td>{round(costResult.packaging_cost).toLocaleString()}</td>
+                                        <td>{round(costResult.packaging_cost * batchSize).toLocaleString()}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Labour Cost</td>
+                                        <td>{round(costResult.labour_cost).toLocaleString()}</td>
+                                        <td>{round(costResult.labour_cost * batchSize).toLocaleString()}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>OPEX Cost</td>
+                                        <td>{round(costResult.opex_cost).toLocaleString()}</td>
+                                        <td>{round(costResult.opex_cost * batchSize).toLocaleString()}</td>
+                                    </tr>
+                                    <tr style={{background:'#e2e8f0', fontWeight:'700'}}>
+                                        <td>COGS (Total)</td>
+                                        <td>{round(costResult.COGS).toLocaleString()}</td>
+                                        <td>{round(costResult.COGS * batchSize).toLocaleString()}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Margin ({ (costResult.margin_percent * 100).toFixed(0) }%)</td>
+                                        <td colSpan="2" style={{color:'#166534', fontWeight:'600'}}>
+                                            Selling Price: ₦{round(costResult.selling_price || 0).toLocaleString()}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                         </div>
+
+                         <button 
+                             className="submit-btn" 
+                             style={{marginTop:'24px', maxWidth:'300px'}}
+                             onClick={handleSaveStandardCost}
+                             disabled={standardizingCost}
+                         >
+                             {standardizingCost ? "Saving..." : "Save Standard Cost"}
+                         </button>
+                    </div>
+                </div>
+             )}
+        </div>
+
+        {/* --- Modals --- */}
         {/* Ingredient Modal */}
-        <Modals open={modalOpen} title={editLine ? "Edit Ingredient" : "Add Ingredient"} onClose={() => setModalOpen(false)}>
-          <div className="modal-form">
-            <label>Material</label>
-            <select value={formData.material_id} onChange={e => setFormData({ ...formData, material_id: e.target.value })}>
-              <option value="">-- Select Material --</option>
-              {materials.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-            </select>
-            <label>Qty Per Batch</label>
-            <input type="number" value={formData.recipe_qty} onChange={e => setFormData({ ...formData, recipe_qty: e.target.value })} />
-            <button className="btn-primary full-width" onClick={handleSave}>{editLine ? "Update" : "Save"}</button>
-          </div>
-        </Modals>
+        <Modal visible={modalOpen} title={editLine ? "Edit Ingredient" : "Add Ingredient"} onClose={() => setModalOpen(false)}>
+            <div className="vendor-form">
+                <div className="form-group">
+                    <label className="premium-label">Material</label>
+                    <select className="premium-input" value={formData.material_id} onChange={e => setFormData({ ...formData, material_id: e.target.value })}>
+                        <option value="">Select Material</option>
+                        {materials.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                    </select>
+                </div>
+                <div className="form-group">
+                    <label className="premium-label">Quantity Per Batch</label>
+                    <input className="premium-input" type="number" value={formData.recipe_qty} onChange={e => setFormData({ ...formData, recipe_qty: e.target.value })} />
+                </div>
+                <button className="submit-btn" onClick={handleSave} disabled={actionLoading}>{actionLoading ? "Saving..." : (editLine ? "Update" : "Save")}</button>
+            </div>
+        </Modal>
 
         {/* Packaging Modal */}
-        <Modals open={packagingModal} title={editingPackaging ? "Edit Packaging" : "Add Packaging"} onClose={() => setPackagingModal(false)}>
-          <div className="modal-form">
-            <label>Packaging</label>
-            <select value={packForm.packaging_id} onChange={e => setPackForm({ ...packForm, packaging_id: e.target.value })}>
-              <option value="">-- Select Packaging --</option>
-              {packagingList.map(p => <option key={p.id} value={p.id}>{p.name} (₦{p.cost_per_unit})</option>)}
-            </select>
-            <label>Quantity</label>
-            <input type="number" value={packForm.qty} onChange={e => setPackForm({ ...packForm, qty: e.target.value })} />
-            <button className="btn-primary full-width" onClick={handleSavePackaging}>{editingPackaging ? "Update" : "Save"}</button>
-          </div>
-        </Modals>
+        <Modal visible={packagingModal} title={editingPackaging ? "Edit Packaging" : "Add Packaging"} onClose={() => setPackagingModal(false)}>
+            <div className="vendor-form">
+                <div className="form-group">
+                    <label className="premium-label">Packaging</label>
+                    <select className="premium-input" value={packForm.packaging_id} onChange={e => setPackForm({ ...packForm, packaging_id: e.target.value })}>
+                        <option value="">Select Packaging</option>
+                        {packagingList.map(p => <option key={p.id} value={p.id}>{p.name} (₦{p.cost_per_unit})</option>)}
+                    </select>
+                </div>
+                <div className="form-group">
+                    <label className="premium-label">Quantity</label>
+                    <input className="premium-input" type="number" value={packForm.qty} onChange={e => setPackForm({ ...packForm, qty: e.target.value })} />
+                </div>
+                <button className="submit-btn" onClick={handleSavePackaging} disabled={actionLoading}>{actionLoading ? "Saving..." : (editingPackaging ? "Update" : "Save")}</button>
+            </div>
+        </Modal>
 
-      </main>
-    </div>
+        {/* Labour Modal */}
+        <Modal visible={labourModal} title={editingLabour ? "Edit Labour" : "Add Labour"} onClose={() => setLabourModal(false)}>
+            <div className="vendor-form">
+                <div className="form-group">
+                    <label className="premium-label">Labour Item</label>
+                    <select className="premium-input" value={labourForm.labour_id} onChange={e => setLabourForm({ ...labourForm, labour_id: e.target.value })}>
+                        <option value="">Select Labour</option>
+                        {labourList.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+                    </select>
+                </div>
+                <div className="form-group">
+                    <label className="premium-label">Amount (₦)</label>
+                    <input className="premium-input" type="number" value={labourForm.amount} onChange={e => setLabourForm({ ...labourForm, amount: e.target.value })} />
+                </div>
+                <button className="submit-btn" onClick={handleSaveLabour} disabled={actionLoading}>{actionLoading ? "Saving..." : (editingLabour ? "Update" : "Save")}</button>
+            </div>
+        </Modal>
+
+        {/* Opex Modal */}
+        <Modal visible={opexModal} title={editingOpex ? "Edit Opex" : "Add Opex"} onClose={() => setOpexModal(false)}>
+            <div className="vendor-form">
+                <div className="form-group">
+                    <label className="premium-label">Opex Item</label>
+                    <select className="premium-input" value={opexForm.opex_id} onChange={e => setOpexForm({ ...opexForm, opex_id: e.target.value })}>
+                        <option value="">Select Opex</option>
+                        {opexList.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+                    </select>
+                </div>
+                <div className="form-group">
+                    <label className="premium-label">Amount (₦)</label>
+                    <input className="premium-input" type="number" value={opexForm.amount} onChange={e => setOpexForm({ ...opexForm, amount: e.target.value })} />
+                </div>
+                <button className="submit-btn" onClick={handleSaveOpex} disabled={actionLoading}>{actionLoading ? "Saving..." : (editingOpex ? "Update" : "Save")}</button>
+            </div>
+        </Modal>
+
+      </div>
+    </Layout>
   );
 };
 
-export default RecipePage;    
+export default RecipePage;

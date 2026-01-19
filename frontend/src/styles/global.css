@@ -1,0 +1,99 @@
+@import './variables.css';
+
+/* Remove default margins/paddings */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-main);
+  background-color: var(--color-bg-body);
+  color: var(--color-text-body);
+  -webkit-font-smoothing: antialiased; /* Crisp text */
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Hide scrollbar for cleaner UI but keep functionality */
+/* Works in Chrome/Safari/Edge */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* --- 🧊 Glass Utilities --- */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-backdrop);
+  -webkit-backdrop-filter: var(--glass-backdrop);
+  border: 1px solid var(--glass-border);
+}
+
+/* --- 🃏 Card Utility --- */
+.card-base {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card-base:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* --- 🔘 Button Reset --- */
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* --- 🔗 Link Reset --- */
+a {
+  text-decoration: none;
+  color: inherit;
+  transition: color 0.2s;
+}
+
+/* --- headings --- */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--color-text-main);
+  margin-top: 0;
+}
+
+/* --- 📊 Table Responsiveness --- */
+@media (max-width: 768px) {
+  table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Compact Typography */
+  h1 { font-size: 24px!important; }
+  h2 { font-size: 20px!important; }
+  h3 { font-size: 18px!important; }
+  p, span, li, a { font-size: 14px; }
+  
+  /* Compact Inputs */
+  input, select, textarea {
+    font-size: 14px!important;
+    padding: 8px 10px!important;
+  }
+}
+
+

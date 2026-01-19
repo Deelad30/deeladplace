@@ -1,4 +1,5 @@
 const Expense = require('../models/Expense');
+const logger = require('../utils/logger');
 
 exports.createExpense = async (req, res) => {
   try {
@@ -33,7 +34,7 @@ exports.createExpense = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Create expense error:', error);
+    logger.error('Create expense error', { error: error.message, tenantId });
     res.status(500).json({
       success: false,
       message: "Error creating expense"
@@ -54,7 +55,7 @@ exports.getExpenseSummary = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Get expense summary error:', error);
+    logger.error('Get expense summary error', { error: error.message, tenantId });
     res.status(500).json({
       success: false,
       message: 'Error fetching expense summary'
@@ -75,7 +76,7 @@ exports.getAllExpenses = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Get all expenses error:', error);
+    logger.error('Get all expenses error', { error: error.message, tenantId });
     res.status(500).json({
       success: false,
       message: 'Error fetching expenses'
@@ -104,7 +105,7 @@ exports.updateExpense = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Update expense error:', error);
+    logger.error('Update expense error', { error: error.message, tenantId, expenseId: id });
     res.status(500).json({
       success: false,
       message: 'Failed to update expense'
@@ -133,7 +134,7 @@ exports.deleteExpense = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Delete expense error:', error);
+    logger.error('Delete expense error', { error: error.message, tenantId, expenseId: id });
     res.status(500).json({
       success: false,
       message: 'Failed to delete expense'

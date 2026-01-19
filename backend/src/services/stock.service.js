@@ -9,17 +9,21 @@ async function recordStockMovement({
   costPerUnit = null,
   vendorId = null,
   reference = null,
-  createdBy = null
+  createdBy = null,
+  source = null,
+  destination = null,
+  notes = null,
+  batchNumber = null
 }) {
   const totalCost = costPerUnit ? Number(costPerUnit) * Number(qty) : null;
 
   const result = await db.query(`
     INSERT INTO stock_movements
-      (tenant_id, item_type, item_id, movement_type, qty, vendor_id, reference, created_by, cost_per_unit, total_cost)
+      (tenant_id, item_type, item_id, movement_type, qty, vendor_id, reference, created_by, cost_per_unit, total_cost, source, destination, notes, batch_number)
     VALUES
-      ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
     RETURNING *
-  `, [tenantId, itemType, itemId, movementType, qty, vendorId, reference, createdBy, costPerUnit, totalCost]);
+  `, [tenantId, itemType, itemId, movementType, qty, vendorId, reference, createdBy, costPerUnit, totalCost, source, destination, notes, batchNumber]);
 
   return result.rows[0];
 }

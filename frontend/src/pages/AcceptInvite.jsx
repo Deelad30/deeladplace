@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import api from "../api/axios"; 
 import LoadingSpinner from "../components/common/LoadingSpinner";
-import "../styles/components/ResetPassword.css"; // reuse same layout + styling
+import AuthLayout from "../components/auth/AuthLayout";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 
 const AcceptInvite = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [showPassword2, setShowPassword2] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [name, setName] = useState("");
@@ -58,135 +59,87 @@ const AcceptInvite = () => {
     }
   };
 
-  const pageVariants = {
-    hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { duration: 0.5 } },
-    exit: { opacity: 0, transition: { duration: 0.5 } },
-  };
-
   if (!validToken) {
     return (
-      <motion.div
-        className="login"
-        variants={pageVariants}
-        initial="hidden"
-        animate="show"
-        exit="exit"
-      >
-        <main className="reset__main" style={{ paddingTop: "80px" }}>
-          <div className="reset__text">
-            <h1 className="reset__heading">Invalid Invitation Link</h1>
-            <p className="reset__subtext">
-              This invitation link is invalid or has expired.
-            </p>
-            <Link className="btn btn-shadow" to="/login">
-              Go to Login
-            </Link>
-          </div>
-        </main>
-      </motion.div>
+      <AuthLayout title="Invalid Invite" subtitle="This invitation link is invalid or has expired.">
+         <div className="form-header">
+            <h2>Invalid Link</h2>
+            <p>Please contact your administrator for a new invite.</p>
+         </div>
+         <Link to="/login" className="auth-link" style={{display:'block', textAlign:'center', marginTop: '20px'}}>
+             Go to Login
+         </Link>
+      </AuthLayout>
     );
   }
 
   return (
-    <motion.div
-      className="login"
-      variants={pageVariants}
-      initial="hidden"
-      animate="show"
-      exit="exit"
-    >
-      <main className="reset__main" style={{ paddingTop: "80px" }}>
-
-        {/* LEFT SECTION */}
-        <div className="reset__text">
-          <h1 className="reset__heading">Activate Your Account</h1>
-          <p className="reset__subtext">
-            Set your name and password to complete your registration.
-          </p>
-          <Link to="/login" className="reset__back">
-            ← Back to Login
-          </Link>
-        </div>
-
-        {/* RIGHT SECTION (FORM) */}
-        <form onSubmit={handleSubmit} className="reset__form">
+    <AuthLayout title="Activate Account" subtitle="Set your details to complete registration.">
+      <form onSubmit={handleSubmit}>
+         <div className="form-header">
+            <h2>Welcome Aboard!</h2>
+            <p>Complete your profile to get started.</p>
+         </div>
 
           {error && <div className="error-message">{error}</div>}
           {message && <div className="success-message">{message}</div>}
 
-          {/* Name */}
-          <label className="reset__input">
+          <div className="auth-input-group">
+            <label>Full Name</label>
             <input
               type="text"
+              className="auth-input"
               placeholder="Your Full Name"
-              className="reset__input--box"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
               disabled={loading || message}
             />
-          </label>
+          </div>
 
-          {/* Password */}
-          <label className="reset__input">
-            <div className="password-wrapper">
+          <div className="auth-input-group">
+            <label>Password</label>
+            <div className="password-input-wrapper">
               <input
                 type={showPassword ? "text" : "password"}
+                className="auth-input"
                 placeholder="Password"
-                className="reset__input--box"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                disabled={loading || message}
                 minLength="6"
+                disabled={loading || message}
               />
-              <span
-                className="toggle-password pointer"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? "🔓" : "🔒"}
-              </span>
+               <span className="toggle-password" onClick={() => setShowPassword(!showPassword)}>
+                  <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+               </span>
             </div>
-          </label>
+          </div>
 
-          {/* Confirm Password */}
-          <label className="reset__input">
-            <div className="password-wrapper">
+          <div className="auth-input-group">
+            <label>Confirm Password</label>
+            <div className="password-input-wrapper">
               <input
-                type={showPassword2 ? "text" : "password"}
+                type={showConfirm ? "text" : "password"}
+                className="auth-input"
                 placeholder="Confirm Password"
-                className="reset__input--box"
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
                 required
-                disabled={loading || message}
                 minLength="6"
+                disabled={loading || message}
               />
-              <span
-                className="toggle-password pointer"
-                onClick={() => setShowPassword2(!showPassword2)}
-              >
-                {showPassword2 ? "🔓" : "🔒"}
-              </span>
+               <span className="toggle-password" onClick={() => setShowConfirm(!showConfirm)}>
+                  <FontAwesomeIcon icon={showConfirm ? faEyeSlash : faEye} />
+               </span>
             </div>
-          </label>
+          </div>
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            className="btn btn-shadow"
-            disabled={loading || message}
-          >
-            {loading ? <LoadingSpinner size="small" /> : "Activate Account"}
+          <button type="submit" className="btn-primary" disabled={loading || message}>
+             {loading ? "Activating..." : "Activate Account"}
           </button>
-
-          {message && (
-            <p className="reset__note">{message}</p>
-          )}
-        </form>
-      </main>
-    </motion.div>
+      </form>
+    </AuthLayout>
   );
 };
 

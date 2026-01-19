@@ -38,6 +38,20 @@ FROM opex_items
 WHERE tenant_id = $1
 `;
 
+const GET_LABOUR_FOR_PRODUCT = `
+  SELECT pl.id, pl.labour_id, pl.amount, l.name AS labour_name
+  FROM product_labour pl
+  JOIN labour_costs l ON l.id = pl.labour_id
+  WHERE pl.product_id = $1 AND pl.tenant_id = $2
+`;
+
+const GET_OPEX_FOR_PRODUCT = `
+  SELECT po.id, po.opex_id, po.amount, o.name AS opex_name
+  FROM product_opex po
+  JOIN opex_items o ON o.id = po.opex_id
+  WHERE po.product_id = $1 AND po.tenant_id = $2
+`;
+
 const GET_LATEST_STANDARD = `
   SELECT * FROM standard_costs
   WHERE product_id = $1 AND tenant_id = $2
@@ -132,9 +146,13 @@ const DELETE_MATERIAL = `
     DELETE FROM raw_materials
     WHERE id=$1 AND tenant_id=$2
 `
-const LIST_PURCHASES = `SELECT p.*, m.name AS material_name
+const LIST_PURCHASES = `SELECT 
+        p.*, 
+        m.name AS material_name,
+        v.name AS vendor_name
     FROM material_purchases p
     JOIN raw_materials m ON m.id=p.material_id
+    LEFT JOIN vendors v ON v.id=p.vendor_id
     WHERE p.tenant_id=$1
     ORDER BY p.id DESC
 `
@@ -143,6 +161,12 @@ const CREATE_PURCHASE = `INSERT INTO material_purchases
     VALUES ($1,$2,$3,$4,$5,$6,$7)
     RETURNING *`
 
+
+const GET_MATERIAL_BY_NAME = `
+    SELECT id FROM raw_materials 
+    WHERE LOWER(name) = LOWER($1) AND tenant_id = $2
+    LIMIT 1;
+`;
 
 module.exports = {
   UPDATE_MATERIAL,
@@ -162,5 +186,8 @@ module.exports = {
   GET_ACTUAL_MATERIAL_USAGE,
   GET_MATERIAL_UNIT_COST,
   GET_PRODUCT_SALES_QTY,
-  GET_POS_ACTUAL_SALES   
+  GET_POS_ACTUAL_SALES,
+  GET_MATERIAL_BY_NAME,
+  GET_LABOUR_FOR_PRODUCT,
+  GET_OPEX_FOR_PRODUCT
 };

@@ -1,4 +1,5 @@
 const db = require('../config/database');
+const logger = require('../utils/logger');
 
 // CREATE OPEX
 exports.createOpex = async (req, res) => {
@@ -28,7 +29,7 @@ exports.createOpex = async (req, res) => {
 
     res.json({ success: true, opex: result.rows[0] });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to create OPEX item', { error: err.message, tenantId });
     res.status(500).json({ success: false, message: "Failed to create OPEX item" });
   }
 };
@@ -45,7 +46,7 @@ exports.getOpex = async (req, res) => {
 
     res.json({ success: true, opex: result.rows });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to fetch OPEX items', { error: err.message, tenantId });
     res.status(500).json({ success: false, message: "Failed to fetch OPEX items" });
   }
 };
@@ -83,7 +84,7 @@ exports.updateOpex = async (req, res) => {
 
     res.json({ success: true, opex: result.rows[0] });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to update OPEX item', { error: err.message, tenantId, opexId });
     res.status(500).json({ success: false, message: "Failed to update OPEX item" });
   }
 };
@@ -105,7 +106,7 @@ exports.deleteOpex = async (req, res) => {
 
     res.json({ success: true, message: "OPEX item deleted" });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to delete OPEX item', { error: err.message, tenantId, opexId });
     res.status(500).json({ success: false, message: "Failed to delete OPEX item" });
   }
 };

@@ -1,5 +1,6 @@
 // sic.controller.js
 const db = require('../config/database');
+const logger = require('../utils/logger');
 
 // Raw SIC
 // RAW MATERIAL SIC (with variance)
@@ -31,43 +32,44 @@ async function submitRawSIC(req, res) {
       });
     }
 
-    const sysRes = await db.query(
-      `SELECT COALESCE(SUM(qty), 0) AS system_usage
-       FROM stock_movements
-       WHERE tenant_id = $1
-         AND item_type = 'material'
-         AND item_id = $2
-         AND movement_type = 'issue'
-         AND DATE(created_at) = $3`,
-      [tenantId, material_id, date]
+    // 1. Calculate EXPECTED usage from Recipes x Sales
+    const expectedRes = await db.query(
+      `SELECT COALESCE(SUM(r.recipe_qty * ps.qty), 0) AS expected_usage
+       FROM recipes r
+       JOIN pos_sales ps ON ps.product_id = r.product_id
+       WHERE r.material_id = $1
+         AND ps.tenant_id = $2
+         AND DATE(ps.created_at) = $3`,
+      [material_id, tenantId, date]
     );
+    const expected_usage = Number(expectedRes.rows[0].expected_usage || 0);
 
-    const system_usage = Number(sysRes.rows[0].system_usage || 0);
-
-    // 2️⃣ Expected usage from SIC formula
-    const expected_usage =
+    // 2. Calculate ACTUAL usage from manual physical counts
+    // Formula: actual_usage = opening + issues - (waste + closing)
+    const actual_usage =
       Number(opening_qty) +
       Number(issues_qty) -
       (Number(closing_qty) + Number(waste_qty));
 
-    // 3️⃣ Variance = expected - system
-    const variance = expected_usage - system_usage;
+    // 3. Calculate Variance
+    // Formula: variance = expected - actual
+    const variance = expected_usage - actual_usage;
 
-    // 4️⃣ Get cost per unit
+    // 4. Get Cost for Variance Value
     const costRes = await db.query(
-      `SELECT COALESCE(AVG(cost_per_unit), 0) AS cost
-       FROM stock_movements
+      `SELECT COALESCE(average_cost, 0) AS cost
+       FROM stock_balance
        WHERE tenant_id = $1
          AND item_type = 'material'
-         AND item_id = $2
-         AND cost_per_unit IS NOT NULL`,
+         AND item_id = $2`,
       [tenantId, material_id]
     );
-
-    const cost_per_unit = Number(costRes.rows[0].cost || 0);
+    const cost_per_unit = Number(costRes.rows[0]?.cost || 0);
     const variance_value = variance * cost_per_unit;
 
-    // 5️⃣ Insert SIC row
+    // 5. Save to DB (repurposing columns to avoid schema changes for now, but logical names match)
+    // expected_usage (DB col) -> expected_usage (Recipe)
+    // system_usage (DB col) -> actual_usage (Manual)
     const result = await db.query(
       `INSERT INTO sic_raw_materials
        (tenant_id, material_id, date,
@@ -84,8 +86,8 @@ async function submitRawSIC(req, res) {
         issues_qty,
         waste_qty,
         closing_qty,
-        expected_usage,
-        system_usage,
+        expected_usage, // recipe usage
+        actual_usage,   // manual count results
         variance,
         variance_value,
         override_reason,
@@ -95,7 +97,7 @@ async function submitRawSIC(req, res) {
 
     res.json({ success: true, sic: result.rows[0] });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to submit raw SIC', { error: err.message, tenantId, materialId: material_id });
     res.status(500).json({
       success: false,
       message: 'Failed to submit raw SIC'
@@ -120,19 +122,20 @@ async function submitProductSIC(req, res) {
   } = req.body;
 
   try {
-   const duplicateProduct = await db.query(
-  `SELECT id FROM sic_products
-   WHERE tenant_id = $1 AND product_id = $2 AND date = $3`,
-  [tenantId, product_id, date]
-);
+    const duplicateProduct = await db.query(
+      `SELECT id FROM sic_products
+       WHERE tenant_id = $1 AND product_id = $2 AND date = $3`,
+      [tenantId, product_id, date]
+    );
 
-if (duplicateProduct.rows.length > 0) {
-  return res.status(400).json({
-    success: false,
-    message: 'SIC for this product and date has already been submitted.'
-  });
-}
+    if (duplicateProduct.rows.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'SIC for this product and date has already been submitted.'
+      });
+    }
 
+    // 1. Expected sales from SYSTEM (POS)
     const sysRes = await db.query(
       `SELECT COALESCE(SUM(qty), 0) AS system_sales
        FROM pos_sales
@@ -141,19 +144,20 @@ if (duplicateProduct.rows.length > 0) {
          AND DATE(created_at) = $3`,
       [tenantId, product_id, date]
     );
+    const expected_sales = Number(sysRes.rows[0].system_sales || 0);
 
-    const system_sales = Number(sysRes.rows[0].system_sales || 0);
-
-    // 2️⃣ Expected sales from SIC formula
-    const expected_sales =
+    // 2. Actual sales from PHYSICAL counting
+    // Formula: actual_sales = opening + issues - (waste + closing)
+    const actual_sales =
       Number(opening_qty) +
       Number(issues_qty) -
       (Number(closing_qty) + Number(waste_qty));
 
-    // 3️⃣ Variance
-    const variance = expected_sales - system_sales;
+    // 3. Variance
+    // Formula: variance = expected - actual
+    const variance = expected_sales - actual_sales;
 
-    // 4️⃣ Get TCOP (standard cost)
+    // 4. Get TCOP for Variance Value
     const costRes = await db.query(
       `SELECT tcop
        FROM standard_costs
@@ -165,7 +169,9 @@ if (duplicateProduct.rows.length > 0) {
     const tcop = Number(costRes.rows[0]?.tcop || 0);
     const variance_value = variance * tcop;
 
-    // 5️⃣ Insert SIC row
+    // 5. Save to DB
+    // expected_sales (DB col) -> expected_sales (System)
+    // system_sales (DB col) -> actual_sales (Manual)
     const result = await db.query(
       `INSERT INTO sic_products
        (tenant_id, product_id, date,
@@ -182,8 +188,8 @@ if (duplicateProduct.rows.length > 0) {
         issues_qty,
         waste_qty,
         closing_qty,
-        expected_sales,
-        system_sales,
+        expected_sales, // POS Sales
+        actual_sales,   // Manual Sales Count
         variance,
         variance_value,
         override_reason,
@@ -193,7 +199,7 @@ if (duplicateProduct.rows.length > 0) {
 
     res.json({ success: true, sic: result.rows[0] });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to submit product SIC', { error: err.message, tenantId, productId: product_id });
     res.status(500).json({
       success: false,
       message: 'Failed to submit product SIC'
@@ -212,8 +218,8 @@ async function listRawSIC(req, res) {
     
     res.json({ success: true, sic: result.rows });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Failed to fetch raw SIC' });
+    logger.error('Failed to fetch raw SIC', { error: err.message, tenantId });
+    res.status(500).json({ success: true, message: 'Failed to fetch raw SIC' });
   }
 }
 
@@ -227,8 +233,43 @@ async function listProductSIC(req, res) {
     );
     res.json({ success: true, sic: result.rows });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to fetch product SIC', { error: err.message, tenantId });
     res.status(500).json({ success: false, message: 'Failed to fetch product SIC' });
+  }
+}
+
+async function getLatestRawSIC(req, res) {
+  const tenantId = req.user.tenant_id;
+  try {
+    // Get the most recent entry for each material
+    const result = await db.query(
+      `SELECT DISTINCT ON (material_id) *
+       FROM sic_raw_materials
+       WHERE tenant_id = $1
+       ORDER BY material_id, date DESC, created_at DESC`,
+      [tenantId]
+    );
+    res.json({ success: true, sic: result.rows });
+  } catch (err) {
+    logger.error('Failed to fetch latest raw SIC', { error: err.message, tenantId });
+    res.status(500).json({ success: false, message: 'Failed to fetch latest raw SIC' });
+  }
+}
+
+async function getLatestProductSIC(req, res) {
+  const tenantId = req.user.tenant_id;
+  try {
+    const result = await db.query(
+      `SELECT DISTINCT ON (product_id) *
+       FROM sic_products
+       WHERE tenant_id = $1
+       ORDER BY product_id, date DESC, created_at DESC`,
+      [tenantId]
+    );
+    res.json({ success: true, sic: result.rows });
+  } catch (err) {
+    logger.error('Failed to fetch latest product SIC', { error: err.message, tenantId });
+    res.status(500).json({ success: false, message: 'Failed to fetch latest product SIC' });
   }
 }
 
@@ -242,9 +283,13 @@ async function getRawSICReport(req, res) {
     let values = [tenantId];
     let idx = 2;
 
-    if (startDate && endDate) {
-      filters.push(`sr.date BETWEEN $${idx++} AND $${idx++}`);
-      values.push(startDate, endDate);
+    if (startDate) {
+      filters.push(`sr.date >= $${idx++}`);
+      values.push(startDate);
+    }
+    if (endDate) {
+      filters.push(`sr.date <= $${idx++}`);
+      values.push(endDate);
     }
 
     if (createdBy) {
@@ -269,7 +314,7 @@ async function getRawSICReport(req, res) {
     const { rows } = await db.query(sql, values);
     res.json({ success: true, report: rows });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to fetch raw SIC report', { error: err.message, tenantId });
     res.status(500).json({ success: false, message: 'Failed to fetch raw SIC report' });
   }
 }
@@ -283,9 +328,13 @@ async function getProductSICReport(req, res) {
     let values = [tenantId];
     let idx = 2;
 
-    if (startDate && endDate) {
-      filters.push(`sp.date BETWEEN $${idx++} AND $${idx++}`);
-      values.push(startDate, endDate);
+    if (startDate) {
+      filters.push(`sp.date >= $${idx++}`);
+      values.push(startDate);
+    }
+    if (endDate) {
+      filters.push(`sp.date <= $${idx++}`);
+      values.push(endDate);
     }
 
     if (createdBy) {
@@ -296,6 +345,11 @@ async function getProductSICReport(req, res) {
     if (productId) {
       filters.push(`sp.product_id = $${idx++}`);
       values.push(productId);
+    }
+
+    if (vendorId) {
+      filters.push(`p.vendor_id = $${idx++}`);
+      values.push(vendorId);
     }
 
     const sql = `
@@ -310,7 +364,7 @@ async function getProductSICReport(req, res) {
     const { rows } = await db.query(sql, values);
     res.json({ success: true, report: rows });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to fetch product SIC report', { error: err.message, tenantId });
     res.status(500).json({ success: false, message: 'Failed to fetch product SIC report' });
   }
 }
@@ -321,6 +375,8 @@ module.exports = {
   submitProductSIC, 
   listRawSIC, 
   listProductSIC,
+  getLatestRawSIC,
+  getLatestProductSIC,
   getRawSICReport,
   getProductSICReport 
 };

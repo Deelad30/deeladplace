@@ -8,8 +8,9 @@ async function listPurchases(tenantId) {
 }
 
 async function createPurchase(tenantId, data, userId = null) {
-  const {
+  let {
     material_id,
+    material_name,
     purchase_price,
     purchase_qty,
     vendor_id,
@@ -17,7 +18,25 @@ async function createPurchase(tenantId, data, userId = null) {
     measurement_unit
   } = data;
 
-  // 1️⃣ Insert purchase
+  // 1️⃣ Handle dynamic material creation if material_id is missing but name is provided
+  if (!material_id && material_name) {
+    // Check if material already exists (case-insensitive)
+    const existingRes = await db.query(SQL.GET_MATERIAL_BY_NAME, [material_name, tenantId]);
+    
+    if (existingRes.rows.length > 0) {
+      material_id = existingRes.rows[0].id;
+    } else {
+      // Create new raw material
+      const newMatRes = await db.query(SQL.CREATE_MATERIAL, [tenantId, material_name, measurement_unit || 'pcs']);
+      material_id = newMatRes.rows[0].id;
+    }
+  }
+
+  if (!material_id) {
+    throw new Error('Material ID or Name is required');
+  }
+
+  // 2️⃣ Insert purchase
   const res = await db.query(SQL.CREATE_PURCHASE, [
     tenantId,
     material_id,
@@ -30,10 +49,10 @@ async function createPurchase(tenantId, data, userId = null) {
 
   const purchase = res.rows[0];
 
-  // 2️⃣ Compute unit cost
+  // 3️⃣ Compute unit cost
   const unitCost = Number(purchase_price) / Number(purchase_qty);
 
-  // 3️⃣ Record stock movement with all metadata
+  // 4️⃣ Record stock movement with all metadata
   const movement = await recordStockMovement({
     tenantId,
     itemId: material_id,
@@ -45,7 +64,7 @@ async function createPurchase(tenantId, data, userId = null) {
     createdBy: userId
   });
 
-  // 4️⃣ Update stock balance
+  // 5️⃣ Update stock balance
   const stock = await upsertStockBalance(tenantId, 'material', material_id, purchase_qty, unitCost);
 
   return { ...purchase, movement, stock };

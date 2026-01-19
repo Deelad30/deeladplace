@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const database = require('../config/database');
 const User = require('../models/User');
 const emailService = require('../utils/emailService');
+const logger = require('../utils/logger');
 const router = express.Router();
 
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY;
@@ -51,7 +52,7 @@ router.post('/create-subscription', async (req, res) => {
     if (!planDetails) return res.status(500).json({ error: 'Plan not found on Paystack' });
 
     const planAmountInKobo = planDetails.amount;
-          console.log("Using PAYSTACK plan price:", planAmountInKobo, "for plan:", planType);
+    logger.info("Using PAYSTACK plan price", { planAmountInKobo, planType, planCode });
 
     // Create or fetch Paystack customer
     const customerResp = await axios.post(
@@ -106,7 +107,7 @@ router.post('/create-subscription', async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Create subscription error:", err.response?.data || err.message);
+    logger.error("Create subscription error", { error: err.response?.data || err.message, userId, planType });
     return res.status(500).json({ error: 'Subscription creation failed' });
   }
 });
@@ -128,7 +129,7 @@ router.get('/verify/:reference', async (req, res) => {
     if (data.status === 'success') return res.json({ status: 'success', data });
     return res.json({ status: 'failed', data });
   } catch (err) {
-    console.error('Verify error:', err.response?.data || err.message);
+    logger.error('Verify error', { error: err.response?.data || err.message, reference });
     return res.status(500).json({ status: 'error' });
   }
 });
@@ -144,25 +145,25 @@ router.post('/webhook', express.json({ type: '*/*' }), async (req, res) => {
     const expectedHash = crypto.createHmac('sha512', PAYSTACK_SECRET).update(body).digest('hex');
 
     if (signature !== expectedHash) {
-      console.warn('Invalid Paystack webhook signature');
+      logger.warn('Invalid Paystack webhook signature');
       return res.status(400).send('Invalid signature');
     }
 
     const event = req.body;
-    console.log('Webhook event:', event.event);
+    logger.info('Received Paystack webhook event', { event: event.event });
 
     const metadata = parseMetadata(event.data?.metadata);
     const userId = metadata?.userId;
     const planType = metadata?.planType;
 
     if (!userId) {
-      console.log('Webhook: no user metadata; event:', event.event);
+      logger.info('Webhook: no user metadata found', { event: event.event });
       return res.sendStatus(200);
     }
 
     const user = await User.findById(userId);
     if (!user) {
-      console.warn('Webhook: user not found for id', userId);
+      logger.warn('Webhook: user not found', { userId });
       return res.sendStatus(200);
     }
 
@@ -176,7 +177,7 @@ router.post('/webhook', express.json({ type: '*/*' }), async (req, res) => {
         subscriptionCode = event.data?.subscription?.subscription_code || event.data?.authorization?.authorization_code;
 
         if (!subscriptionCode) {
-          console.warn('Webhook: no subscription code found in event');
+          logger.warn('Webhook: no subscription code found in event', { event: event.event });
           break;
         }
 
@@ -189,40 +190,39 @@ router.post('/webhook', express.json({ type: '*/*' }), async (req, res) => {
               { code: user.subscription_code },
               { headers: { Authorization: `Bearer ${PAYSTACK_SECRET}` } }
             );
-            console.log(`Disabled old subscription ${user.subscription_code} for user ${userId}`);
+            logger.info('Disabled old subscription in Paystack', { oldSubscriptionCode: user.subscription_code, userId });
           } catch (err) {
-            console.error('Failed to disable old subscription:', err.response?.data || err.message);
+            logger.error('Failed to disable old subscription', { error: err.response?.data || err.message, userId });
           }
         }
 
-        // Update DB with new plan and subscription
         await User.updatePlan(String(userId), planType, subscriptionCode);
-        console.log(`DB updated with subscription ${subscriptionCode} for user ${userId}`);
+        logger.info('User plan updated via webhook', { userId, planType, subscriptionCode });
 
         // Send email notification
         await emailService.sendSubscriptionSuccessEmail(user, planType);
-        console.log(`Subscription success email sent to user ${userId}`);
+        logger.info('Subscription success email sent', { userId });
         break;
       }
 
       case 'charge.failed':
         await emailService.sendSubscriptionPaymentFailed(user, planType);
-        console.log(`Subscription payment failed email sent to user ${userId}`);
+        logger.info('Subscription payment failed email sent', { userId });
         break;
 
       case 'subscription.disable':
-        console.log(`Subscription disabled for user ${userId}`);
+        logger.info('Subscription disabled for user', { userId });
         break;
 
       case 'subscription.renewal':
-        console.log(`Subscription renewed for user ${userId}`);
+        logger.info('Subscription renewed for user', { userId });
         break;
 
       default:
-        console.log('Webhook: unhandled event type', event.event);
+        logger.info('Webhook: unhandled event type', { event: event.event });
     }
   } catch (err) {
-    console.error('Webhook processing error:', err);
+    logger.error('Webhook processing error', { error: err.message, stack: err.stack });
   }
 
   // Always respond 200 to avoid retries

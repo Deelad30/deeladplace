@@ -4,7 +4,7 @@ import { salesService } from '../../../services/salesService';
 import { toast } from 'react-hot-toast';
 import './SalesTable.css';
 
-const SalesTable = ({ filters, vendors }) => {
+const SalesTable = ({ filters, vendors, auditMode = false }) => {
   const [page, setPage] = useState(1);
   const [limit] = useState(20);
   const [data, setData] = useState([]);
@@ -15,7 +15,7 @@ const SalesTable = ({ filters, vendors }) => {
   const [activeTab, setActiveTab] = useState('details');
 
 
-const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
+const round100 = (num) => Math.round((num || 0) / 100) * 100;
 
 const fetchPage = useCallback(async (p = 1) => { 
   setLoading(true);
@@ -26,7 +26,8 @@ const fetchPage = useCallback(async (p = 1) => {
       start: filters.start,
       end: filters.end,
       vendor_id: filters.vendor_id,
-      payment_type: filters.payment_type
+      payment_type: filters.payment_type,
+      user_id: filters.user_id
     };
 
     const res = await salesService.getSalesPaginated(params);
@@ -103,14 +104,14 @@ useEffect(() => {
                   </td>
                 </tr>
               ) : data.map((row) => (
-                <tr key={row.id || Math.random()} onClick={() => openModal(row)} style={{ cursor: 'pointer' }}>
+                <tr key={row.id || Math.random()} onClick={() => openModal(row)} className={auditMode ? 'audit-border-row' : ''} style={{ cursor: 'pointer' }}>
                   <td>{new Date(row.created_at).toLocaleString()}</td>
                   <td>{row.product_name || `#${row.product_id}`}</td>
                   <td>{row.sold_by || "-"}</td>
                   <td>{vendors.find(v => v.id === row.vendor_id)?.name || row.vendor_id}</td>
                   <td>{row.qty}</td>
-                  <td>{new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(Number(round(row.selling_price)))}</td>
-                  <td>{new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(Number(row.commission))}</td>
+                  <td>{new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: auditMode ? 2 : 0 }).format(Number(auditMode ? row.selling_price : round100(row.selling_price)) + Number(auditMode ? row.commission : round100(row.commission)))}</td>
+                  <td>{new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: auditMode ? 2 : 0 }).format(Number(auditMode ? row.commission : round100(row.commission)))}</td>
                   <td><span className="row-badge">{row.payment_method || 'unknown'}</span></td>
                 </tr>
               ))}
@@ -147,7 +148,7 @@ useEffect(() => {
                   <p><strong>Product:</strong> {selectedSale.product_name || `#${selectedSale.product_id}`}</p>
                   <p><strong>Vendor:</strong> {vendors.find(v => v.id === selectedSale.vendor_id)?.name || selectedSale.vendor_id}</p>
                   <p><strong>Quantity:</strong> {selectedSale.qty}</p>
-                  <p><strong>Commission:</strong> {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(Number(selectedSale.commission))}</p>
+                   <p><strong>Commission:</strong> {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: auditMode ? 2 : 0 }).format(Number(auditMode ? selectedSale.commission : round100(selectedSale.commission)))}</p>
                 </>
               )}
 
@@ -155,10 +156,9 @@ useEffect(() => {
                 <>
                   <p><strong>Customer Type:</strong> {selectedSale.order_method || 'Unknown'}</p>
                  <p><strong>Customer Price:</strong> {
-  new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(
-    round(
-      Number(selectedSale.selling_price || 0) + Number(selectedSale.commission || 0)
-    )
+  new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: auditMode ? 2 : 0 }).format(
+    Number(auditMode ? selectedSale.selling_price : round100(selectedSale.selling_price || 0)) + 
+    Number(auditMode ? selectedSale.commission : round100(selectedSale.commission || 0))
   )
 }</p>
 

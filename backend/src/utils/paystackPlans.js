@@ -1,5 +1,6 @@
 // utils/paystackPlans.js
 const axios = require("axios");
+const logger = require('./logger');
 require("dotenv").config();
 
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY;
@@ -28,8 +29,6 @@ async function fetchPaystackPlans() {
 
     const plans = resp.data.data;
 
-    console.log(plans);
-    
     // Transform plan list into easy lookup object
     const planMap = {};
     plans.forEach(plan => {
@@ -45,10 +44,11 @@ async function fetchPaystackPlans() {
     cachedPlans = planMap;
     lastFetchTime = now;
 
+    logger.debug("Fetched Paystack plans", { count: plans.length });
     return planMap;
 
   } catch (err) {
-    console.error("Failed to fetch Paystack plans", err.response?.data || err.message);
+    logger.error("Failed to fetch Paystack plans", { error: err.response?.data || err.message });
     return {};
   }
 }

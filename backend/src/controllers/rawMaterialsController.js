@@ -1,4 +1,5 @@
 const RawMaterial = require('../models/RawMaterial');
+const logger = require('../utils/logger');
 
 /**
  * CREATE (tenant-scoped)
@@ -26,7 +27,7 @@ exports.createRawMaterial = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Create raw material error:', error);
+    logger.error('Create raw material error', { error: error.message, tenantId: req.user?.tenant_id });
     res.status(500).json({
       success: false,
       message: 'Error creating raw material'
@@ -50,7 +51,7 @@ exports.getRawMaterials = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Get raw materials error:', error);
+    logger.error('Get raw materials error', { error: error.message, tenantId: req.user?.tenant_id });
     res.status(500).json({
       success: false,
       message: 'Error fetching raw materials'
@@ -82,7 +83,7 @@ exports.getRawMaterial = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Get raw material error:', error);
+    logger.error('Get raw material error', { error: error.message, tenantId: req.user?.tenant_id, materialId: req.params.id });
     res.status(500).json({
       success: false,
       message: 'Error fetching raw material'
@@ -114,7 +115,7 @@ exports.updateRawMaterial = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Update raw material error:', error);
+    logger.error('Update raw material error', { error: error.message, tenantId: req.user?.tenant_id, materialId: req.params.id });
     res.status(500).json({
       success: false,
       message: 'Error updating raw material'
@@ -146,7 +147,7 @@ exports.deleteRawMaterial = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Delete raw material error:', error);
+    logger.error('Delete raw material error', { error: error.message, tenantId: req.user?.tenant_id, materialId: req.params.id });
     res.status(500).json({
       success: false,
       message: 'Error deleting raw material'

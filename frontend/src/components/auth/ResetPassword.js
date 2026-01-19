@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { authService } from "../../services/authService";
 import LoadingSpinner from "../common/LoadingSpinner";
-import "../../../src/styles/components/ResetPassword.css"; // original styling
-
+import AuthLayout from "./AuthLayout";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 
 const ResetPassword = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [showPasswordd, setShowPasswordd] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -48,8 +48,6 @@ const ResetPassword = () => {
     try {
       const response = await authService.resetPassword(token, newPassword);
       setMessage(response.data.message);
-
-      // Redirect to login after 3 seconds
       setTimeout(() => navigate("/login"), 3000);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to reset password");
@@ -58,126 +56,84 @@ const ResetPassword = () => {
     }
   };
 
-  const loginVariants = {
-    hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { duration: 0.5, ease: "linear", delayChildren: 2 } },
-    exit: { opacity: 0, transition: { duration: 0.5, ease: "linear", delay: 0.35 } },
-  };
-
   if (!validToken) {
     return (
-      <motion.div
-        className="login"
-        variants={loginVariants}
-        initial="hidden"
-        animate="show"
-        exit="exit"
-      >
- 
-        <main style={{ paddingTop: "80px" }} className="reset__main">
-          <div className="reset__text">
-            <h1 className="reset__heading">Invalid Reset Link</h1>
-            <p className="reset__subtext">
-              The password reset link is invalid or has expired.
-            </p>
-            <button
-              onClick={() => navigate("/forgot-password")}
-              className="btn btn-shadow"
-            >
-              Request New Reset Link
-            </button>
-          </div>
-        </main>
-      </motion.div>
+      <AuthLayout title="Link Invalid" subtitle="The password reset link is invalid or has expired.">
+         <div className="form-header">
+            <h2>Invalid Link</h2>
+            <p>Please request a new reset link.</p>
+         </div>
+         <button onClick={() => navigate("/forgot-password")} className="btn-primary">
+            Request New Link
+         </button>
+      </AuthLayout>
     );
   }
 
   return (
-    <motion.div
-      className="login"
-      variants={loginVariants}
-      initial="hidden"
-      animate="show"
-      exit="exit"
-    >
- 
-      <main style={{ paddingTop: "80px" }} className="reset__main">
-        {/* Left Info Section */}
-        <div className="reset__text">
-          <h1 className="reset__heading">Create New Password</h1>
-          <p className="reset__subtext">
-            Enter your new password below and confirm it to reset your account password.
-          </p>
-          <Link to="/login" className="reset__back">
-            ← Back to Login
-          </Link>
+    <AuthLayout title="Reset Password" subtitle="Secure your account with a new password.">
+      <form onSubmit={handleSubmit}>
+        <div className="form-header">
+           <h2>Create New Password</h2>
+           <p>Enter your new password below</p>
         </div>
 
-        {/* Reset Form */}
-        <form onSubmit={handleSubmit} className="reset__form">
-          {error && <div className="error-message">{error}</div>}
-          {message && <div className="success-message">{message}</div>}
+        {error && <div className="error-message">{error}</div>}
+        {message && <div className="success-message">{message}</div>}
 
+        <div className="auth-input-group">
+          <label>New Password</label>
+          <div className="password-input-wrapper">
+             <input
+               type={showPassword ? "text" : "password"}
+               className="auth-input"
+               placeholder="New Password"
+               value={newPassword}
+               onChange={(e) => setNewPassword(e.target.value)}
+               required
+               minLength="6"
+               disabled={loading || message}
+             />
+             <span className="toggle-password" onClick={() => setShowPassword(!showPassword)}>
+                <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+             </span>
+          </div>
+        </div>
 
-          <label htmlFor="new-password" className="reset__input">
-<div className="password-wrapper">
-            <input
-              type={showPasswordd ? "text" : "password"}
-              id="new-password"
-              placeholder="New Password"
-              className="reset__input--box"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
-              disabled={loading || message}
-              minLength="6"
-            />
-    <span 
-      className="toggle-password pointer" 
-      onClick={() => setShowPasswordd(!showPasswordd)}
-    >
-      {showPasswordd ? "🔓" : "🔒"}
-    </span>
- </div>
-          </label>
+        <div className="auth-input-group">
+          <label>Confirm Password</label>
+          <div className="password-input-wrapper">
+             <input
+               type={showConfirm ? "text" : "password"}
+               className="auth-input"
+               placeholder="Confirm Password"
+               value={confirmPassword}
+               onChange={(e) => setConfirmPassword(e.target.value)}
+               required
+               minLength="6"
+               disabled={loading || message}
+             />
+             <span className="toggle-password" onClick={() => setShowConfirm(!showConfirm)}>
+                <FontAwesomeIcon icon={showConfirm ? faEyeSlash : faEye} />
+             </span>
+          </div>
+        </div>
 
-                    <label htmlFor="confirm-password" className="reset__input">
-<div className="password-wrapper">
-            <input
-              type={showPassword ? "text" : "password"}
-              id="confirm-password"
-              placeholder="Confirm Password"
-              className="reset__input--box"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              disabled={loading || message}
-              minLength="6"
-            />
-       {/* Toggle Button */}
-          <span 
-            className="toggle-password pointer" 
-            onClick={() => setShowPassword(!showPassword)}
-          >
-            {showPassword ? "🔓" : "🔒"}
-          </span>
-      </div>
-          </label>
+        <button type="submit" className="btn-primary" disabled={loading || message}>
+           {loading ? "Resetting..." : "Reset Password"}
+        </button>
 
-
-          <button type="submit" className="btn btn-shadow" disabled={loading || message}>
-            {loading ? <LoadingSpinner size="small" /> : "Reset Password"}
-          </button>
-
-          {message && (
-            <p className="reset__note">
-              Password reset successful! Redirecting to login...
-            </p>
-          )}
-        </form>
-      </main>
-    </motion.div>
+        <div className="switch-auth-text">
+            <Link to="/login" className="auth-link">
+              ← Back to Login
+            </Link>
+        </div>
+      </form>
+    </AuthLayout>
   );
 };
 
 export default ResetPassword;
+
+
+

@@ -58,69 +58,32 @@ async function computePackagingCost(productId, tenantId) {
 
 
 
-// ---------- LABOUR COST (per unit and old) ----------
-// async function computeLabourCost(tenantId) {
-//   const res = await db.query(SQL.GET_LABOUR, [tenantId]);
-//   console.log(res);
-  
-//   const rows = res.rows || [];
-//   if (!rows.length) return 0;
-
-//   const today = new Date();
-//   const active = rows.filter(l => {
-//     const from = l.start_date ? new Date(l.start_date) : null;
-//     const to = l.end_date ? new Date(l.end_date) : null;
-//     return (!from || today >= from) && (!to || today <= to);
-//   });
-
-//   if (!active.length) return 0;
-
-//   let totalLabour = 0;
-//   for (const l of active) {
-//     const amount = Number(l.amount) || 0;
-//     const estSales = Number(l.estimated_monthly_sales) || 1; // protect division by zero
-//     const perUnit = amount / estSales;
-//     totalLabour += perUnit;
-//   }
-//   return totalLabour; // already per unit
-// }
-
-async function computeLabourCost(tenantId) {
-  const res = await db.query(SQL.GET_LABOUR, [tenantId]);
+// ---------- LABOUR COST (direct for product) ----------
+async function computeLabourCost(productId, tenantId) {
+  const res = await db.query(SQL.GET_LABOUR_FOR_PRODUCT, [productId, tenantId]);
   const rows = res.rows || [];
   if (!rows.length) return 0;
 
   let totalLabour = 0;
   for (const l of rows) {
-    const amount = Number(l.amount) || 0;
-    const estSales = Number(l.estimated_monthly_sales) || 1; // prevent division by zero
-    totalLabour += amount / estSales;
+    totalLabour += Number(l.amount) || 0;
   }
 
-  return totalLabour; // per unit
+  return totalLabour; // sum of direct labour costs for this product/batch
 }
 
-// ---------- OPEX (per unit) ----------
-async function computeOpex(tenantId, preOpexCOGS) {
-  const res = await db.query(SQL.GET_OPEX, [tenantId]);
+// ---------- OPEX (direct for product) ----------
+async function computeOpex(productId, tenantId, preOpexCOGS) {
+  const res = await db.query(SQL.GET_OPEX_FOR_PRODUCT, [productId, tenantId]);
   const rows = res.rows || [];
   if (!rows.length) return 0;
 
-  const today = new Date();
   let totalOpex = 0;  
 
   for (const o of rows) {
-  const estSales = Number(o.estimated_monthly_sales) || 1;
-
-  if (o.allocation_mode === 'fixed') {
-    const perUnit = (Number(o.amount) || 0) / estSales;
-    totalOpex += perUnit;
-  } else if (o.allocation_mode === 'percent_of_cogs') {
-    const perUnit = (Number(o.percentage_value || 0) / 100) * preOpexCOGS;
-    totalOpex += perUnit;
+    totalOpex += Number(o.amount) || 0;
   }
-}
-  return totalOpex;
+  return totalOpex; // sum of direct opex costs for this product/batch
 }
 
 // ---------- MAIN ----------
@@ -135,15 +98,16 @@ async function computeProductCost(productId, tenantId, options = {}) {
   const totalPackagingCost = await computePackagingCost(productId, tenantId);
   const packagingCostPerUnit = totalPackagingCost / batchSize;
 
-  // 3) labour per unit (already per unit)
-  const labourCostPerUnit = await computeLabourCost(tenantId);
-  console.log(labourCostPerUnit);
+  // 3) labour (direct for product/batch -> per unit)
+  const totalLabourCost = await computeLabourCost(productId, tenantId);
+  const labourCostPerUnit = totalLabourCost / batchSize;
   
   // 4) pre-OPEX COGS (per unit)
   const preOpexCOGS = recipeCostPerUnit + packagingCostPerUnit + labourCostPerUnit;
 
-  // 5) OPEX per unit
-  const opexCostPerUnit = await computeOpex(tenantId, preOpexCOGS);
+  // 5) OPEX (direct for product/batch -> per unit)
+  const totalOpexCost = await computeOpex(productId, tenantId, preOpexCOGS);
+  const opexCostPerUnit = totalOpexCost / batchSize;
 
   // 6) TCOP per unit
   const TCOP = preOpexCOGS + opexCostPerUnit;

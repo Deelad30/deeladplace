@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { sicService } from "../../../services/profitService";
 import { productService } from "../../../services/productService";
+import { vendorService } from "../../../services/vendorService";
 import SkeletonCard from "../../../components/common/SkeletonCard";
 import toast from "react-hot-toast";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
@@ -11,14 +12,17 @@ const SICProductReport = () => {
   const [loading, setLoading] = useState(true);
   const [productSIC, setProductSIC] = useState([]);
   const [products, setProducts] = useState([]);
+  const [vendors, setVendors] = useState([]);
   const [filters, setFilters] = useState({
     startDate: "",
     endDate: "",
     createdBy: "",
     productId: "",
+    vendorId: "",
   });
   
-const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
+  const [auditMode, setAuditMode] = useState(false);
+  const round100 = (num) => Math.round((num || 0) / 100) * 100;
 
   const loadSIC = async () => {
     setLoading(true);
@@ -44,15 +48,19 @@ const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
   }, []);
 
   useEffect(() => {
-    const loadProducts = async () => {
+    const loadInitialData = async () => {
       try {
-        const res = await productService.getAllProducts();
-      if (res.data.success) setProducts(res.data.products);
+        const [prodRes, vendRes] = await Promise.all([
+          productService.getAllProducts(),
+          vendorService.getAllVendors()
+        ]);
+        if (prodRes.data.success) setProducts(prodRes.data.products);
+        if (vendRes.data.success) setVendors(vendRes.data.vendors);
       } catch (err) {
         console.error(err);
       }
     };
-    loadProducts();
+    loadInitialData();
   }, []);
 
   const top5Variance = [...productSIC]
@@ -70,7 +78,23 @@ const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
           <option value="">All Products</option>
           {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
+        <select onChange={e => setFilters(f => ({ ...f, vendorId: e.target.value }))}>
+          <option value="">All Vendors</option>
+          {vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+        </select>
         <button onClick={loadSIC}>Apply</button>
+
+        <div className="audit-toggle-container">
+          <label className="switch">
+            <input 
+              type="checkbox" 
+              checked={auditMode} 
+              onChange={() => setAuditMode(!auditMode)} 
+            />
+            <span className="slider round"></span>
+          </label>
+          <span className="audit-label">Audit Mode {auditMode ? "ON" : "OFF"}</span>
+        </div>
       </div>
 
       <div className="export-actions">
@@ -98,21 +122,30 @@ const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
         {loading ? (
           <SkeletonCard height={150} />
         ) : (
-          productSIC.map(p => (
-            <div key={p.id} className="product-card">
-              <h4>{p.product_name || `ID: ${p.product_id}`}</h4>
-              <p>Opening: {p.opening_qty}</p>
-              <p>Produced: {p.issues_qty}</p>
-              <p>Waste: {p.waste_qty}</p>
-              <p>Closing: {p.closing_qty}</p>
-              <p>Expected: {p.expected_sales}</p>
-              <p>System: {p.system_sales}</p>
-              <strong className={p.variance >= 0 ? "profit" : "loss"}>
-                Variance: {round(p.variance)} ({round(p.variance_value)})
-              </strong>
-              {p.override_reason && <small>Override: {p.override_reason}</small>}
-            </div>
-          ))
+          productSIC.map(p => {
+            const variance = auditMode ? p.variance : Math.round(p.variance);
+            const varianceValue = auditMode ? p.variance_value : round100(p.variance_value);
+
+            return (
+              <div key={p.id} className={`product-card ${auditMode ? 'audit-border' : ''}`}>
+                <h4>{p.product_name || `ID: ${p.product_id}`}</h4>
+                <p>Opening: {p.opening_qty}</p>
+                <p>Produced: {p.issues_qty}</p>
+                <p>Waste: {p.waste_qty}</p>
+                <p>Closing: {p.closing_qty}</p>
+                <hr />
+                <p>Actual Sales: <strong>{p.system_sales}</strong></p>
+                <p>Expected Sales (System): <strong>{p.expected_sales}</strong></p>
+                <strong className={p.variance >= 0 ? "profit" : "loss"}>
+                  Variance: {variance} (₦{Number(varianceValue).toLocaleString(undefined, { maximumFractionDigits: auditMode ? 2 : 0 })})
+                </strong>
+                <div className={`remark-badge ${p.variance < 0 ? 'over' : (p.variance > 0 ? 'under' : 'good')}`}>
+                    {p.variance < 0 ? 'Missing sales' : (p.variance > 0 ? 'Overring' : 'Good')}
+                </div>
+                {p.override_reason && <small>Override: {p.override_reason}</small>}
+              </div>
+            );
+          })
         )}
       </div>
     </div>

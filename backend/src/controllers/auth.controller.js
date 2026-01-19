@@ -4,10 +4,15 @@ const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 const crypto = require('crypto');
 const emailService = require('../utils/emailService');
+const logger = require('../utils/logger');
 
 dotenv.config();
 
-const JWT_SECRET = process.env.JWT_SECRET || 'secret';
+// CRITICAL: JWT_SECRET must be set in environment variables
+if (!process.env.JWT_SECRET) {
+  throw new Error('SECURITY: JWT_SECRET environment variable is required. Please set it in your .env file or hosting platform.');
+}
+const JWT_SECRET = process.env.JWT_SECRET;
 
 /**
  * ============================
@@ -16,9 +21,6 @@ const JWT_SECRET = process.env.JWT_SECRET || 'secret';
  */
 async function signup(req, res) {
   const { email, password, name, tenantName } = req.body;
-  if (!email || !password || !tenantName) {
-    return res.status(400).json({ error: 'email, password and tenantName required' });
-  }
 
   const client = await db.pool.connect();
   try {
@@ -53,14 +55,14 @@ async function signup(req, res) {
 
     // Optional: send welcome email
     emailService.sendWelcomeEmail(user).catch(err =>
-      console.error("Failed to send welcome email:", err)
+      logger.error("Failed to send welcome email", { error: err.message, userId: user.id })
     );
 
     res.json({ token, user, tenant });
 
   } catch (err) {
     await client.query('ROLLBACK');
-    console.error(err);
+    logger.error('Signup failed', { error: err.message, email });
     res.status(500).json({ error: 'Signup failed', details: err.message });
   } finally {
     client.release();
@@ -74,7 +76,6 @@ async function signup(req, res) {
  */
 async function login(req, res) {
   const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ error: 'Missing credentials' });
 
   try {
     const result = await db.query(
@@ -104,7 +105,7 @@ async function login(req, res) {
 
     // Non-blocking email notification
     emailService.sendLoginNotification(user, new Date().toLocaleString())
-      .catch(err => console.error('Failed to send login notification:', err));
+      .catch(err => logger.error('Failed to send login notification', { error: err.message, userId: user.id }));
 
     res.json({
       token,
@@ -121,7 +122,7 @@ async function login(req, res) {
     });
 
   } catch (err) {
-    console.error(err);
+    logger.error('Login failed', { error: err.message, email });
     res.status(500).json({ error: 'Login failed' });
   }
 }
@@ -135,9 +136,6 @@ async function login(req, res) {
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
-
-    if (!email)
-      return res.status(400).json({ success: false, message: 'Email is required' });
 
     const userResult = await db.query(
       'SELECT id, email, name FROM users WHERE email = $1',
@@ -174,7 +172,7 @@ const forgotPassword = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Forgot password error:', error);
+    logger.error('Forgot password error', { error: error.message, email });
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
@@ -187,10 +185,6 @@ const forgotPassword = async (req, res) => {
 const resetPassword = async (req, res) => {
   try {
     const { token, newPassword } = req.body;
-
-    if (!token || !newPassword) {
-      return res.status(400).json({ success: false, message: 'Token and new password are required' });
-    }
 
     // Hash the token to match the one stored in DB
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
@@ -219,16 +213,16 @@ const resetPassword = async (req, res) => {
       [newHash, user.id]
     );
 
-    console.log('Password reset for user:', user.email);
+    logger.info('Password reset successful', { email: user.email });
 
     // Send confirmation email
     await emailService.sendPasswordResetConfirmation(user)
-      .catch(err => console.error('Failed to send reset confirmation email:', err));
+      .catch(err => logger.error('Failed to send reset confirmation email', { error: err.message, userId: user.id }));
 
     res.json({ success: true, message: 'Password reset successfully' });
 
   } catch (error) {
-    console.error('Reset password error:', error);
+    logger.error('Reset password error', { error: error.message });
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };

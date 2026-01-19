@@ -180,8 +180,8 @@ const ExpenseList = ({ refreshFlag, onEditExpense, hideActions = false  }) => {
 </select>
       </div>
 
-      <div className="expense-table-wrapper">
-        <table className="expense-table">
+      <div className="premium-table-wrapper">
+        <table className="premium-table">
           <thead>
             <tr>
               <th>Description</th>
@@ -197,17 +197,21 @@ const ExpenseList = ({ refreshFlag, onEditExpense, hideActions = false  }) => {
             {currentExpenses.map((exp) => (
               <tr key={exp.id}>
                 <td>{exp.description}</td>
-                <td>₦{Number(exp.amount).toLocaleString()}</td>
-                <td>{exp.category}</td>
+                <td className="font-bold">₦{Number(exp.amount).toLocaleString()}</td>
+                <td><span className="premium-badge">{exp.category}</span></td>
                 <td>{exp.supplier || "-"}</td>
                 <td>{exp.vendor_name || "-"}</td>
                 <td>{new Date(exp.expense_date).toLocaleDateString()}</td>
                 <td>
                     {!hideActions && (
-                    <>
-                      <button className="edit-btn" onClick={() => handleEdit(exp)}>Edit</button>
-                      <button className="delete-btn" onClick={() => confirmDelete(exp)}>Delete</button>
-                    </>
+                    <div className="action-buttons">
+                      <button className="item-action-btn view" onClick={() => handleEdit(exp)}>
+                        Edit
+                      </button>
+                      <button className="item-action-btn delete" onClick={() => confirmDelete(exp)}>
+                        Delete
+                      </button>
+                    </div>
                   )}
                 </td>
               </tr>
@@ -216,29 +220,35 @@ const ExpenseList = ({ refreshFlag, onEditExpense, hideActions = false  }) => {
         </table>
       </div>
 
-      <div className="expense-card-list">
+      <div className="premium-card-list">
         {currentExpenses.map((exp) => (
-          <div key={exp.id} className="expense-card">
-            <div className="card-row">
-              <span className="card-label">Description:</span>
-              <span>{exp.description}</span>
+          <div key={exp.id} className="premium-card">
+            <div className="card-row header">
+              <span className="card-title">{exp.description}</span>
+              <span className="card-amount">₦{Number(exp.amount).toLocaleString()}</span>
             </div>
+            
             <div className="card-row">
-              <span className="card-label">Amount:</span>
-              <span>₦{Number(exp.amount).toLocaleString()}</span>
+              <span className="card-label">Category</span>
+              <span className="premium-badge">{exp.category}</span>
             </div>
+            
             <div className="card-row">
-              <span className="card-label">Category:</span>
-              <span>{exp.category}</span>
-            </div>
-            <div className="card-row">
-              <span className="card-label">Supplier:</span>
+              <span className="card-label">Supplier</span>
               <span>{exp.supplier || "-"}</span>
             </div>
+            
             <div className="card-row">
-              <span className="card-label">Date:</span>
+              <span className="card-label">Date</span>
               <span>{new Date(exp.expense_date).toLocaleDateString()}</span>
             </div>
+            
+            {!hideActions && (
+              <div className="card-actions">
+                 <button className="secondary-btn" onClick={() => handleEdit(exp)}>Edit</button>
+                 <button className="danger-btn" onClick={() => confirmDelete(exp)}>Delete</button>
+              </div>
+            )}
           </div>
         ))}
       </div>

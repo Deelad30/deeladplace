@@ -1,18 +1,34 @@
 // controllers/varianceRaw.controller.js
 const db = require("../config/database");
+const logger = require('../utils/logger');
 
 exports.getRawMaterialVariance = async (req, res) => {
   try {
     const tenantId = req.user.tenant_id;
     const { start_date, end_date } = req.query;
 
-    const dateFilterPOS = start_date && end_date
-      ? `AND DATE(ps.created_at) BETWEEN '${start_date}' AND '${end_date}'`
-      : "";
+    let filters = [`m.tenant_id = $1`];
+    let posFilters = [`ps.tenant_id = $1`];
+    let sicFilters = [`sr.tenant_id = $1`];
+    let stockFilters = [`sm.tenant_id = $1`, `sm.item_type = 'material'`, `sm.movement_type = 'issue'`];
+    
+    let values = [tenantId];
+    let idx = 2;
 
-    const dateFilterSIC = start_date && end_date
-      ? `AND DATE(sr.date) BETWEEN '${start_date}' AND '${end_date}'`
-      : "";
+    if (start_date) {
+      posFilters.push(`DATE(ps.created_at) >= $${idx}`);
+      sicFilters.push(`DATE(sr.date) >= $${idx}`);
+      stockFilters.push(`DATE(sm.created_at) >= $${idx}`);
+      values.push(start_date);
+      idx++;
+    }
+    if (end_date) {
+      posFilters.push(`DATE(ps.created_at) <= $${idx}`);
+      sicFilters.push(`DATE(sr.date) <= $${idx}`);
+      stockFilters.push(`DATE(sm.created_at) <= $${idx}`);
+      values.push(end_date);
+      idx++;
+    }
 
     const sql = `
       SELECT
@@ -20,33 +36,28 @@ exports.getRawMaterialVariance = async (req, res) => {
         m.name AS material_name,
 
         -- EXPECTED usage (recipe × product sales)
-COALESCE((
-  SELECT SUM(r.recipe_qty * ps.qty)
-  FROM recipes r
-  JOIN pos_sales ps ON ps.product_id = r.product_id
-  WHERE r.material_id = m.id
-    AND ps.tenant_id = $1
-    ${dateFilterPOS}
-), 0) AS expected_usage,
-
-        -- ACTUAL usage (from SIC raw)
         COALESCE((
-          SELECT SUM(sr.computed_usage)
+          SELECT SUM(r.recipe_qty * ps.qty)
+          FROM recipes r
+          JOIN pos_sales ps ON ps.product_id = r.product_id
+          WHERE r.material_id = m.id
+            AND ${posFilters.join(" AND ")}
+        ), 0) AS expected_usage,
+
+        -- ACTUAL usage (from SIC raw manual count, stored in system_usage)
+        COALESCE((
+          SELECT SUM(sr.system_usage)
           FROM sic_raw_materials sr
           WHERE sr.material_id = m.id
-            AND sr.tenant_id = $1
-            ${dateFilterSIC}
+            AND ${sicFilters.join(" AND ")}
         ), 0) AS sic_actual_usage,
 
         -- SYSTEM usage (issue to production)
         COALESCE((
           SELECT SUM(sm.qty)
           FROM stock_movements sm
-          WHERE sm.item_type = 'material'
-            AND sm.item_id = m.id
-            AND sm.tenant_id = $1
-            AND sm.movement_type = 'issue'
-            ${start_date && end_date ? `AND DATE(sm.created_at) BETWEEN '${start_date}' AND '${end_date}'` : ""}
+          WHERE sm.item_id = m.id
+            AND ${stockFilters.join(" AND ")}
         ), 0) AS system_actual_usage,
 
         -- Weighted average cost
@@ -59,7 +70,7 @@ COALESCE((
           LIMIT 1
         ) AS average_cost
       FROM raw_materials m
-      WHERE m.tenant_id = $1;
+      WHERE ${filters.join(" AND ")};
     `;
 
     const result = await db.query(sql, [tenantId]);
@@ -69,18 +80,22 @@ COALESCE((
       const sicActual = Number(row.sic_actual_usage || 0);
       const systemActual = Number(row.system_actual_usage || 0);
 
-      // You can choose which "actual" to use
-      const actual = Math.max(sicActual, systemActual); // best practice
+      // Use the SIC Actual usage (from physical count) as the primary source of truth
+      const actual = sicActual; 
 
-      const varianceQty = actual - expected;
+      // Formula: variance = expected - actual (Matching doc)
+      // Negative = over usage (missing), Positive = under usage
+      const varianceQty = expected - actual; 
       const unitCost = Number(row.average_cost || 0);
 
       let remark = "Good";
-      if (varianceQty < 0) remark = "Over usage / Missing";       // negative = over usage
-      else if (varianceQty > 0) remark = "Under usage";           // positive = under usage
+      if (varianceQty < 0) remark = "Over usage / Missing";       
+      else if (varianceQty > 0) remark = "Under usage";           
 
-      // Optional: suspicious threshold, e.g., more than 20% difference
-      if (Math.abs(varianceQty) > expected * 0.2) remark = "Suspicious variance";
+      // Suspicious threshold: e.g., more than 10% difference
+      if (Math.abs(varianceQty) > (expected * 0.1) && expected > 0) {
+          remark = "Suspicious variance";
+      }
 
       return {
         material_id: row.material_id,
@@ -101,7 +116,7 @@ COALESCE((
 
     return res.json({ ok: true, items });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to fetch raw material variance', { error: err.message, tenantId });
     return res.status(500).json({ ok: false, message: "Error computing raw variance" });
   }
 };

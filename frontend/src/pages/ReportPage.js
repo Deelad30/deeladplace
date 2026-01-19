@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import Header from '../components/common/Header';
-import Sidebar from '../components/common/Sidebar';
+import Layout from '../components/common/Layout';
 import SalesReport from '../components/reports/SalesReport';
 import ExpenseReport from '../components/expenses/Expensereport';
 import ProductProfit from '../components/reports/components/ProductProfit';
@@ -10,16 +9,14 @@ import SICProductReport from '../components/reports/components/SICProductReport'
 import SICRawReport from '../components/reports/components/SICRawReport'; 
 import '../../src/styles/pages/ReportsPage.css';
 import ProductVarianceReport from '../components/inventory/ProductVariance';
+import StockBalanceTable from '../components/inventory/StockBalanceTable';
+import StockMovementLog from '../components/inventory/StockMovementLog';
 
 const ReportsPage = () => {
   const [activeTab, setActiveTab] = useState('sales'); // default tab
 
   return (
-    <div className="reports-page">
-      <Header />
-      <div className="page-content">
-        <Sidebar />
-        <main className="main-content">
+    <Layout>
           <div className="content-header">
             <h1>Reports & Analytics</h1>
           </div>
@@ -74,6 +71,20 @@ const ReportsPage = () => {
             >
               SIC Product Report
             </button>
+
+            <button
+              className={`report-tab-btn ${activeTab === 'stock-balance' ? 'active' : ''}`}
+              onClick={() => setActiveTab('stock-balance')}
+            >
+              Stock Balance Report
+            </button>
+
+            <button
+              className={`report-tab-btn ${activeTab === 'stock-movements' ? 'active' : ''}`}
+              onClick={() => setActiveTab('stock-movements')}
+            >
+              Stock Movements Log
+            </button>
           </div>
 
           {/* --- Tab Content --- */}
@@ -100,10 +111,21 @@ const ReportsPage = () => {
             {activeTab === 'product-sic' && (
             <SICRawReport />
             )}
+            {activeTab === 'stock-balance' && (
+                <div style={{ padding: '20px' }}>
+                    <div style={{ marginBottom: '20px', background: '#e0f2fe', padding: '15px', borderRadius: '10px', color: '#0369a1', fontSize: '14px', border: '1px solid #bae6fd' }}>
+                        <strong>Stock Balance Report</strong>: This is a real-time snapshot of your current inventory levels and value.
+                    </div>
+                   <StockBalanceTable limit={1000} />
+                </div>
+            )}
+            {activeTab === 'stock-movements' && (
+                 <div style={{ padding: '20px' }}>
+                     <StockMovementLog />
+                 </div>
+            )}
           </div>
-        </main>
-      </div>
-    </div>
+    </Layout>
   );
 };
 

@@ -62,7 +62,8 @@ const round0 = (value) => {
     try {
       const res = await productVariance({
         start_date: startDate,
-        end_date: endDate
+        end_date: endDate,
+        vendor_id: selectedVendor
       });
 
       setItems(res.data.items || []);

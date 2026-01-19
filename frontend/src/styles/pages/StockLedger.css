@@ -1,0 +1,27 @@
+/* StockLedgerView Layout */
+.ledger-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 30px;
+    align-items: start;
+}
+
+@media (max-width: 1024px) {
+    .ledger-grid {
+        grid-template-columns: 1fr; /* Stack vertically on tablets and mobile */
+    }
+}
+
+/* Highlight Animation */
+@keyframes glow {
+    0% { background-color: rgba(239, 68, 68, 0.1); }
+    50% { background-color: rgba(239, 68, 68, 0.3); box-shadow: 0 0 10px rgba(239, 68, 68, 0.2); }
+    100% { background-color: rgba(239, 68, 68, 0.1); }
+}
+
+.highlight-row {
+    animation: glow 2s ease-in-out infinite;
+    border: 2px solid #ef4444 !important;
+    position: relative;
+    z-index: 10;
+}

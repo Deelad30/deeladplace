@@ -1,8 +1,9 @@
 const Vendor = require('../models/Vendor');
+const logger = require('../utils/logger');
 
 exports.getAllVendors = async (req, res) => {
+  const tenantId = req.user.tenant_id;
   try {
-    const tenantId = req.user.tenant_id;
     if (!tenantId) {
       return res.status(400).json({ success: false, message: "Missing tenant ID" });
     }
@@ -16,7 +17,7 @@ exports.getAllVendors = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Get vendors error:", error);
+    logger.error("Get vendors error", { error: error.message, tenantId });
     res.status(500).json({
       success: false,
       message: "Error fetching vendors"
@@ -25,9 +26,9 @@ exports.getAllVendors = async (req, res) => {
 };
 
 exports.getVendorById = async (req, res) => {
+  const tenantId = req.user.tenant_id;
+  const vendorId = req.params.id;
   try {
-    const tenantId = req.user.tenant_id;
-    const vendorId = req.params.id;
 
     if (!tenantId) {
       return res.status(400).json({ success: false, message: "Missing tenant ID" });
@@ -45,7 +46,7 @@ exports.getVendorById = async (req, res) => {
     res.json({ success: true, vendor });
 
   } catch (error) {
-    console.error("Get vendor error:", error);
+    logger.error("Get vendor error", { error: error.message, tenantId, vendorId });
     res.status(500).json({
       success: false,
       message: "Error fetching vendor"
@@ -54,8 +55,8 @@ exports.getVendorById = async (req, res) => {
 };
 
 exports.createVendor = async (req, res) => {
+  const tenantId = req.user.tenant_id;
   try {
-    const tenantId = req.user.tenant_id;
 
     if (!tenantId) {
       return res.status(400).json({ success: false, message: "Missing tenant ID" });
@@ -70,7 +71,7 @@ exports.createVendor = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Create vendor error:", error);
+    logger.error("Create vendor error", { error: error.message, tenantId });
     res.status(500).json({
       success: false,
       message: "Error creating vendor"
@@ -79,9 +80,9 @@ exports.createVendor = async (req, res) => {
 };
 
 exports.updateVendor = async (req, res) => {
+  const tenantId = req.user.tenant_id;
+  const vendorId = req.params.id;
   try {
-    const tenantId = req.user.tenant_id;
-    const vendorId = req.params.id;
 
     if (!tenantId) {
       return res.status(400).json({ success: false, message: "Missing tenant ID" });
@@ -103,7 +104,7 @@ exports.updateVendor = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Update vendor error:", error);
+    logger.error("Update vendor error", { error: error.message, tenantId, vendorId });
     res.status(500).json({
       success: false,
       message: "Error updating vendor"
@@ -112,9 +113,9 @@ exports.updateVendor = async (req, res) => {
 };
 
 exports.deleteVendor = async (req, res) => {
+  const tenantId = req.user.tenant_id;
+  const vendorId = req.params.id;
   try {
-    const tenantId = req.user.tenant_id;
-    const vendorId = req.params.id;
 
     if (!tenantId) {
       return res.status(400).json({ success: false, message: "Missing tenant ID" });
@@ -135,7 +136,7 @@ exports.deleteVendor = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Delete vendor error:", error);
+    logger.error("Delete vendor error", { error: error.message, tenantId, vendorId });
     res.status(500).json({
       success: false,
       message: "Error deleting vendor"

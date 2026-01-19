@@ -1,12 +1,13 @@
 const Product = require('../models/Product');
 const { calculatePricing } = require('../utils/commissionCalculator');
+const logger = require('../utils/logger');
 
 //
 // 🔹 CREATE PRODUCT (with tenant)
 //
 const createProduct = async (req, res) => {
+  const tenantId = req.user.tenant_id;
   try {
-    const tenantId = req.user.tenant_id;
 
     const {
       name,
@@ -17,14 +18,6 @@ const createProduct = async (req, res) => {
       category_id,
       vendor_id
     } = req.body;
-
-    // === VALIDATION ===
-    if (!name || !sku || !category_id) {
-      return res.status(400).json({
-        success: false,
-        message: 'name, sku and category_id are required'
-      });
-    }
 
     const newProduct = await Product.create({
       name,
@@ -40,7 +33,7 @@ const createProduct = async (req, res) => {
     return res.status(201).json({ success: true, product: newProduct });
 
   } catch (err) {
-    console.error('Create product error:', err);
+    logger.error('Create product error', { error: err.message, tenantId });
     res.status(500).json({ success: false, message: 'Error creating product' });
   }
 };
@@ -49,8 +42,8 @@ const createProduct = async (req, res) => {
 // 🔹 GET ALL PRODUCTS (tenant scoped)
 //
 const getAllProducts = async (req, res) => {
+  const tenantId = req.user.tenant_id;
   try {
-    const tenantId = req.user.tenant_id;
 
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 20;
@@ -72,7 +65,7 @@ const getAllProducts = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Get all products error:', error);
+    logger.error('Get all products error', { error: error.message, tenantId });
     res.status(500).json({ success: false, message: 'Error fetching products' });
   }
 };
@@ -81,9 +74,9 @@ const getAllProducts = async (req, res) => {
 // 🔹 GET PRODUCTS BY VENDOR (tenant scoped)
 //
 const getProductsByVendor = async (req, res) => {
+  const tenantId = req.user.tenant_id;
+  const { vendor_id } = req.query;
   try {
-    const tenantId = req.user.tenant_id;
-    const { vendor_id } = req.query;
 
     if (!vendor_id) {
       return res.status(400).json({
@@ -113,7 +106,7 @@ const getProductsByVendor = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Get products by vendor error:', error);
+    logger.error('Get products by vendor error', { error: error.message, tenantId, vendor_id });
     res.status(500).json({ success: false, message: 'Error fetching vendor products' });
   }
 };
@@ -122,9 +115,9 @@ const getProductsByVendor = async (req, res) => {
 // 🔹 UPDATE PRODUCT
 //
 const updateProduct = async (req, res) => {
+  const tenantId = req.user.tenant_id;
+  const id = req.params.id;
   try {
-    const tenantId = req.user.tenant_id;
-    const id = req.params.id;
 
     const updated = await Product.update(id, tenantId, req.body);
 
@@ -135,7 +128,7 @@ const updateProduct = async (req, res) => {
     res.json({ success: true, product: updated });
 
   } catch (err) {
-    console.error('Update product error:', err);
+    logger.error('Update product error', { error: err.message, tenantId, productId: id });
     res.status(500).json({ success: false, message: 'Error updating product' });
   }
 };
@@ -144,9 +137,9 @@ const updateProduct = async (req, res) => {
 // 🔹 DELETE PRODUCT
 //
 const deleteProduct = async (req, res) => {
+  const tenantId = req.user.tenant_id;
+  const id = req.params.id;
   try {
-    const tenantId = req.user.tenant_id;
-    const id = req.params.id;
 
     const deleted = await Product.delete(id, tenantId);
 
@@ -157,7 +150,7 @@ const deleteProduct = async (req, res) => {
     res.json({ success: true, deletedId: id });
 
   } catch (err) {
-    console.error('Delete product error:', err);
+    logger.error('Delete product error', { error: err.message, tenantId, productId: id });
     res.status(500).json({ success: false, message: 'Error deleting product' });
   }
 };
@@ -166,8 +159,8 @@ const deleteProduct = async (req, res) => {
 // 🔹 VENDORS + GROUPINGS (tenant scoped)
 //
 const getProductsByVendorGrouped = async (req, res) => {
+  const tenantId = req.user.tenant_id;
   try {
-    const tenantId = req.user.tenant_id;
 
     const rows = await Product.findAllGroupedByVendor(tenantId);
 
@@ -193,18 +186,18 @@ const getProductsByVendorGrouped = async (req, res) => {
     res.json({ success: true, vendors: Object.values(grouped) });
 
   } catch (err) {
-    console.error('Get grouped products error:', err);
+    logger.error('Get grouped products error', { error: err.message, tenantId });
     res.status(500).json({ success: false, message: 'Error fetching grouped products' });
   }
 };
 
 const getVendors = async (req, res) => {
+  const tenantId = req.user.tenant_id;
   try {
-    const tenantId = req.user.tenant_id;
     const vendors = await Product.findAllVendors(tenantId);
     res.json({ success: true, vendors });
   } catch (err) {
-    console.error('Get vendors error:', err);
+    logger.error('Get vendors error', { error: err.message, tenantId });
     res.status(500).json({ success: false, message: 'Error fetching vendors' });
   }
 };

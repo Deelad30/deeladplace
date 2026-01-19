@@ -1,4 +1,5 @@
 const purchaseService = require('../services/purchase.service');
+const logger = require('../utils/logger');
 
 exports.getPurchases = async (req, res) => {
   try {
@@ -6,6 +7,7 @@ exports.getPurchases = async (req, res) => {
     const rows = await purchaseService.listPurchases(tenantId);
     res.json({ ok: true, items: rows });
   } catch (err) {
+    logger.error('Failed to get purchases', { error: err.message, tenantId });
     res.status(500).json({ ok: false, message: err.message });
   }
 };
@@ -19,7 +21,7 @@ exports.createPurchase = async (req, res) => {
 
     res.json({ ok: true, purchase: item });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to create purchase', { error: err.message, tenantId, userId });
     res.status(500).json({ ok: false, message: err.message });
   }
 };
@@ -39,7 +41,7 @@ exports.updatePurchase = async (req, res) => {
 
     res.json({ ok: true, purchase: updated });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to update purchase', { error: err.message, tenantId, purchaseId });
 
     if (err.code === 'INVALID_QTY') {
       return res.status(400).json({ ok: false, message: err.message });
@@ -60,7 +62,7 @@ exports.deletePurchase = async (req, res) => {
 
     res.json({ ok: true });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to delete purchase', { error: err.message, tenantId, purchaseId });
 
     if (err.code === 'PURCHASE_USED') {
       return res.status(400).json({

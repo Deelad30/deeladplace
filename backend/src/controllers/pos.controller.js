@@ -1,6 +1,6 @@
-// pos.controller.js
 const db = require('../config/database');
 const stockService = require('../services/stock.service');
+const logger = require('../utils/logger');
 
 // record sale
 async function recordSale(req, res) {
@@ -8,25 +8,16 @@ async function recordSale(req, res) {
   const userId = req.user.userId || req.user.id;
 
   const {
-  product_id,
-  qty,
-  selling_price,
-  payment_method,
-  payment_breakdown = [],
-  order_method,
-  vendor_id,
-  commission = 0,
-  shift_id
-} = req.body;
-
-
-  // Validate
-  if (!product_id || qty === undefined || !selling_price) {
-    return res.status(400).json({
-      success: false,
-      message: 'product_id, qty, selling_price are required'
-    });
-  }
+    product_id,
+    qty,
+    selling_price,
+    payment_method,
+    payment_breakdown = [],
+    order_method,
+    vendor_id,
+    commission = 0,
+    shift_id
+  } = req.body;
 
   try {
     // 1️⃣ Insert sale record (NO reference)
@@ -96,7 +87,7 @@ async function recordSale(req, res) {
     });
 
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to record sale', { error: err.message, tenantId, userId, product_id });
     res.status(500).json({
       success: false,
       message: 'Failed to record sale'
@@ -111,10 +102,6 @@ async function closeShift(req, res) {
   const tenantId = req.user.tenant_id;
   const userId = req.user.userId || req.user.id;
   const { shift_id } = req.body;
-
-  if (!shift_id) {
-    return res.status(400).json({ success: false, message: 'shift_id is required' });
-  }
 
   try {
     //Get the shift info
@@ -157,7 +144,7 @@ const salesRes = await db.query(
 );
 
     const total_units = salesRes.rows.reduce((sum, s) => sum + Number(s.qty), 0);
-    const total_sales = salesRes.rows.reduce((sum, s) => sum + Number(s.selling_price) * Number(s.qty), 0);
+    const total_sales = salesRes.rows.reduce((sum, s) => sum + (Number(s.selling_price) + Number(s.commission || 0)) * Number(s.qty), 0);
 
     //Calculate payment totals
     const paymentTotals = { cash: 0, transfer: 0, card: 0, other: 0 };
@@ -208,7 +195,7 @@ res.json({
 
 
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to close shift', { error: err.message, tenantId, userId, shift_id });
     res.status(500).json({ success: false, message: 'Failed to close shift' });
   }
 }
@@ -241,7 +228,7 @@ async function openShift(req, res) {
 
     res.json({ success: true, shift: shiftRes.rows[0] });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to open shift', { error: err.message, tenantId, userId });
     res.status(500).json({ success: false, message: 'Failed to open shift' });
   }
 }

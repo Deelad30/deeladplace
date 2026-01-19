@@ -1,5 +1,5 @@
-// src/models/User.js
 const db = require('../config/database');
+const logger = require('../utils/logger');
 
 class User {
 
@@ -47,7 +47,7 @@ class User {
   // UPDATE SUBSCRIPTION PLAN
   // -----------------------------
   static async updatePlan(userId, planType, subscriptionCode = null) {
-    console.log("Updating user plan:", { userId, planType, subscriptionCode });
+    logger.info("Updating user plan", { userId, planType, subscriptionCode });
 
     const result = await db.query(
       `UPDATE users 
@@ -57,8 +57,22 @@ class User {
       [planType, subscriptionCode, userId]
     );
 
-    console.log("DB update result:", result.rows[0]);
+    logger.debug("Plan update DB result", { result: result.rows[0] });
     return result.rows[0];
+  }
+
+  // -----------------------------
+  // FIND ALL BY TENANT
+  // -----------------------------
+  static async findAllByTenant(tenantId) {
+    const result = await db.query(
+      `SELECT id, name, email, role_id, status, created_at 
+       FROM users 
+       WHERE tenant_id = $1
+       ORDER BY name ASC`,
+      [tenantId]
+    );
+    return result.rows;
   }
 }
 

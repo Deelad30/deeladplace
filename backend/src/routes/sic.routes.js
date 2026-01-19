@@ -12,4 +12,7 @@ router.post('/product', auth, requireTenant, sic.submitProductSIC);
 router.get('/raw', auth, requireTenant, sic.listRawSIC);
 router.get('/product', auth, requireTenant, sic.listProductSIC);
 
+router.get('/latest-raw', auth, requireTenant, sic.getLatestRawSIC);
+router.get('/latest-product', auth, requireTenant, sic.getLatestProductSIC);
+
 module.exports = router;

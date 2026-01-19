@@ -1,4 +1,5 @@
 const db = require('../config/database');
+const logger = require('../utils/logger');
 
 async function addRecipeItem(req, res) {
   const tenantId = req.user.tenant_id;
@@ -17,7 +18,7 @@ async function addRecipeItem(req, res) {
 
     res.json({ ok: true });
   } catch (err) {
-    console.error(err);
+    logger.error('Add recipe item failed', { error: err.message, tenantId, productId, materialId: material_id });
     res.status(500).json({ error: 'Add recipe item failed' });
   }
 }
@@ -44,7 +45,7 @@ async function getRecipe(req, res) {
 
     res.json({ ok: true, items: result.rows });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to load recipe', { error: err.message, tenantId, productId });
     res.status(500).json({ error: 'Failed to load recipe' });
   }
 }
@@ -69,7 +70,7 @@ async function updateRecipeItem(req, res) {
 
     res.json({ ok: true });
   } catch (err) {
-    console.error(err);
+    logger.error('Update recipe item failed', { error: err.message, tenantId, itemId });
     res.status(500).json({ error: 'Update failed' });
   }
 }
@@ -87,7 +88,7 @@ async function deleteRecipeItem(req, res) {
 
     res.json({ ok: true });
   } catch (err) {
-    console.error(err);
+    logger.error('Delete recipe item failed', { error: err.message, tenantId, itemId });
     res.status(500).json({ error: 'Delete failed' });
   }
 }

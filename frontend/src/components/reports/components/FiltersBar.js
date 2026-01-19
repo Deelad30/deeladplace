@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 
-const FiltersBar = ({ onApply, vendors = [], current = {} }) => {
+const FiltersBar = ({ onApply, vendors = [], users = [], current = {} }) => {
   const [start, setStart] = useState(current.start || '');
   const [end, setEnd] = useState(current.end || '');
   const [vendorId, setVendorId] = useState(current.vendor_id || '');
   const [paymentType, setPaymentType] = useState(current.payment_type || '');
+  const [userId, setUserId] = useState(current.user_id || '');
 
   // Keep local state in sync if `current` changes
   useEffect(() => {
@@ -12,6 +13,7 @@ const FiltersBar = ({ onApply, vendors = [], current = {} }) => {
     setEnd(current.end || '');
     setVendorId(current.vendor_id || '');
     setPaymentType(current.payment_type || '');
+    setUserId(current.user_id || '');
   }, [current]);
 
   const apply = () => {
@@ -20,6 +22,7 @@ const FiltersBar = ({ onApply, vendors = [], current = {} }) => {
       end: end || null,
       vendor_id: vendorId || null,
       payment_type: paymentType || null,
+      user_id: userId || null,
     });
   };
 
@@ -28,7 +31,8 @@ const FiltersBar = ({ onApply, vendors = [], current = {} }) => {
     setEnd('');
     setVendorId('');
     setPaymentType('');
-    onApply({ start: null, end: null, vendor_id: null, payment_type: null });
+    setUserId('');
+    onApply({ start: null, end: null, vendor_id: null, payment_type: null, user_id: null });
   };
 
   return (
@@ -56,6 +60,20 @@ const FiltersBar = ({ onApply, vendors = [], current = {} }) => {
         {vendors.map((v) => (
           <option key={v.id} value={v.id}>
             {v.name}
+          </option>
+        ))}
+      </select>
+
+      {/* User dropdown */}
+      <select
+        className="filter-select"
+        value={userId}
+        onChange={(e) => setUserId(e.target.value)}
+      >
+        <option value="">All Users</option>
+        {users.map((u) => (
+          <option key={u.id} value={u.id}>
+            {u.name}
           </option>
         ))}
       </select>

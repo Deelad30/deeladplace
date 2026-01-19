@@ -88,7 +88,7 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 35vh;
+  height: 50vh;
 }
 
 .product-card:hover {
@@ -253,9 +253,16 @@ canvas {
 
 
 .main-content{
-      width: 65%!important;
-    margin: auto!important;
+  width: 65%!important;
+  margin: auto!important;
 }
+
+@media (max-width: 768px) {
+  .main-content {
+      width: 96%!important;
+  }
+}
+
 .content-header{
   padding-top: 20px!important;
 }
@@ -269,12 +276,12 @@ canvas {
 }
 
 .btn-primary {
-  background-color: #22c55e; /* Deelad Green */
+  background-color:  #d91f22; /* Deelad Green */
   color: white;
 }
 
 .btn-primary:hover {
-  background-color: #16a34a;
+  background-color: # #d91f22;
 }
 
 .btn-secondary {
@@ -319,7 +326,20 @@ canvas {
   border-color: #22c55e;
 }
 
-@keyframes skeleton {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-cell {
+  height: 18px;
+  width: 100%;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 4px;
+}
+
+.skeleton-row td {
+  padding: 15px 10px !important;
 }

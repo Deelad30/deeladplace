@@ -88,8 +88,9 @@
 /* Charts layout */
 .charts-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 16px;
+  width: 100%;
 }
 
 .chart-card {
@@ -98,7 +99,9 @@
   padding: 18px;
   box-shadow: var(--card-shadow);
   min-height: 260px;
+  width: 100%;
   opacity: 0;
+  max-width: unset!important;
   transform: translateY(8px);
   animation: fadeUp 420ms var(--transition) forwards;
 }
@@ -112,8 +115,9 @@
 /* Additional insights */
 .insights-row {
   display: grid;
-  grid-template-columns: 1fr 360px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 16px;
+  width: 100%;
 }
 
 /* Table card */
@@ -248,4 +252,88 @@
   .kpi-row { grid-template-columns: repeat(2, 1fr); }
   .charts-row { grid-template-columns: 1fr; }
   .insights-row { grid-template-columns: 1fr; }
+}
+
+/* ==========================
+  AUDIT MODE UI
+========================== */
+.audit-toggle-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(217, 31, 34, 0.08); /* Primary color fade */
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+}
+
+.audit-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.audit-hint {
+  display: block;
+  font-size: 0.7rem;
+  color: inherit;
+  font-weight: 600;
+  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.audit-border {
+  border: 1px solid var(--color-primary) !important;
+  box-shadow: 0 0 12px rgba(217, 31, 34, 0.1) !important;
+}
+
+.audit-border-row td {
+  background-color: rgba(217, 31, 34, 0.03) !important;
+  border-bottom: 1px solid var(--color-primary-fade) !important;
+}
+
+/* Switch Styling */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 20px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: var(--color-primary);
+}
+
+input:checked + .slider:before {
+  transform: translateX(16px);
 }

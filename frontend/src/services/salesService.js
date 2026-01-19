@@ -34,6 +34,11 @@ class SalesService {
     return response.data;
   }
 
+  async getVendorPerformance(params = {}) {
+    const response = await api.get('/reports/vendor-performance', { params });
+    return response.data;
+  }
+
 
   // -----------------------
   // OLD SALES ENDPOINTS (STILL USED BY SalesTable)
@@ -59,6 +64,7 @@ class SalesService {
     end: filters.endDate || filters.end || null,
     vendor_id: filters.vendor_id || null,
     payment_type: filters.payment_type || null,
+    user_id: filters.user_id || null,
     limit: 999999 // just fetch everything
   };
 

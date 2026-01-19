@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react';
+import TableSkeleton from '../common/TableSkeleton';
 import PageHeader from '../common/PageHeader';
-import Modals from '../common/Modals';
-import Table from '../common/Table';
+import Modal from '../common/Modal'; // Standard Modal
 import toast from 'react-hot-toast';
 
 import { getOpex, createOpex, updateOpex, deleteOpex } from '../../api/opex';
-import '../../styles/pages/RawMaterialsPage.css';
+import '../../styles/shared/PremiumShared.css'; // Shared Premium Styles
 
 export default function OpexPage() {
   const [loading, setLoading] = useState(true);
   const [opexList, setOpexList] = useState([]);
   const [openModal, setOpenModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [loadingAction, setLoadingAction] = useState(false);
 
   const [form, setForm] = useState({
     name: '',
@@ -56,8 +57,9 @@ export default function OpexPage() {
     } catch (err) {
       console.error(err);
       toast.error('Failed to load OPEX records.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   useEffect(() => {
@@ -71,6 +73,7 @@ export default function OpexPage() {
       return;
     }
 
+    setLoadingAction(true);
     const payload = {
       ...form,
       amount: form.allocation_mode === "fixed" ? Number(form.amount || 0) : null,
@@ -102,6 +105,8 @@ export default function OpexPage() {
     } catch (err) {
       console.error(err);
       toast.error("Failed to save OPEX item");
+    } finally {
+      setLoadingAction(false);
     }
   };
 
@@ -123,26 +128,18 @@ export default function OpexPage() {
   // Delete OPEX
   async function handleDelete(id) {
     if (!window.confirm("Are you sure you want to delete this OPEX record?")) return;
+    
+    setLoadingAction(true);
     try {
       await deleteOpex(id);
       toast.success('OPEX record deleted.');
       loadOpex();
     } catch (err) {
       toast.error('Failed to delete OPEX record.');
+    } finally {
+      setLoadingAction(false);
     }
   }
-
-  // Table columns
-  const columns = [
-    { key: 'name', label: 'Name' },
-    { key: 'allocation_mode', label: 'Mode' },
-    { key: 'amount', label: 'Amount' },
-    { key: 'percentage_value', label: '% of COGS' },
-    { key: 'estimated_monthly_sales', label: 'Monthly Sales' },
-    { key: 'effective_from', label: 'Start Date' },
-    { key: 'effective_to', label: 'End Date' },
-    { key: 'actions', label: 'Actions' }
-  ];
 
   // Filter and paginate
   const filtered = opexList.filter(o =>
@@ -154,179 +151,206 @@ export default function OpexPage() {
   const start = (currentPage - 1) * ITEMS_PER_PAGE;
   const paginated = filtered.slice(start, start + ITEMS_PER_PAGE);
 
-  const tableData = paginated.map(o => ({
-    ...o,
-    effective_from: formatDateDisplay(o.effective_from),
-    effective_to: formatDateDisplay(o.effective_to),
-    actions: (
-      <>
-        <button
-          onClick={() => handleEdit(o)}
-          style={{
-            marginRight: 5,
-            padding: '5px 10px',
-            backgroundColor: '#4caf50',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 3,
-            cursor: 'pointer'
-          }}
-        >
-          Edit
-        </button>
-        <button
-          onClick={() => handleDelete(o.id)}
-          style={{
-            padding: '5px 10px',
-            backgroundColor: '#f44336',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 3,
-            cursor: 'pointer'
-          }}
-        >
-          Delete
-        </button>
-      </>
-    )
-  }));
-
   return (
     <div className="page-container">
-      <PageHeader
-        title="Operational Expenses"
-        actionLabel="Add OPEX"
-        onAction={() => {
-          setOpenModal(true);
-          setEditingId(null);
-          setForm({
-            name: '',
-            allocation_mode: 'fixed',
-            estimated_monthly_sales: '',
-            amount: '',
-            percentage_value: '',
-            effective_from: '',
-            effective_to: ''
-          });
-        }}
-      />
+      {/* Loading Overlay */}
+      {loadingAction && (
+        <div className="loading-overlay">
+            <div className="spinner"></div>
+        </div>
+      )}
 
-      <input
-        type="text"
-        placeholder="Search OPEX..."
-        value={search}
-        onChange={(e) => {
-          setSearch(e.target.value);
-          setCurrentPage(1);
-        }}
-        style={{
-          width: 250,
-          marginBottom: 15,
-          padding: 8,
-          borderRadius: 5,
-          border: '1px solid #ccc'
-        }}
-      />
+      {/* Header Actions */}
+      <div className="page-header-actions">
+        <input
+            type="text"
+            className="search-bar"
+            placeholder="Search OPEX..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
+        />
+        <button className="premium-btn primary" onClick={() => {
+            setOpenModal(true);
+            setEditingId(null);
+            setForm({
+                name: '',
+                allocation_mode: 'fixed',
+                estimated_monthly_sales: '',
+                amount: '',
+                percentage_value: '',
+                effective_from: '',
+                effective_to: ''
+            });
+        }}>
+            + Add Expenses
+        </button>
+      </div>
 
       {loading ? (
-        <div className="loading">Loading...</div>
+        <TableSkeleton columns={[{key:'1'},{key:'2'},{key:'3'},{key:'4'},{key:'5'},{key:'6'},{key:'7'}]} rows={10} />
       ) : (
-        <>
-          <Table columns={columns} data={tableData} />
-          {filtered.length > ITEMS_PER_PAGE && (
-            <div style={{ marginTop: 20, display: 'flex', gap: 10, alignItems: 'center' }}>
-              {currentPage > 1 && (
-                <button onClick={() => setCurrentPage(prev => prev - 1)}>Previous</button>
-              )}
-              <span>Page {currentPage} of {totalPages}</span>
-              {currentPage < totalPages && (
-                <button onClick={() => setCurrentPage(prev => prev + 1)}>Next</button>
-              )}
+        <div className="table-container">
+           <table className="premium-table">
+            <thead>
+                <tr>
+                    <th>Expense Name</th>
+                    <th>Mode</th>
+                    <th>Amount / (%)</th>
+                    <th>Monthly Sales</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th style={{textAlign: 'right'}}>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {paginated.length === 0 ? (
+                    <tr><td colSpan="7" className="empty-state">No OPEX records found.</td></tr>
+                ) : (
+                    paginated.map(o => (
+                        <tr key={o.id}>
+                            <td style={{fontWeight: '600', color: '#0f172a'}}>{o.name}</td>
+                            <td>
+                                <span style={{
+                                    background: o.allocation_mode === 'fixed' ? '#eef2ff' : '#fff7ed',
+                                    color: o.allocation_mode === 'fixed' ? '#4f46e5' : '#ea580c',
+                                    padding: '4px 8px', borderRadius: '6px', fontSize: '13px', textTransform: 'capitalize'
+                                }}>
+                                    {o.allocation_mode === 'percent_of_cogs' ? '% COGS' : 'Fixed'}
+                                </span>
+                            </td>
+                            <td>
+                                {o.allocation_mode === 'fixed' 
+                                    ? `₦${Number(o.amount).toLocaleString()}` 
+                                    : `${o.percentage_value}%`}
+                            </td>
+                            <td>{o.estimated_monthly_sales ? Number(o.estimated_monthly_sales).toLocaleString() : '-'}</td>
+                            <td>{formatDateDisplay(o.effective_from)}</td>
+                            <td>{formatDateDisplay(o.effective_to)}</td>
+                            <td style={{textAlign: 'right'}}>
+                                <button className="item-action-btn edit" onClick={() => handleEdit(o)}>Edit</button>
+                                <button className="item-action-btn delete" onClick={() => handleDelete(o.id)}>Delete</button>
+                            </td>
+                        </tr>
+                    ))
+                )}
+            </tbody>
+           </table>
+
+           {/* Pagination */}
+           {filtered.length > ITEMS_PER_PAGE && (
+            <div className="pagination-container">
+                <button 
+                  className="page-btn"
+                  onClick={() => setCurrentPage(prev => prev - 1)}
+                  disabled={currentPage === 1}
+                >Previous</button>
+                <span style={{fontSize: '14px', color: '#64748b'}}>Page {currentPage} of {totalPages}</span>
+                <button 
+                  className="page-btn" 
+                  onClick={() => setCurrentPage(prev => prev + 1)}
+                  disabled={currentPage === totalPages}
+                >Next</button>
             </div>
           )}
-        </>
+        </div>
       )}
 
       {/* Modal */}
-      <Modals
-        open={openModal}
-        title={editingId ? 'Edit OPEX' : 'New OPEX'}
+      <Modal
+        visible={openModal}
         onClose={() => setOpenModal(false)}
+        title={editingId ? 'Edit OPEX' : 'New Operational Expense'}
       >
-        <div className="form-group">
-          <label>Name</label>
-          <input
-            value={form.name}
-            onChange={e => setForm({ ...form, name: e.target.value })}
-          />
+        <div className="vendor-form">
+            <div className="form-group">
+                <label className="premium-label">Expense Name</label>
+                <input
+                    className="premium-input"
+                    value={form.name}
+                    onChange={e => setForm({ ...form, name: e.target.value })}
+                    placeholder="e.g. Rent, Utilities..."
+                />
+            </div>
+
+            <div className="form-group">
+                <label className="premium-label">Allocation Mode</label>
+                <select
+                    className="premium-input"
+                    value={form.allocation_mode}
+                    onChange={e => setForm({ ...form, allocation_mode: e.target.value })}
+                >
+                    <option value="fixed">Fixed Amount</option>
+                    <option value="percent_of_cogs">% of COGS</option>
+                </select>
+            </div>
+
+
+            {form.allocation_mode === 'fixed' && (
+              <div className="form-group">
+                <label className="premium-label">Fixed Amount (₦)</label>
+                <input
+                  className="premium-input"
+                  type="number"
+                  value={form.amount}
+                  onChange={e => setForm({ ...form, amount: e.target.value })}
+                  placeholder="0.00"
+                />
+              </div>
+            )}
+
+            {form.allocation_mode === 'percent_of_cogs' && (
+              <div className="form-group">
+                <label className="premium-label">Percentage Value (%)</label>
+                <input
+                  className="premium-input"
+                  type="number"
+                  value={form.percentage_value}
+                  onChange={e => setForm({ ...form, percentage_value: e.target.value })}
+                  placeholder="e.g. 5"
+                />
+              </div>
+            )}
+
+            <div className="form-group">
+                <label className="premium-label">Estimated Monthly Sales</label>
+                <input
+                    className="premium-input"
+                    type="number"
+                    value={form.estimated_monthly_sales}
+                    onChange={e => setForm({ ...form, estimated_monthly_sales: e.target.value })}
+                    placeholder="Optional"
+                />
+            </div>
+
+            <div className="form-grid">
+                <div className="form-group">
+                    <label className="premium-label">Start Date</label>
+                    <input
+                        className="premium-input"
+                        type="date"
+                        value={form.effective_from}
+                        onChange={e => setForm({ ...form, effective_from: e.target.value })}
+                    />
+                </div>
+                <div className="form-group">
+                    <label className="premium-label">End Date</label>
+                    <input
+                        className="premium-input"
+                        type="date"
+                        value={form.effective_to}
+                        onChange={e => setForm({ ...form, effective_to: e.target.value })}
+                    />
+                </div>
+            </div>
+
+            <button className="submit-btn full-width" onClick={handleSave} disabled={loadingAction} style={{marginTop: '20px'}}>
+                {loadingAction ? "Saving..." : (editingId ? "Update Expense" : "Add Expense")}
+            </button>
         </div>
-
-        <div className="form-group">
-          <label>Allocation Mode</label>
-          <select
-            value={form.allocation_mode}
-            onChange={e => setForm({ ...form, allocation_mode: e.target.value })}
-          >
-            <option value="fixed">Fixed</option>
-            <option value="percent_of_cogs">% of COGS</option>
-          </select>
-        </div>
-
-
-        {form.allocation_mode === 'fixed' && (
-          <div className="form-group">
-            <label>Amount</label>
-            <input
-              type="number"
-              value={form.amount}
-              onChange={e => setForm({ ...form, amount: e.target.value })}
-            />
-          </div>
-        )}
-
-        {form.allocation_mode === 'percent_of_cogs' && (
-          <div className="form-group">
-            <label>Percentage Value</label>
-            <input
-              type="number"
-              value={form.percentage_value}
-              onChange={e => setForm({ ...form, percentage_value: e.target.value })}
-            />
-          </div>
-        )}
-
-        <div className="form-group">
-          <label>Estimated Monthly Sales</label>
-          <input
-            type="number"
-            value={form.estimated_monthly_sales}
-            onChange={e => setForm({ ...form, estimated_monthly_sales: e.target.value })}
-          />
-        </div>
-
-
-        <div className="form-group">
-          <label>Start Date</label>
-          <input
-            type="date"
-            value={form.effective_from}
-            onChange={e => setForm({ ...form, effective_from: e.target.value })}
-          />
-        </div>
-
-        <div className="form-group">
-          <label>End Date</label>
-          <input
-            type="date"
-            value={form.effective_to}
-            onChange={e => setForm({ ...form, effective_to: e.target.value })}
-          />
-        </div>
-
-        <button className="primary-btn full" onClick={handleSave}>
-          {editingId ? 'Update' : 'Save'}
-        </button>
-      </Modals>
+      </Modal>
     </div>
   );
 }

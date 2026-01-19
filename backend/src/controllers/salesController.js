@@ -2,6 +2,7 @@
 const Sale = require('../models/Sale');
 const Product = require('../models/Product');
 const { calculatePricing } = require('../utils/commissionCalculator');
+const logger = require('../utils/logger');
 
 // ------------------------------------------------------
 // CREATE SALE
@@ -41,7 +42,7 @@ const createSale = async (req, res) => {
     res.status(201).json({ success: true, message: "Sale recorded successfully", sale });
 
   } catch (error) {
-    console.error("Create sale error:", error);
+    logger.error("Create sale error", { error: error.message, vendor_id, product_id });
     res.status(500).json({ success: false, message: "Error recording sale" });
   }
 };
@@ -62,7 +63,7 @@ const getSalesSummary = async (req, res) => {
     res.json({ success: true, summary });
 
   } catch (error) {
-    console.error("Get sales summary error:", error);
+    logger.error("Get sales summary error", { error: error.message, vendor_id });
     res.status(500).json({ success: false, message: "Error fetching sales summary" });
   }
 };
@@ -90,7 +91,7 @@ const getOverview = async (req, res) => {
     res.json({ success: true, overview });
 
   } catch (error) {
-    console.error("Get overview error:", error);
+    logger.error("Get overview error", { error: error.message, vendor_id });
     res.status(500).json({ success: false, message: "Error fetching overview" });
   }
 };
@@ -117,7 +118,7 @@ const getTopProducts = async (req, res) => {
     res.json({ success: true, top_products: rows });
 
   } catch (error) {
-    console.error("Get top products error:", error);
+    logger.error("Get top products error", { error: error.message, vendor_id });
     res.status(500).json({ success: false, message: "Error fetching top products" });
   }
 };
@@ -142,7 +143,7 @@ const getPaymentSummary = async (req, res) => {
     res.json({ success: true, payment_summary: summary });
 
   } catch (error) {
-    console.error("Get payment summary error:", error);
+    logger.error("Get payment summary error", { error: error.message, vendor_id });
     res.status(500).json({ success: false, message: "Error fetching payment summary" });
   }
 };
@@ -175,7 +176,7 @@ const getSalesPaginated = async (req, res) => {
     res.json({ success: true, ...result });
 
   } catch (error) {
-    console.error("Get paginated sales error:", error);
+    logger.error("Get paginated sales error", { error: error.message, vendor_id, product_id });
     res.status(500).json({ success: false, message: "Error fetching sales" });
   }
 };
@@ -202,7 +203,7 @@ const getVendorsSummary = async (req, res) => {
     res.json({ success: true, vendors: rows });
 
   } catch (error) {
-    console.error("Get vendors summary error:", error);
+    logger.error("Get vendors summary error", { error: error.message, vendor_id });
     res.status(500).json({ success: false, message: "Error fetching vendor summaries" });
   }
 };

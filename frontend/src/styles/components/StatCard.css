@@ -1,0 +1,87 @@
+@import '../../styles/variables.css';
+
+.stat-card {
+    position: relative;
+    padding: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    overflow: hidden;
+    height: 140px;
+    background: #fff; /* Fallback */
+}
+
+/* Color Variants */
+.stat-card.primary .stat-icon-wrapper { background: var(--color-primary-light); color: var(--color-primary); }
+.stat-card.success .stat-icon-wrapper { background: var(--color-success-bg); color: var(--color-success); }
+.stat-card.warning .stat-icon-wrapper { background: var(--color-warning-bg); color: var(--color-warning); }
+
+.stat-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+    z-index: 2;
+}
+
+.stat-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--color-text-main);
+    letter-spacing: -0.5px;
+}
+
+.stat-trend {
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.stat-trend.up { color: var(--color-success); }
+.stat-trend.down { color: var(--color-danger); }
+
+/* Icon Wrapper */
+.stat-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    transition: transform 0.3s ease;
+    z-index: 2;
+}
+
+.stat-card:hover .stat-icon-wrapper {
+    transform: scale(1.1) rotate(5deg);
+}
+
+/* Decorative Background Blob */
+.stat-bg-blob {
+    position: absolute;
+    right: -20px;
+    bottom: -20px;
+    width: 100px;
+    height: 100px;
+    background: currentColor;
+    border-radius: 50%;
+    opacity: 0.03;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.stat-card.primary { color: var(--color-primary); }
+.stat-card.success { color: var(--color-success); }
+.stat-card.warning { color: var(--color-warning); }
