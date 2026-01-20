@@ -513,4 +513,11 @@ body,
   .story-layout, .onboarding-grid, .dual-cta-grid { grid-template-columns: 1fr; }
   .header { padding: 10px 20px !important; }
   .header nav { display: none; } /* Add hamburger later if needed or keep hidden for simplicity */
+  .hero-content h1{
+    font-size: 35px!important;
+  }
+  .premium-card h3{
+    margin-top: 28px!important;
+    font-size: 30px!important;
+  }
 }
