@@ -19,7 +19,9 @@ import {
   faCheckCircle,
   faClock,
   faLaptop,
-  faBookOpen
+  faBookOpen,
+  faEnvelope,
+  faLocationDot
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function LandingPage() {
@@ -29,6 +31,24 @@ export default function LandingPage() {
     const timer = setTimeout(() => setLoading(false), 900);
     return () => clearTimeout(timer);
   }, []);
+
+  // Scroll Animation Logic
+  useEffect(() => {
+    if (loading) return;
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    const sections = document.querySelectorAll('.fade-in-section');
+    sections.forEach(section => observer.observe(section));
+
+    return () => sections.forEach(section => observer.unobserve(section));
+  }, [loading]);
 
   useEffect(() => {
     document.title = "DeeSoftwork | Your Business in a Box";
@@ -71,7 +91,12 @@ export default function LandingPage() {
       </header>
 
       {/* HERO SECTION */}
-      <div className="hero-wrapper">
+      <div className="hero-wrapper" style={{ 
+          backgroundImage: "url('/Hero.png')", 
+          backgroundSize: 'cover', 
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+      }}>
         <div className="hero-overlay"></div>
         <div className="hero-content">
           <h1>Why Hard Work When You Can Just Use DeeSoftwork?</h1>
@@ -87,7 +112,7 @@ export default function LandingPage() {
       </div>
 
       {/* PROBLEM SECTION */}
-      <section className="section" id="problem">
+      <section className="section bg-pattern-subtle fade-in-section" id="problem">
         <div className="section-header landing-pg">
             <h2>We take the hard work, stress and wahala off your hands</h2>
             <p>This isn’t just hard work. It’s profit leaking every single day.</p>
@@ -102,7 +127,7 @@ export default function LandingPage() {
                 { icon: faTable, text: "Long nights with messy spreadsheets." },
                 { icon: faUserClock, text: "I can't be everywhere but need to know everything." }
             ].map((item, i) => (
-                <div key={i} style={{ 
+                <div key={i} className="fade-in-section" style={{ 
                     padding: '24px', 
                     background: '#f8f9fa', 
                     borderRadius: '16px', 
@@ -110,7 +135,8 @@ export default function LandingPage() {
                     alignItems: 'center', 
                     gap: '16px',
                     fontSize: '1.1rem',
-                    fontWeight: '500'
+                    fontWeight: '500',
+                    transitionDelay: `${i * 100}ms`
                 }}>
                     <FontAwesomeIcon icon={item.icon} style={{ color: '#C81E1E', fontSize: '24px' }} />
                     {item.text}
@@ -119,44 +145,35 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* AUTOMATED PROTECTION SYSTEM (Red Cards + Yellow Icons) */}
+      {/* AUTOMATED PROTECTION SYSTEM */}
       <section className="section" id="how">
-        <div className="section-header landing-pg">
+        <div className="section-header landing-pg fade-in-section">
             <h2>Your Automated Protection System</h2>
             <p>Everything you need, nothing you don't.</p>
         </div>
 
         <div className="features-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))' }}>
-            {/* Card 1 */}
-            <div className="premium-card">
+            <div className="premium-card fade-in-section" style={{ transitionDelay: '0ms' }}>
                 <FontAwesomeIcon icon={faMoneyCheckDollar} className="icon-yellow" />
                 <h3>Perfect Pricing Engine</h3>
                 <p>Profit built into every price, automatically. Exact margin targeting with zero guesswork.</p>
             </div>
-
-            {/* Card 2 */}
-            <div className="premium-card">
+            <div className="premium-card fade-in-section" style={{ transitionDelay: '100ms' }}>
                 <FontAwesomeIcon icon={faSearch} className="icon-yellow" />
                 <h3>The 24/7 Loss Detective</h3>
                 <p>Compares expected vs. actual usage and flags theft, waste, or error instantly.</p>
             </div>
-
-            {/* Card 3 */}
-            <div className="premium-card">
+            <div className="premium-card fade-in-section" style={{ transitionDelay: '200ms' }}>
                 <FontAwesomeIcon icon={faCashRegister} className="icon-yellow" />
                 <h3>Cash Register Guardian</h3>
                 <p>Sales automatically reconciled with cash. Any mismatch becomes visible immediately.</p>
             </div>
-
-            {/* Card 4 */}
-            <div className="premium-card">
+            <div className="premium-card fade-in-section" style={{ transitionDelay: '300ms' }}>
                 <FontAwesomeIcon icon={faBoxesStacked} className="icon-yellow" />
                 <h3>Real-World Stock Control</h3>
                 <p>Track stock as you actually work. Manual transfers included. Low-stock alerts built-in.</p>
             </div>
-
-            {/* Card 5 */}
-            <div className="premium-card">
+            <div className="premium-card fade-in-section" style={{ transitionDelay: '400ms' }}>
                 <FontAwesomeIcon icon={faChartPie} className="icon-yellow" />
                 <h3>The Complete Profit Story</h3>
                 <p>From product margins to business viability—all synced in one living dashboard.</p>
@@ -164,18 +181,18 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* PRICING (Vertical Red Cards with Yellow Strip) */}
-      <section className="section" id="pricing" style={{ background: '#fafafa' }}>
-        <div className="section-header landing-pg">
+      {/* PRICING */}
+      <section className="section bg-pattern-subtle" id="pricing">
+        <div className="section-header landing-pg fade-in-section">
             <h2>Choose your path to clarity.</h2>
             <p>Start simple, or scale smart. Every plan includes our "dedicated support week".</p>
         </div>
 
         <div className="pricing-grid">
             {/* Basic */}
-            <div className="premium-card" style={{ paddingTop: '80px' }}>
+            <div className="premium-card fade-in-section" style={{ paddingTop: '80px', transitionDelay: '0ms' }}>
                 <div className="card-header-accent">BASIC</div>
-                <h3 style={{ fontSize: '2.5rem', marginBottom: '10px' }}>N10,000<span style={{ fontSize: '1rem', fontWeight: '400' }}>/mo</span></h3>
+                <h3 style={{ fontSize: '2.5rem', marginBottom: '10px', marginTop: '10px', textAlign: 'center' }}>N10,000<span style={{ fontSize: '1rem', fontWeight: '400' }}>/mo</span></h3>
                 <ul style={{ listStyle: 'none', marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
                     <li><FontAwesomeIcon icon={faCheckCircle} /> Smart POS & Sales</li>
                     <li><FontAwesomeIcon icon={faCheckCircle} /> Recipe Costing</li>
@@ -186,9 +203,9 @@ export default function LandingPage() {
             </div>
 
             {/* Pro */}
-            <div className="premium-card" style={{ paddingTop: '80px', transform: 'scale(1.05)', zIndex: 2 }}>
+            <div className="premium-card fade-in-section" style={{ paddingTop: '80px', transform: 'scale(1.05)', zIndex: 2, transitionDelay: '150ms' }}>
                 <div className="card-header-accent" style={{ background: 'white', color: '#D91F22' }}>PRO (POPULAR)</div>
-                <h3 style={{ fontSize: '2.5rem', marginBottom: '10px' }}>N20,000<span style={{ fontSize: '1rem', fontWeight: '400' }}>/mo</span></h3>
+                <h3 style={{ fontSize: '2.5rem', marginBottom: '10px', marginTop: '10px', textAlign: 'center' }}>N20,000<span style={{ fontSize: '1rem', fontWeight: '400' }}>/mo</span></h3>
                 <ul style={{ listStyle: 'none', marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
                     <li><FontAwesomeIcon icon={faCheckCircle} /> Everything in Basic</li>
                     <li><FontAwesomeIcon icon={faCheckCircle} /> Multi-store & Vendors</li>
@@ -199,9 +216,9 @@ export default function LandingPage() {
             </div>
 
             {/* Enterprise */}
-            <div className="premium-card" style={{ paddingTop: '80px' }}>
+            <div className="premium-card fade-in-section" style={{ paddingTop: '80px', transitionDelay: '300ms' }}>
                 <div className="card-header-accent">ENTERPRISE</div>
-                <h3 style={{ fontSize: '2.5rem', marginBottom: '10px' }}>Custom</h3>
+                <h3 style={{ fontSize: '2.5rem', marginBottom: '10px', marginTop: '10px', textAlign: 'center' }}>Custom</h3>
                 <ul style={{ listStyle: 'none', marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
                     <li><FontAwesomeIcon icon={faCheckCircle} /> Direct API Access</li>
                     <li><FontAwesomeIcon icon={faCheckCircle} /> Custom Features</li>
@@ -214,7 +231,7 @@ export default function LandingPage() {
       </section>
 
       {/* FOUNDER STORY */}
-      <section className="section" id="story">
+      <section className="section bg-pattern-subtle fade-in-section" id="story">
         <div className="section-header landing-pg">
             <h2>We didn’t imagine the problem, we lived it!</h2>
         </div>
@@ -241,14 +258,13 @@ export default function LandingPage() {
 
       {/* ONBOARDING */}
       <section className="section" id="onboarding">
-        <div className="section-header landing-pg">
+        <div className="section-header landing-pg fade-in-section">
             <h2>Onboard in week. Master in a day!</h2>
             <p>We hold your hand through launch, dedicated week, simple setup, live tutorial, and your first eye-opening report within days.</p>
         </div>
 
         <div className="onboarding-grid">
-            {/* Steps */}
-            <div className="premium-card" style={{ background: '#C81E1E' }}> {/* Plain red distinct from others if needed, using class for consistency */}
+            <div className="premium-card fade-in-section" style={{ background: '#C81E1E', transitionDelay: '0ms' }}>
                  <div className="step-list">
                     <div className="step-item">
                         <div className="step-icon" style={{ background: 'white', color: '#C81E1E' }}><FontAwesomeIcon icon={faClock} /></div>
@@ -274,8 +290,7 @@ export default function LandingPage() {
                  </div>
             </div>
 
-            {/* Testimonial */}
-            <div className="testimonial-card">
+            <div className="testimonial-card fade-in-section" style={{ transitionDelay: '200ms' }}>
                 <div style={{ position: 'relative', zIndex: 2 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
                          <img src="/founder.png" alt="User" style={{ width: '60px', height: '60px', borderRadius: '50%', border: '2px solid #FFD700', objectFit: 'cover' }} />
@@ -293,48 +308,82 @@ export default function LandingPage() {
       </section>
 
       {/* FINAL DUAL CTA */}
-      <section className="section" id="final-cta">
-        <div className="section-header landing-pg">
+      <section className="section bg-pattern-subtle" id="final-cta">
+        <div className="section-header landing-pg fade-in-section">
             <h2>Why keep doing the hard work?</h2>
             <p>You built an amazing business. It deserves tools that work as hard as you do.</p>
         </div>
 
         <div className="dual-cta-grid">
-            {/* Left Box */}
-            <div className="premium-card">
+            <div className="premium-card fade-in-section" style={{ transitionDelay: '0ms' }}>
                 <h3>Ready to automate?</h3>
                 <p style={{ margin: '16px 0 30px', opacity: 0.9 }}>Start with the most popular plan and get your business-in-a-box now.</p>
-                
                 <ul style={{ listStyle: 'none', marginBottom: '30px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <li><FontAwesomeIcon icon={faCheckCircle} /> Most popular plan pre-configured</li>
                     <li><FontAwesomeIcon icon={faCheckCircle} /> Dedicated onboarding week</li>
                     <li><FontAwesomeIcon icon={faCheckCircle} /> Priority support</li>
                 </ul>
-
                 <Link to="/login" className="btn-yellow">Get Started with Pro Plan</Link>
             </div>
 
-            {/* Right Box */}
-            <div className="premium-card">
+            <div className="premium-card fade-in-section" style={{ transitionDelay: '200ms' }}>
                 <h3>Want to see your exact solution?</h3>
                 <p style={{ margin: '16px 0 30px', opacity: 0.9 }}>Spend 20-Minutes with our founder. Identify your profit leaks, and see the fix.</p>
-                
                 <ul style={{ listStyle: 'none', marginBottom: '30px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <li><FontAwesomeIcon icon={faCheckCircle} /> 20-Minutes custom audit</li>
                     <li><FontAwesomeIcon icon={faCheckCircle} /> No sales pitch</li>
                     <li><FontAwesomeIcon icon={faCheckCircle} /> Clear roadmap to fix leaks</li>
                 </ul>
-
                 <a href="mailto:deeladplacesoftwork@gmail.com" className="btn-yellow">Book Your Audit</a>
             </div>
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="footer">
-        <p>© 2024 DeeSoftwork. All rights reserved.</p>
+      {/* PREMIUM FOOTER */}
+      <footer className="premium-footer fade-in-section">
+        <div className="footer-content">
+            <div className="footer-brand">
+                <img src="/logo.png" alt="DeeSoftwork" style={{ height: '40px', marginBottom:'20px', filter:'brightness(0) invert(1)' }} />
+                <p>The all-in-one operating system for African F&B businesses. Built by owners, for owners.</p>
+            </div>
+            <div className="footer-col">
+                <h4>Product</h4>
+                <ul>
+                    <li><a href="#how">How It Works</a></li>
+                    <li><a href="#pricing">Pricing</a></li>
+                    <li><a href="#">Inventory</a></li>
+                    <li><a href="#">Reports</a></li>
+                </ul>
+            </div>
+            <div className="footer-col">
+                <h4>Company</h4>
+                <ul>
+                    <li><a href="#story">Our Story</a></li>
+                    <li><a href="#">Careers</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                </ul>
+            </div>
+            <div className="footer-col">
+                <h4>Contact</h4>
+                <ul>
+                    <li><a href="mailto:deesoftwork@gmail.com"><FontAwesomeIcon icon={faEnvelope} /> deesoftwork@gmail.com</a></li>
+                    <li><a href="#"><FontAwesomeIcon icon={faPhone} /> +234 803 892 4869</a></li>
+                    <li><a href="#"> Made with ❤️ in Nigeria</a></li>
+                </ul>
+            </div>
+        </div>
+        <div className="footer-bottom">
+            <p>&copy; {new Date().getFullYear()} DeeSoftwork. All rights reserved.</p>
+            <div style={{ display: 'flex', gap: '20px' }}>
+                <a href="#" style={{ color: '#aaa', textDecoration: 'none' }}>Twitter</a>
+                <a href="#" style={{ color: '#aaa', textDecoration: 'none' }}>LinkedIn</a>
+                <a href="#" style={{ color: '#aaa', textDecoration: 'none' }}>Instagram</a>
+            </div>
+        </div>
       </footer>
     </div>
   );
 }
+
 
