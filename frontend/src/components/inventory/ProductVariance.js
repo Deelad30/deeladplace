@@ -171,106 +171,121 @@ const round0 = (value) => {
   };
 
   return (
-    <div className="variance-report-container">
-      <h2>Product Variance Report</h2>
+    <div className="variance-report-container animate-fade-in premium-card p-6">
+      <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
+        <h2 className="text-xl font-bold text-gray-800">Product Variance Report</h2>
+        <div className="flex gap-2">
+            {filteredItems.length > 0 && (
+              <>
+                <button className="secondary-btn small" onClick={exportCSV}>CSV</button>
+                <button className="secondary-btn small" onClick={exportExcel}>Excel</button>
+                <button className="secondary-btn small" onClick={exportPDF}>PDF</button>
+              </>
+            )}
+        </div>
+      </div>
 
-      {/* Filters */}
-      <div className="controls" style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-  <input
-    type="date"
-    value={startDate}
-    onChange={e => setStartDate(e.target.value)}
-  />
-  <input
-    type="date"
-    value={endDate}
-    onChange={e => setEndDate(e.target.value)}
-  />
+      <div className="premium-card bg-gray-50 p-4 mb-6 flex flex-wrap gap-4 items-end border border-gray-200">
+        <div className="flex flex-col gap-1">
+           <label className="text-xs font-semibold text-gray-500 uppercase">Start Date</label>
+           <input type="date" className="premium-input w-auto bg-white" value={startDate} onChange={e => setStartDate(e.target.value)} />
+        </div>
+        <div className="flex flex-col gap-1">
+           <label className="text-xs font-semibold text-gray-500 uppercase">End Date</label>
+           <input type="date" className="premium-input w-auto bg-white" value={endDate} onChange={e => setEndDate(e.target.value)} />
+        </div>
 
-  <input
-    type="text"
-    placeholder="Search products..."
-    value={search}
-    onChange={e => setSearch(e.target.value)}
-    style={{ minWidth: 200 }}
-  />
+        <div className="flex flex-col gap-1 min-w-[150px]">
+           <label className="text-xs font-semibold text-gray-500 uppercase">Vendor</label>
+           <select
+                className="premium-input w-full bg-white"
+                value={selectedVendor}
+                onChange={e => setSelectedVendor(e.target.value)}
+            >
+                <option value="">All Vendors</option>
+                {vendors.map(v => (
+                <option key={v.id} value={v.id}>
+                    {v.name}
+                </option>
+                ))}
+            </select>
+        </div>
+        
+        <div className="flex-1 min-w-[200px]">
+           <label className="text-xs font-semibold text-gray-500 uppercase">Search</label>
+           <input
+            type="text"
+            className="premium-input w-full bg-white"
+            placeholder="Search products..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
 
-  <select
-    value={selectedVendor}
-    onChange={e => setSelectedVendor(e.target.value)}
-    style={{ minWidth: 200 }}
-  >
-    <option value="">All Vendors</option>
-    {vendors.map(v => (
-      <option key={v.id} value={v.id}>
-        {v.name}
-      </option>
-    ))}
-  </select>
+        <button className="primary-btn" onClick={fetchVariance} disabled={loading}>
+          {loading ? 'Loading...' : 'Fetch Report'}
+        </button>
+      </div>
 
-  <button onClick={fetchVariance} disabled={loading}>
-    {loading ? "Loading..." : "Fetch Variance"}
-  </button>
-
-  {filteredItems.length > 0 && (
-    <>
-      <button onClick={exportCSV}>CSV</button>
-      <button onClick={exportExcel}>Excel</button>
-      <button onClick={exportPDF}>PDF</button>
-    </>
-  )}
-</div>
-
-
-      {/* Table */}
-      <table>
-        <thead>
-          <tr>
-            <th>Product</th>
-            <th>Expected Qty</th>
-            <th>Actual Qty</th>
-            <th>Variance Qty</th>
-            <th>Expected Revenue</th>
-            <th>Actual Revenue</th>
-            <th>Revenue Variance</th>
-            <th>Profit Variance</th>
-            <th>Remark</th>
-          </tr>
-        </thead>
-
-<tbody>
-  {loading ? (
-    [...Array(6)].map((_, i) => (
-      <tr key={i} className="skeleton-row">
-        <td colSpan="9">
-          <div className="skeleton-line" />
-        </td>
-      </tr>
-    ))
-  ) : filteredItems.length === 0 ? (
-    <tr>
-      <td colSpan="9" style={{ textAlign: "center" }}>
-        No data
-      </td>
-    </tr>
-  ) : (
-    filteredItems.map(i => (
-      <tr key={i.product_id}>
-        <td>{i.product_name}</td>
-        <td>{round0(i.expected_sales_qty)}</td>
-        <td>{round0(i.actual_sales_qty)}</td>
-        <td>{round0(i.variance_qty)}</td>
-        <td>{round(i.expected_revenue)}</td>
-        <td>{round(i.actual_revenue)}</td>
-        <td>{round(i.revenue_variance)}</td>
-        <td>{round(i.profit_variance)}</td>
-        <td className={remarkClass(i.remark)}>{i.remark}</td>
-      </tr>
-    ))
-  )}
-</tbody>
-
-      </table>
+      <div className="premium-table-wrapper">
+        <table className="premium-table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th className="text-right">Expected Qty</th>
+              <th className="text-right">Actual Qty</th>
+              <th className="text-right">Variance Qty</th>
+              <th className="text-right">Exp Revenue</th>
+              <th className="text-right">Act Revenue</th>
+              <th className="text-right">Rev Variance</th>
+              <th className="text-right">Profit Var</th>
+              <th>Remark</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              [...Array(6)].map((_, i) => (
+                <tr key={i} className="animate-pulse">
+                  <td colSpan="9"><div className="h-4 bg-gray-200 rounded w-full"></div></td>
+                </tr>
+              ))
+            ) : filteredItems.length === 0 ? (
+              <tr>
+                <td colSpan="9" className="text-center py-8 text-gray-500">No data found</td>
+              </tr>
+            ) : (
+              filteredItems.map(i => (
+                <tr key={i.product_id}>
+                  <td className="font-medium text-gray-700">{i.product_name}</td>
+                  <td className="text-right">{round0(i.expected_sales_qty)}</td>
+                  <td className="text-right">{round0(i.actual_sales_qty)}</td>
+                  <td className={`text-right font-medium ${i.variance_qty < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                     {round0(i.variance_qty)}
+                  </td>
+                  <td className="text-right">{round(i.expected_revenue)}</td>
+                  <td className="text-right">{round(i.actual_revenue)}</td>
+                  <td className={`text-right font-bold ${i.revenue_variance < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                     {round(i.revenue_variance)}
+                  </td>
+                  <td className={`text-right font-bold ${i.profit_variance < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                     {round(i.profit_variance)}
+                  </td>
+                  <td>
+                    <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                        !i.remark ? 'bg-gray-100 text-gray-600' :
+                        i.remark === 'Missing sales' ? 'bg-red-100 text-red-700' :
+                        i.remark === 'Overring' ? 'bg-blue-100 text-blue-700' :
+                        'bg-green-100 text-green-700'
+                    }`}>
+                      {i.remark || '-'}
+                    </span>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

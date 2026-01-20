@@ -258,7 +258,7 @@ const VendorList = () => {
           </div>
           <div>
              <div className="stat-value">{activeVendors}</div>
-             <div className="stat-label">Active Partners</div>
+             <div className="stat-label">Active Vendors</div>
           </div>
         </div>
         <div className="stat-card inactive">
@@ -267,7 +267,7 @@ const VendorList = () => {
            </div>
            <div>
              <div className="stat-value">{inactiveVendors}</div>
-             <div className="stat-label">Inactive</div>
+             <div className="stat-label">Inactive Vendors</div>
            </div>
         </div>
       </div>

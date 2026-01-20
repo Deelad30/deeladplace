@@ -397,7 +397,7 @@ textarea.premium-input {
     padding: 6px;
     background: #f1f5f9;
     border-radius: 16px;
-    width: fit-content;
+    width: 100%;
     border: 1px solid #e2e8f0;
 }
 
@@ -412,6 +412,11 @@ textarea.premium-input {
     border-radius: 12px;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     white-space: nowrap;
+    flex: 1;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .tab-btn:hover {
@@ -545,9 +550,21 @@ textarea.premium-input {
     .mobile-view-cards {
         display: block;
     }
-    
-    /* Ensure grid allows full width on mobile */
+}
+
+/* Ensure grid stacks on tablets and mobile to avoid cramped sidebar */
+@media (max-width: 1024px) {
     .ledger-top-grid {
         grid-template-columns: 1fr !important;
+    }
+}
+
+/* User requested fix: Linearize form on desktop */
+@media (min-width: 1024px) {
+    .stock-dashboard-layout .form-grid {
+        display: block !important;
+    }
+    .stock-dashboard-layout .form-grid .form-group {
+        margin-bottom: 24px;
     }
 }

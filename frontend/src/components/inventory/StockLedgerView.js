@@ -32,28 +32,23 @@ const StockLedgerView = () => {
     }, [refreshKey]);
 
     return (
-        <div className="stock-ledger-view">
-            <div className="ledger-top-grid" style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', 
-                gap: '24px',
-                marginBottom: '24px'
-            }}>
-                {/* 1. Entry Form (Left) */}
-                <section style={{ flex: 2 }}>
-                    <StockLedgerForm onSuccess={handleSuccess} />
-                </section>
-
-                {/* 2. Low Stock Widget (Right) */}
-                <section style={{ flex: 1 }}>
-                    <LowStockWidget stockItems={stockItems} />
-                </section>
+        <div style={{ display: 'flex', flexDirection: 'column-reverse' }} className="stock-dashboard-layout">
+            
+            {/* Main Content: Stock Table */}
+            <div className="stock-main-content">
+                <StockBalanceTable refreshTrigger={refreshKey} highlightId={highlightId} />
             </div>
 
-            {/* 3. Balance Table (Full Width) */}
-            <section className="ledger-table-section">
-                <StockBalanceTable refreshTrigger={refreshKey} highlightId={highlightId} />
-            </section>
+            {/* Sidebar: Actions & Alerts */}
+            <div className="stock-sidebar">
+                <LowStockWidget stockItems={stockItems} />
+                
+                {/* Form in Sidebar - simplified layout */}
+                <div className="sidebar-form-wrapper">
+                    <StockLedgerForm onSuccess={handleSuccess} />
+                </div>
+            </div>
+            
         </div>
     );
 };

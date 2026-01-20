@@ -22,65 +22,65 @@ const ReportsPage = () => {
           </div>
 
           {/* --- Tabs --- */}
-          <div className="report-tabs">
+          <div className="premium-tabs">
             <button
-              className={`report-tab-btn ${activeTab === 'sales' ? 'active' : ''}`}
+              className={`tab-btn ${activeTab === 'sales' ? 'active' : ''}`}
               onClick={() => setActiveTab('sales')}
             >
               Sales Report
             </button>
 
             <button
-              className={`report-tab-btn ${activeTab === 'expense' ? 'active' : ''}`}
+              className={`tab-btn ${activeTab === 'expense' ? 'active' : ''}`}
               onClick={() => setActiveTab('expense')}
             >
               Expense Report
             </button>
 
             <button
-              className={`report-tab-btn ${activeTab === 'variance' ? 'active' : ''}`}
+              className={`tab-btn ${activeTab === 'variance' ? 'active' : ''}`}
               onClick={() => setActiveTab('variance')}
             >
               Raw Variance Report
             </button>
 
             <button
-              className={`report-tab-btn ${activeTab === 'product-variance' ? 'active' : ''}`}
+              className={`tab-btn ${activeTab === 'product-variance' ? 'active' : ''}`}
               onClick={() => setActiveTab('product-variance')}
             >
               Product Variance Report
             </button>
 
               <button
-              className={`report-tab-btn ${activeTab === 'product-profit' ? 'active' : ''}`}
+              className={`tab-btn ${activeTab === 'product-profit' ? 'active' : ''}`}
               onClick={() => setActiveTab('product-profit')}
             >
               Product Profitability Report
             </button>
 
               <button
-              className={`report-tab-btn ${activeTab === 'product-sic' ? 'active' : ''}`}
+              className={`tab-btn ${activeTab === 'product-sic' ? 'active' : ''}`}
               onClick={() => setActiveTab('product-sic')}
             >
               SIC Raw Report
             </button>
 
              <button
-              className={`report-tab-btn ${activeTab === 'raw-sic' ? 'active' : ''}`}
+              className={`tab-btn ${activeTab === 'raw-sic' ? 'active' : ''}`}
               onClick={() => setActiveTab('raw-sic')}
             >
               SIC Product Report
             </button>
 
             <button
-              className={`report-tab-btn ${activeTab === 'stock-balance' ? 'active' : ''}`}
+              className={`tab-btn ${activeTab === 'stock-balance' ? 'active' : ''}`}
               onClick={() => setActiveTab('stock-balance')}
             >
               Stock Balance Report
             </button>
 
             <button
-              className={`report-tab-btn ${activeTab === 'stock-movements' ? 'active' : ''}`}
+              className={`tab-btn ${activeTab === 'stock-movements' ? 'active' : ''}`}
               onClick={() => setActiveTab('stock-movements')}
             >
               Stock Movements Log
