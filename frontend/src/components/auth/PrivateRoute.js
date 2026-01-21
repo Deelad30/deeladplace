@@ -42,7 +42,7 @@ const PrivateRoute = ({ requiredSection = null, children = null }) => {
 
   // If user has NO PLAN and is NOT on a payment page
   // (Optional: Exempt 'admin' or specific roles if needed)
-  if (!user.plan && !isPaymentPage && user.role !== 'admin') {
+  if (!user.plan && !isPaymentPage) {
     // Prevent toast loop
     if (location.pathname !== "/checkout") {
         toast.error("Please subscribe to a plan to continue", { id: 'plan-error' });
