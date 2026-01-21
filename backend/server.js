@@ -43,8 +43,12 @@ app.use(require('morgan')(morganFormat, {
 }));
 app.use(express.json());
 
-app.use('/api/paystack', paystackRoutes);
+app.use('/api/paystack', paystackRoutes); // Keeping for legacy reference or mixed use
 app.use('/api/paystack/webhook', webhookRoutes);
+
+// FLUTTERWAVE ROUTES
+const flutterwaveRoutes = require('./src/routes/flutterwave');
+app.use('/api/flutterwave', flutterwaveRoutes);
 
 app.get('/health', (req, res) => res.status(200).json({ status: 'ok' }));
 

@@ -2,56 +2,122 @@
 import { FaRocket } from "react-icons/fa";
 import axios from "axios";
 import { useState } from "react";
+import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
+import PaymentSuccessModal from '../PaymentSuccessModal';
 
 import '../../../src/styles/components/PricingSection.css';
 
-function PricingSection({ user }) {
-  const [loadingPlan, setLoadingPlan] = useState(null);
+// Key provided by user (Test Mode). Ideally move to .env
+const FLUTTERWAVE_PUBLIC_KEY = process.env.REACT_APP_FLUTTERWAVE_PUBLIC_KEY || 'FLWPUBK_TEST-55d667890873bb104a707f2295eb782c-X';
 
-  const handleSubscription = async (planType) => {
-    setLoadingPlan(planType);
-    try {
-      const response = await axios.post(
-        "https://deeladplace-production.up.railway.app/api/paystack/create-subscription",
-        {
-          userId: user.id,
-          planType,
-          customerEmail: user.email,
-        }
-      );
+const PLAN_IDS = {
+  basic: '153403',
+  pro: '153404'
+};
 
-      const data = response.data;
-      // If Paystack needs the user to pay / add card
-      if (data.success === false && data.authorization_url) {
-        // Redirect to Paystack checkout page
-        window.location.href = data.authorization_url;
-        return;
-      }
-
-      // Subscription created immediately (saved card)
-      if (data.success === true && data.subscription) {
-        alert(`Subscription created for ${planType} plan!`);
-        // Optionally reload user data or update UI
-        return;
-      }
-
-      // Unexpected response
-      console.warn('Unexpected response', data);
-      alert('Unexpected response from server. Check console.');
-    } catch (err) {
-      console.error("Subscription creation failed:", err.response?.data || err.message);
-      alert("Subscription creation failed");
-    } finally {
-      setLoadingPlan(null);
-    }
+// Helper Button Component to handle individual configs
+const SubscribeButton = ({ user, planType, amount, className, children, onStatusChange }) => {
+  const config = {
+    public_key: FLUTTERWAVE_PUBLIC_KEY,
+    tx_ref: `tx_${planType}_${Date.now()}`,
+    amount: amount,
+    amount: amount,
+    currency: 'NGN',
+    payment_options: 'card,mobilemoney,ussd',
+    payment_plan: PLAN_IDS[planType], // Enable Recurring Payment
+    customer: {
+      email: user?.email,
+      phone_number: user?.phone || '',
+      name: user?.name || user?.email,
+    },
+    customizations: {
+      title: 'Deelad Place Subscription',
+      description: `${planType.toUpperCase()} Plan Subscription`,
+      logo: 'https://deeladplace-production.up.railway.app/logo.png',
+    },
   };
 
+  const handleFlutterwavePayment = useFlutterwave(config);
+
+  const verifyTransaction = async (transaction_id) => {
+      console.log("Verifying Transaction:", { transaction_id, planType, userId: user.id });
+      try {
+          // USE LOCALHOST FOR TESTING
+          // const API_URL = "https://deeladplace-production.up.railway.app"; 
+          const API_URL = "http://127.0.0.1:5000"; 
+          
+          const res = await axios.post(`${API_URL}/api/flutterwave/verify`, {
+              transaction_id,
+              planType,
+              userId: user.id
+          });
+
+          if (res.data.success) {
+              onStatusChange('success', planType); // Update to Success
+          } else {
+              alert(`Verification failed: ${res.data.error || "Unknown error"}`);
+             // OPTIONAL: onStatusChange('error', planType); could handle error in modal too
+          }
+      } catch (err) {
+          console.error("Verification Error:", err);
+          const errorMessage = err.response?.data?.error || err.message;
+          alert(`Error verifying payment: ${errorMessage}`);
+      }
+  };
+
+  const onClick = () => {
+    handleFlutterwavePayment({
+      callback: (response) => {
+        closePaymentModal();
+        if (response.status === "successful") {
+            onStatusChange('loading', planType); // Show Spinner Immediately
+            verifyTransaction(response.transaction_id);
+        } else {
+            console.log("Payment failed/cancelled", response);
+        }
+      },
+      onClose: () => {
+        // Did not complete
+      },
+    });
+  };
+
+  return (
+    <button onClick={onClick} className={className}>
+      {children}
+    </button>
+  );
+};
+
+function PricingSection({ user }) {
+  const [modalState, setModalState] = useState({ isOpen: false, status: 'idle', planName: '' });
+
+  const formatPlanName = (type) => {
+    if (type === 'basic') return 'Basic'; 
+    if (type === 'test') return 'Basic'; 
+    if (type === 'pro') return 'Pro';
+    return type;
+  };
+
+  const handleStatusChange = (status, planType) => {
+      setModalState({
+          isOpen: true,
+          status: status, // 'loading' or 'success'
+          planName: formatPlanName(planType)
+      });
+  };
+
+  const closeSuccessModal = () => {
+      setModalState({ isOpen: false, status: 'idle', planName: '' });
+      window.location.reload();
+  };
+  
   return (
     <div className="pricing-section fade-in">
       <h2>Choose Your Plan</h2>
       <div className="pricing-table">
 
-        {/* PRO Plan */}
+        {/* PRO Plan (UI: Basic) */}
         <div className="pricing-card pro">
           <h3>Basic</h3>
           <p className="price" style={{ color: "#000" }}>₦10,000<span>/month</span></p>
@@ -63,35 +129,36 @@ function PricingSection({ user }) {
             <li>✔ Basic Analytics</li>
             <li>✔ Add One Vendor to your store</li>
           </ul>
-          <button
-            onClick={() => handleSubscription("pro")}
+          <SubscribeButton 
+            user={user} 
+            planType="basic" 
+            amount={10000} 
             className="signup-btn"
-            disabled={loadingPlan === "pro"}
+            onStatusChange={handleStatusChange}
           >
-            {loadingPlan === "pro" ? "Processing..." : "Subscribe"}
-          </button>
+            Subscribe
+          </SubscribeButton>
         </div>
 
-        {/* ENTERPRISE Plan */}
+        {/* ENTERPRISE Plan (UI: Pro) */}
         <div className="pricing-card enterprise">
           <h3>Pro</h3>
           <p className="price" style={{ color: "#000" }}>₦20,000<span>/month</span></p>
           <ul>
-        
             <li>✔ Short Interval Control (Stock Flow)</li>
-
             <li>✔ Multi-Store / Multi-Vendor Access</li>
             <li>✔ Custom Reports & Dashboards</li>
             <li>✔ Priority Support & Staff Training</li>
-
           </ul>
-          <button
-            onClick={() => handleSubscription("enterprise")}
+          <SubscribeButton 
+            user={user} 
+            planType="pro" 
+            amount={20000} 
             className="signup-btn enterprise-btn"
-            disabled={loadingPlan === "enterprise"}
+            onStatusChange={handleStatusChange}
           >
-            {loadingPlan === "enterprise" ? "Processing..." : "Subscribe"}
-          </button>
+            Subscribe
+          </SubscribeButton>
         </div>
 
          <div className="pricing-card enterprise">
@@ -105,15 +172,19 @@ function PricingSection({ user }) {
             <li>✔ Custom Reports & Dashboards</li>
             <li>✔ Priority Support At All Times</li>
           </ul>
-          <button
-            className="signup-btn enterprise-btn"
-          >
+          <button className="signup-btn enterprise-btn">
             Contact Our Sales Team
           </button>
         </div>
 
-
       </div>
+
+      <PaymentSuccessModal 
+        isOpen={modalState.isOpen} 
+        status={modalState.status}
+        planName={modalState.planName} 
+        onClose={closeSuccessModal} 
+      />
     </div>
   );
 }

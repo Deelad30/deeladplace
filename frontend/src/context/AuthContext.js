@@ -123,9 +123,17 @@ export function AuthProvider({ children }) {
 
       return { success: true };
     } catch (error) {
+      const res = error.response?.data;
+      let msg = res?.error || res?.message || "Registration failed";
+
+      // Joi Validation Errors (Array)
+      if (res?.errors && Array.isArray(res.errors)) {
+          msg = res.errors.map(e => e.message.replace(/"/g, '')).join(', ');
+      }
+
       return {
         success: false,
-        message: error.response?.data?.error || "Registration failed",
+        message: msg,
       };
     }
   };

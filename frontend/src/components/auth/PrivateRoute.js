@@ -31,7 +31,28 @@ const PrivateRoute = ({ requiredSection = null, children = null }) => {
     return null; 
   }
 
-  // 3. Role-based access check
+  // -------------------------------------------------------------------
+  // 3. PAYMENT PROTECTION (New)
+  // -------------------------------------------------------------------
+  // Allow access to Checkout/Payment pages even if not paid
+  const isPaymentPage = 
+    location.pathname.startsWith("/checkout") || 
+    location.pathname.startsWith("/payment/") ||
+    location.pathname.startsWith("/paystack/"); 
+
+  // If user has NO PLAN and is NOT on a payment page
+  // (Optional: Exempt 'admin' or specific roles if needed)
+  if (!user.plan_type && !isPaymentPage && user.role !== 'admin') {
+    // Prevent toast loop
+    if (location.pathname !== "/checkout") {
+        toast.error("Please subscribe to a plan to continue", { id: 'plan-error' });
+    }
+    return <Navigate to="/checkout" replace />;
+  }
+  // -------------------------------------------------------------------
+
+
+  // 4. Role-based access check
   if (requiredSection && !perms[requiredSection]) {
     // SILENCE TOAST IF: we are currently at /login or just redirected from it
     // Or if we're on the root path

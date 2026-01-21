@@ -486,3 +486,7 @@
 {"error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":19,"timestamp":"2026-01-20 11:13:24"}
 {"error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":19,"timestamp":"2026-01-20 11:15:41"}
 {"error":"Connection terminated unexpectedly","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":19,"timestamp":"2026-01-20 11:16:03"}
+{"error":"Request failed with status code 401","level":"error","message":"Flutterwave Verification Error","service":"deelad-place-api","timestamp":"2026-01-20 21:16:44"}
+{"error":"Request failed with status code 401","level":"error","message":"Flutterwave Verification Error","service":"deelad-place-api","timestamp":"2026-01-20 21:21:28"}
+{"level":"error","message":"Flutterwave Verification Error getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","service":"deelad-place-api","timestamp":"2026-01-21 12:21:59"}
+{"error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":19,"timestamp":"2026-01-21 12:45:35"}
