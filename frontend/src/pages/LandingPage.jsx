@@ -24,6 +24,7 @@ import {
   faLocationDot
 } from "@fortawesome/free-solid-svg-icons";
 
+// Deployment trigger: 2026-01-21 23:15
 export default function LandingPage() {
   const [loading, setLoading] = useState(true);
 
