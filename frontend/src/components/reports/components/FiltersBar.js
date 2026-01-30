@@ -36,7 +36,7 @@ const FiltersBar = ({ onApply, vendors = [], users = [], current = {} }) => {
   };
 
   return (
-    <div className="filters-bar-sales" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+    <div className="filters-bar-sales">
       <input
         className="filter-input"
         type="date"

@@ -206,12 +206,14 @@
   top: -6px;
   right: -6px;
   background: #ef4444;
-  color: white;
+  color: #FFFF00; /* Standard bright yellow */
   font-size: 10px;
   font-weight: bold;
   height: 16px;
-  width: 16px;
-  border-radius: 50%;
+  min-width: 16px; /* Allow width to grow */
+  width: auto;     /* Auto width for larger numbers */
+  padding: 0 4px;  /* Add padding for text breathing room */
+  border-radius: 999px; /* Pill shape */
   display: flex;
   align-items: center;
   justify-content: center;

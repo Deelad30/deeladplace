@@ -58,7 +58,7 @@ class EmailService {
     const html = templates.welcomeEmail(user, `${process.env.CLIENT_URL}/login`);
     return this.sendMail({
       to: user.email,
-      subject: 'Welcome to Deelad Place!',
+      subject: 'Welcome to DeeSoftwork!',
       html
     });
   }

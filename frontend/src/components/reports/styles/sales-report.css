@@ -37,7 +37,7 @@
 /* KPI section */
 .kpi-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
 }
 
@@ -208,26 +208,57 @@
 }
 
 /* Filters bar */
-.filters-bar {
+.filters-bar-sales {
   display: flex;
+  flex-wrap: wrap; /* Fix overflow */
   gap: 12px;
   align-items: center;
-  padding: 10px 0;
+  padding: 16px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border: 1px solid var(--color-border);
+  margin-bottom: 20px;
 }
 
 .filter-input,
 .filter-select {
-  padding: 8px 12px;
+  padding: 10px 14px;
   border-radius: 8px;
   border: 1px solid var(--color-border);
-  background: #fff;
+  background: #f9fafb;
   font-size: 0.92rem;
+  color: var(--color-dark);
+  transition: all 0.2s;
+  min-width: 140px; /* Ensure decent width */
+}
+
+.filter-input:focus,
+.filter-select:focus {
+  outline: none;
+  background: white;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-fade);
 }
 
 .filter-actions {
-  margin-left: auto;
   display: flex;
   gap: 8px;
+  margin-left: auto; /* Push to right if space permits, or wraps naturally */
+}
+
+/* Ensure actions don't stretch weirdly on mobile */
+@media (max-width: 768px) {
+  .filters-bar-sales {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .filter-actions {
+    margin-left: 0;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
 }
 
 /* Loading skeleton */

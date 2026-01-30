@@ -18,7 +18,12 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBox, faCheckCircle, faMoneyBillWave, faFilter, faSearch } from "@fortawesome/free-solid-svg-icons";
 
 // Helper for rounding
-const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
+// Helper for smart rounding (nearest 100 for large numbers, integer for small)
+const round = (num) => {
+  const n = Number(num || 0);
+  if (n >= 1000) return Math.round(n / 100) * 100;
+  return Math.round(n);
+};
 
 const ProductsDashboard = () => {
   const [products, setProducts] = useState([]);
@@ -89,7 +94,11 @@ const ProductsDashboard = () => {
       // Compute stats
       setTotalProducts(allProducts.length);
       setActiveProducts(allProducts.length);
-      const totalPrice = allProducts.reduce((acc, p) => acc + Number(p.selling_price || 0), 0);
+      const totalPrice = allProducts.reduce((acc, p) => {
+        const basePrice = p.selling_price ? Number(p.selling_price) : Number(p.vendor_price || 0);
+        const comm = Number(p.commission || p.custom_commission || 0);
+        return acc + (basePrice + comm);
+      }, 0);
       setAvgPrice(allProducts.length ? (totalPrice / allProducts.length).toFixed(2) : 0);
       
     } catch (err) {
@@ -215,7 +224,7 @@ const ProductsDashboard = () => {
                 </div>
                 <div className="stat-info">
                     {tilesLoading ? <div className="spinner" style={{width:'20px', height:'20px'}}/> : <h3>₦{round(avgPrice).toLocaleString()}</h3>}
-                    <p>Avg. Selling Price</p>
+                    <p>Avg. Customer Price</p>
                 </div>
             </div>
         </div>
@@ -257,13 +266,14 @@ const ProductsDashboard = () => {
              <TableSkeleton columns={[{key:'1'},{key:'2'},{key:'3'},{key:'4'},{key:'5'}]} rows={10} />
         ) : (
             <div className="table-container">
-                <div className="premium-table-wrapper">
-                    <table className="premium-table">
+                {/* Desktop View */}
+                <div className="premium-table-wrapper desktop-view" style={{ overflowX: 'auto', width: '100%', border: '1px solid #e2e8f0' }}>
+                    <table className="premium-table" style={{ minWidth: '600px', width: '100%' }}>
                         <thead>
                             <tr>
                                 <th>Name</th>
                                 <th>SKU</th>
-                                <th>Selling Price</th>
+                                <th>Customer Price</th>
                                 <th>Vendor</th>
                                 <th style={{textAlign:'right'}}>Actions</th>
                             </tr>
@@ -274,11 +284,15 @@ const ProductsDashboard = () => {
                             ) : (
                                 currentPageProducts.map(p => {
                                     const vendorName = vendors.find(v => v.id === p.vendor_id)?.name || '-';
+                                    const basePrice = p.selling_price ? Number(p.selling_price) : Number(p.vendor_price || 0);
+                                    const comm = Number(p.commission || 0);
+                                    const finalPrice = basePrice + comm;
+                                    
                                     return (
                                         <tr key={p.id}>
                                             <td style={{fontWeight:'600', color:'#0f172a'}}>{p.name}</td>
                                             <td><span style={{background:'#f1f5f9', padding:'4px 8px', borderRadius:'6px', fontSize:'13px', color:'#64748b'}}>{p.sku || '-'}</span></td>
-                                            <td>₦{p.selling_price ? round(p.selling_price).toLocaleString() : '-'}</td>
+                                            <td>₦{finalPrice ? round(finalPrice).toLocaleString() : '-'}</td>
                                             <td>{vendorName}</td>
                                             <td style={{textAlign:'right'}}>
                                                 <div className="actions-cell">
@@ -299,6 +313,46 @@ const ProductsDashboard = () => {
                             )}
                         </tbody>
                     </table>
+                </div>
+
+                {/* Mobile View (Cards) */}
+                <div className="mobile-view-cards">
+                    {currentPageProducts.length === 0 ? (
+                        <div className="empty-state" style={{textAlign:'center', padding:'20px'}}>No products found.</div>
+                    ) : (
+                        currentPageProducts.map(p => {
+                             const vendorName = vendors.find(v => v.id === p.vendor_id)?.name || '-';
+                             const basePrice = p.selling_price ? Number(p.selling_price) : Number(p.vendor_price || 0);
+                             const comm = Number(p.commission || 0);
+                             const finalPrice = basePrice + comm;
+
+                             return (
+                                <div key={p.id} className="premium-card" style={{padding:'16px', display:'flex', flexDirection:'column', gap:'12px'}}>
+                                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start'}}>
+                                        <div>
+                                            <h4 style={{margin:0, fontSize:'16px', fontWeight:'700', color:'#1e293b'}}>{p.name}</h4>
+                                            <span style={{background:'#f1f5f9', padding:'2px 6px', borderRadius:'4px', fontSize:'12px', color:'#64748b', marginTop:'4px', display:'inline-block'}}>{p.sku || 'No SKU'}</span>
+                                        </div>
+                                        <div style={{textAlign:'right'}}>
+                                            <div style={{fontWeight:'700', color:'#1e293b'}}>₦{finalPrice ? round(finalPrice).toLocaleString() : '-'}</div>
+                                            <div style={{fontSize:'12px', color:'#64748b'}}>{vendorName}</div>
+                                        </div>
+                                    </div>
+                                    <div style={{display:'flex', gap:'8px', marginTop:'8px'}}>
+                                         <button className="item-action-btn view" style={{flex:1, justifyContent:'center'}} onClick={() => navigate(`/products/${p.id}/recipe`)}>
+                                            Recipe
+                                         </button>
+                                         <button className="item-action-btn edit" style={{flex:1, justifyContent:'center'}} onClick={() => handleEdit(p)}>
+                                            Edit
+                                         </button>
+                                         <button className="item-action-btn delete" style={{flex:1, justifyContent:'center'}} onClick={() => handleDelete(p.id)}>
+                                            Delete
+                                         </button>
+                                    </div>
+                                </div>
+                             );
+                        })
+                    )}
                 </div>
 
                  {/* Pagination */}
@@ -327,63 +381,67 @@ const ProductsDashboard = () => {
             title={editProduct ? "Edit Product" : "New Product"}
         >
             <div className="vendor-form">
-                <div className="form-group">
-                    <label className="premium-label">Product Name</label>
-                    <input
-                        className="premium-input"
-                        value={formData.name}
-                        onChange={e => setFormData({ ...formData, name: e.target.value })}
-                        placeholder="e.g. Chicken Pie"
-                    />
-                </div>
-
-                <div className="form-grid">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxHeight: '50vh', overflowY: 'auto', paddingRight: '4px' }}>
                     <div className="form-group">
-                        <label className="premium-label">SKU</label>
+                        <label className="premium-label-2">Product Name</label>
                         <input
                             className="premium-input"
-                            value={formData.sku}
-                            onChange={e => setFormData({ ...formData, sku: e.target.value })}
-                            placeholder="Optional"
+                            value={formData.name}
+                            onChange={e => setFormData({ ...formData, name: e.target.value })}
+                            placeholder="e.g. Chicken Pie"
                         />
                     </div>
+
+                    <div className="form-grid">
+                        <div className="form-group">
+                            <label className="premium-label-2">SKU</label>
+                            <input
+                                className="premium-input"
+                                value={formData.sku}
+                                onChange={e => setFormData({ ...formData, sku: e.target.value })}
+                                placeholder="store keeping unit-001"
+                            />
+                        </div>
+                        <div className="form-group">
+                             <label className="premium-label-2">Commission</label>
+                             <input
+                                className="premium-input"
+                                type="number"
+                                value={formData.commission}
+                                onChange={e => setFormData({ ...formData, commission: e.target.value })}
+                                placeholder="0.00"
+                             />
+                        </div>
+                    </div>
+
                     <div className="form-group">
-                         <label className="premium-label">Commission</label>
-                         <input
+                        <label className="premium-label-2">Vendor</label>
+                        <select
                             className="premium-input"
-                            type="number"
-                            value={formData.commission}
-                            onChange={e => setFormData({ ...formData, commission: e.target.value })}
-                            placeholder="0.00"
-                         />
+                            value={formData.vendor_id}
+                            onChange={e => setFormData({ ...formData, vendor_id: e.target.value })}
+                        >
+                            <option value="">Select Vendor</option>
+                            {vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+                        </select>
+                    </div>
+
+                    <div className="form-group">
+                        <label className="premium-label-2">Description</label>
+                        <textarea
+                            className="premium-input"
+                            value={formData.description}
+                            onChange={e => setFormData({ ...formData, description: e.target.value })}
+                            placeholder="Product details..."
+                        />
                     </div>
                 </div>
 
-                <div className="form-group">
-                    <label className="premium-label">Vendor</label>
-                    <select
-                        className="premium-input"
-                        value={formData.vendor_id}
-                        onChange={e => setFormData({ ...formData, vendor_id: e.target.value })}
-                    >
-                        <option value="">Select Vendor</option>
-                        {vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
-                    </select>
+                <div style={{marginTop: '20px'}}>
+                    <button className="submit-btn" onClick={handleSubmit} disabled={actionLoading}>
+                        {actionLoading ? "Saving..." : (editProduct ? "Update Product" : "Create Product")}
+                    </button>
                 </div>
-
-                <div className="form-group">
-                    <label className="premium-label">Description</label>
-                    <textarea
-                        className="premium-input"
-                        value={formData.description}
-                        onChange={e => setFormData({ ...formData, description: e.target.value })}
-                        placeholder="Product details..."
-                    />
-                </div>
-
-                <button className="submit-btn" onClick={handleSubmit} disabled={actionLoading}>
-                    {actionLoading ? "Saving..." : (editProduct ? "Update Product" : "Create Product")}
-                </button>
             </div>
         </Modal>
 

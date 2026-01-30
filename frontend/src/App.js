@@ -41,7 +41,32 @@ function App() {
     <AuthProvider>
       <LayoutProvider>
         <Router>
-          <Toaster position="top-right" />
+          <Toaster 
+            position="top-right" 
+            containerStyle={{ zIndex: 999999 }}
+            toastOptions={{
+              className: '',
+              style: {
+                border: '1px solid #713200',
+                padding: '16px',
+                color: '#713200',
+              },
+              success: {
+                style: {
+                  background: '#f0fdf4',
+                  color: '#166534',
+                  border: '1px solid #bbf7d0'
+                },
+              },
+              error: {
+                style: {
+                  background: '#fef2f2',
+                  color: '#991b1b',
+                  border: '1px solid #fecaca'
+                },
+              },
+            }}
+          />
 
           <Routes>
           {/* PUBLIC ROUTES */}

@@ -12,7 +12,7 @@ const AuthLayout = ({ children, title, subtitle, isSignup = false }) => {
                 {title || (isSignup ? "Join the Future." : "Welcome Back.")}
             </h1>
             <p className="brand-sub">
-                {subtitle || "Manage your inventory, track sales, and optimize production with Deelad Place."}
+                {subtitle || "Manage your inventory, track sales, and optimize production with DeeSoftwork."}
             </p>
         </div>
       </div>

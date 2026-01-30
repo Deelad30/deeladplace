@@ -141,8 +141,8 @@ const StockBalanceTable = ({ limit, refreshTrigger, highlightId }) => {
     <div className="premium-card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
         <div>
-            <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: '#1e293b' }}>Stock Balance</h3>
-            <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#64748b' }}>Real-time inventory levels</p>
+            <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: 'yellow' }}>Stock Balance</h3>
+            <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#fff' }}>Real-time inventory levels</p>
         </div>
         <button 
             className="item-action-btn view" 

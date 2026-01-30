@@ -70,7 +70,7 @@
     background: white;
     border-radius: 16px;
     border: 1px solid #e2e8f0;
-    overflow: hidden; /* Ensures scrollbar inside if needed */
+    /* overflow: hidden; -- Removed to prevent mobile clipping */
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     margin-top: 20px;
 }
@@ -203,7 +203,28 @@
     display: block;
     font-size: 13px;
     font-weight: 700;
-    color: #1e293b;
+    color: yellow!important;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.premium-label-2 {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1e293b!important;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+
+.premium-label-3{
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff!important;
     margin-bottom: 4px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -390,15 +411,68 @@ textarea.premium-input {
 }
 
 /* ---- Premium Tabs (Added Step 1618) ---- */
+.scrollable-tabs-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-bottom: 32px;
+    width: 100%;
+}
+
+.scrollable-tabs-container .premium-tabs {
+    margin-bottom: 0; /* Remove margin from inner tabs */
+    flex: 1;
+}
+
+.scroll-btn {
+    background: white;
+    border: 1px solid #e2e8f0;
+    color: #64748b;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    z-index: 2;
+    transition: all 0.2s;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.scroll-btn:hover {
+    color: #d91f22;
+    border-color: #d91f22;
+    background: #fff;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.scroll-btn.left {
+    margin-right: 8px;
+}
+
+.scroll-btn.right {
+    margin-left: 8px;
+}
+
 .premium-tabs {
     display: flex;
+    overflow-x: auto;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE 10+ */
     gap: 8px;
-    margin-bottom: 32px;
     padding: 6px;
     background: #f1f5f9;
     border-radius: 16px;
-    width: 100%;
+    max-width: 100%;
     border: 1px solid #e2e8f0;
+    white-space: nowrap;
+}
+
+.premium-tabs::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
 }
 
 .tab-btn {
@@ -412,7 +486,7 @@ textarea.premium-input {
     border-radius: 12px;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     white-space: nowrap;
-    flex: 1;
+    flex-shrink: 0; /* Prevent squishing */
     text-align: center;
     display: flex;
     align-items: center;
@@ -543,12 +617,15 @@ textarea.premium-input {
     display: none;
 }
 
+/* Ensure desktop table wrapper hides on mobile if we have cards */
 @media (max-width: 768px) {
     .premium-table-wrapper.desktop-view {
-        display: none;
+        display: none !important;
     }
     .mobile-view-cards {
-        display: block;
+        display: flex !important;
+        flex-direction: column;
+        gap: 16px;
     }
 }
 

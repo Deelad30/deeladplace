@@ -300,8 +300,9 @@ exports.getPaymentSummary = async (req, res) => {
     const { params, whereSql } = buildSalesFilters(tenantId, { start, end, vendor_id, user_id });
 
     const sql = `
-      SELECT ps.payment_method, SUM(ps.qty * ps.selling_price) AS amount
+      SELECT ps.payment_method, SUM(ps.qty * (ps.selling_price + COALESCE(p.custom_commission, 0))) AS amount
       FROM pos_sales ps
+      LEFT JOIN products p ON p.id = ps.product_id
       WHERE ps.tenant_id = $1
       ${whereSql}
       GROUP BY ps.payment_method

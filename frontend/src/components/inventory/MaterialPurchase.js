@@ -23,6 +23,7 @@ export default function MaterialPurchasesPage() {
   // Modal State
   const [openModal, setOpenModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [lastAdded, setLastAdded] = useState(null); // Success feedback
   
   const [form, setForm] = useState({
     material_id: '',
@@ -41,6 +42,7 @@ export default function MaterialPurchasesPage() {
 
   // Edit Handler
   function handleEdit(p) {
+    setLastAdded(null); 
     setEditingId(p.id);
     let formattedDate = '';
     if (p.purchase_date) {
@@ -69,8 +71,8 @@ export default function MaterialPurchasesPage() {
     try {
         setLoadingAction(true);
         await deletePurchase(purchaseId);
-        toast.success('Purchase deleted');
-        loadAll();
+        toast.success("Purchase deleted successfully", { duration: 4000 });
+        await loadAll(true); // Silent reload
     } catch (err) {
         console.error(err);
         toast.error(err.response?.data?.message || 'Error deleting purchase');
@@ -80,8 +82,8 @@ export default function MaterialPurchasesPage() {
   }
 
   // Load Data
-  async function loadAll() {
-    setLoading(true);
+  async function loadAll(silent = false) {
+    if (!silent) setLoading(true);
     try {
         const mats = await getMaterials();
         setMaterials(mats.data?.items || []);
@@ -91,20 +93,24 @@ export default function MaterialPurchasesPage() {
 
         const pur = await getPurchases();
         const purchasesList = pur.data?.items || [];
-        
-        const purchasesWithVendor = purchasesList.map(p => ({
-            ...p,
-            vendor_name: p.vendor_name || 'N/A',
-            material_name: p.material_name || 'N/A',
-            purchase_date: p.purchase_date ? new Date(p.purchase_date).toLocaleDateString() : 'N/A'
-        }));
+        const purchasesWithVendor = purchasesList.map(p => {
+            // Find underlying material if possible to get unit
+            const mat = mats.data?.items?.find(m => m.id === p.material_id);
+            return {
+                ...p,
+                vendor_name: p.vendor_name || 'N/A',
+                material_name: p.material_name || 'N/A',
+                measurement_unit: p.measurement_unit || (mat ? mat.measurement_unit : 'pcs'),
+                purchase_date: p.purchase_date ? new Date(p.purchase_date).toLocaleDateString() : 'N/A'
+            };
+        });
 
         setPurchases(purchasesWithVendor);
     } catch (err) {
         console.error(err);
         toast.error('Error loading data.');
     } finally {
-        setLoading(false);
+        if (!silent) setLoading(false);
     }
   }
 
@@ -130,23 +136,28 @@ export default function MaterialPurchasesPage() {
             materialData.material_id = ''; // Backend will auto-create
         }
 
-        if (editingId) {
+    if (editingId) {
             await updatePurchase(editingId, materialData);
             toast.success('Purchase updated');
+            setOpenModal(false);
+            setEditingId(null);
         } else {
             await createPurchase(materialData);
-            toast.success('Purchase recorded');
+            toast.success('Purchase recorded. Add another?');
+            // Keep modal open, just reset form
+            setLastAdded(materialData.material_name);
+            setEditingId(null); // Ensure we remain in create mode
         }
         
-        setOpenModal(false);
-        setEditingId(null);
+        // Reset form but keep date/vendor if convenient? No, user requested "add as much purchase", usually implies fresh form or maybe sticky fields. 
+        // For now, full reset is safer to avoid confusion.
         setForm({
             material_id: '',
             material_name: '',
             purchase_qty: '',
             purchase_price: '',
-            vendor_id: '',
-            purchase_date: '',
+            vendor_id: form.vendor_id, // Keep vendor selected for convenience
+            purchase_date: form.purchase_date, // Keep date selected for convenience
             measurement_unit: 'pcs'
         });
 
@@ -195,7 +206,7 @@ export default function MaterialPurchasesPage() {
                   purchase_qty: '',
                   purchase_price: '',
                   vendor_id: '',
-                  purchase_date: '',
+                  purchase_date: new Date().toISOString().split('T')[0], // Default to today
                   measurement_unit: 'pcs'
               });
               setOpenModal(true);
@@ -213,6 +224,7 @@ export default function MaterialPurchasesPage() {
                 <tr>
                     <th>Material</th>
                     <th>Qty</th>
+                    <th>Unit Cost</th>
                     <th>Price (NGN)</th>
                     <th>Vendor</th>
                     <th>Date</th>
@@ -221,7 +233,7 @@ export default function MaterialPurchasesPage() {
             </thead>
             <tbody>
                 {paginated.length === 0 ? (
-                    <tr><td colSpan="6" className="empty-state">No purchase records found.</td></tr>
+                    <tr><td colSpan="7" className="empty-state">No purchase records found.</td></tr>
                 ) : (
                     paginated.map(p => (
                         <tr key={p.id}>
@@ -229,6 +241,7 @@ export default function MaterialPurchasesPage() {
                             <td>
                                 {Number(p.purchase_qty).toFixed(2)} <span style={{fontSize: '12px', color: '#64748b'}}>{p.measurement_unit}</span>
                             </td>
+                            <td>₦{Number(p.purchase_price / p.purchase_qty).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                             <td>₦{Number(p.purchase_price).toLocaleString()}</td>
                             <td>
                                 {p.vendor_name !== 'N/A' ? (
@@ -274,19 +287,51 @@ export default function MaterialPurchasesPage() {
       {/* Modal */}
       <Modal
         visible={openModal}
-        onClose={() => setOpenModal(false)}
+        onClose={() => { setOpenModal(false); setLastAdded(null); }}
         title={editingId ? "Edit Purchase Record" : "New Purchase Record"}
       >
         <div className="vendor-form"> {/* Reusing vendor form style for consistency */}
-            <div className="form-grid">
+            
+             {/* Success Banner */}
+            {lastAdded && !editingId && (
+                <div style={{
+                    marginBottom: '16px',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    backgroundColor: '#f0fdf4',
+                    border: '1px solid #bbf7d0',
+                    color: '#166534',
+                    fontSize: '14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                }}>
+                    <span style={{fontSize: '18px'}}>✓</span>
+                    <div>
+                        <strong>Success!</strong> Added <u>{lastAdded}</u>.
+                        <div style={{fontSize: '12px', marginTop: '2px', opacity: 0.9}}>Ready for next item...</div>
+                    </div>
+                </div>
+            )}
+
+            {/* Changed from form-grid to vertical layout */}
+            <div style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '20px', 
+                maxHeight: '50vh', // Reduced to accommodate success banner
+                overflowY: 'auto', 
+                paddingRight: '4px' // Prevent scrollbar overlapping content
+            }}>
                 <div className="form-group full-width">
-                    <label className="premium-label">Material Name</label>
+                    <label style={{color: '#0f172a!important'}} className="premium-label-2">Material Name</label>
                     <input
                         className="premium-input"
                         list="material-list"
                         placeholder="Search existing or type new..."
                         value={form.material_name}
                         onChange={e => setForm({ ...form, material_name: e.target.value })}
+                        autoFocus
                     />
                     <datalist id="material-list">
                         {materials.map(m => <option key={m.id} value={m.name} />)}
@@ -294,7 +339,7 @@ export default function MaterialPurchasesPage() {
                 </div>
 
                 <div className="form-group">
-                    <label className="premium-label">Quantity</label>
+                    <label className="premium-label-2">Quantity</label>
                     <input
                         className="premium-input"
                         type="number"
@@ -305,7 +350,7 @@ export default function MaterialPurchasesPage() {
                 </div>
 
                 <div className="form-group">
-                    <label className="premium-label">Unit</label>
+                    <label className="premium-label-2">Unit</label>
                     <input
                         className="premium-input"
                         list="unit-list"
@@ -320,7 +365,7 @@ export default function MaterialPurchasesPage() {
                 </div>
 
                 <div className="form-group">
-                    <label className="premium-label">Price (₦)</label>
+                    <label className="premium-label-2">Price (₦)</label>
                     <input
                         className="premium-input"
                         type="number"
@@ -331,7 +376,7 @@ export default function MaterialPurchasesPage() {
                 </div>
 
                 <div className="form-group">
-                    <label className="premium-label">Date</label>
+                    <label className="premium-label-2">Date</label>
                     <input
                         className="premium-input"
                         type="date"
@@ -341,7 +386,7 @@ export default function MaterialPurchasesPage() {
                 </div>
 
                 <div className="form-group full-width">
-                     <label className="premium-label">Vendor</label>
+                     <label className="premium-label-2">Vendor</label>
                      <select
                         className="premium-input"
                         value={form.vendor_id}

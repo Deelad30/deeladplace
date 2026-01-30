@@ -78,24 +78,39 @@ exports.getProductProfitability = async (req, res) => {
 exports.getNetProfit = async (req, res) => {
   try {
     const tenantId = req.user.tenant_id;
-    const { startDate, endDate } = req.query;
+    const { startDate, endDate, productId, categoryId, vendorId } = req.query;
 
-    let salesFilter = [`tenant_id = $1`];
+    let salesFilter = [`ps.tenant_id = $1`]; // Use alias ps for consistency
     let expenseFilter = [`tenant_id = $1`];
     let values = [tenantId];
     let idx = 2;
 
+    // Filters for SALES (Product Profit)
     if (startDate) {
-      salesFilter.push(`DATE(created_at) >= $${idx}`);
+      salesFilter.push(`DATE(ps.created_at) >= $${idx}`);
       expenseFilter.push(`DATE(expense_date) >= $${idx}`);
       values.push(startDate);
       idx++;
     }
     if (endDate) {
-      salesFilter.push(`DATE(created_at) <= $${idx}`);
+      salesFilter.push(`DATE(ps.created_at) <= $${idx}`);
       expenseFilter.push(`DATE(expense_date) <= $${idx}`);
       values.push(endDate);
       idx++;
+    }
+
+    // Additional Sales Filters (Vendor, Category, Product)
+    if (productId) {
+      salesFilter.push(`ps.product_id = $${idx++}`);
+      values.push(productId);
+    }
+    if (categoryId) {
+      salesFilter.push(`p.category_id = $${idx++}`);
+      values.push(categoryId);
+    }
+    if (vendorId) {
+      salesFilter.push(`p.vendor_id = $${idx++}`);
+      values.push(vendorId);
     }
 
     const sql = `
@@ -113,16 +128,12 @@ exports.getNetProfit = async (req, res) => {
           ORDER BY sc.created_at DESC
           LIMIT 1
         ) sc_latest ON true
-        WHERE ps.tenant_id = $1
-          ${startDate ? `AND DATE(ps.created_at) >= $2` : ""}
-          ${endDate ? `AND DATE(ps.created_at) <= ${startDate ? "$3" : "$2"}` : ""}
+        WHERE ${salesFilter.join(" AND ")}
       ),
       expenses AS (
         SELECT COALESCE(SUM(amount), 0) AS total_expenses
         FROM expenses
-        WHERE tenant_id = $1
-          ${startDate ? `AND DATE(expense_date) >= $2` : ""}
-          ${endDate ? `AND DATE(expense_date) <= ${startDate ? "$3" : "$2"}` : ""}
+        WHERE ${expenseFilter.join(" AND ")}
       )
       SELECT
         pp.total_sales,

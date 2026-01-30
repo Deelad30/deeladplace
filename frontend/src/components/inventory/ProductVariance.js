@@ -187,16 +187,16 @@ const round0 = (value) => {
 
       <div className="premium-card bg-gray-50 p-4 mb-6 flex flex-wrap gap-4 items-end border border-gray-200">
         <div className="flex flex-col gap-1">
-           <label className="text-xs font-semibold text-gray-500 uppercase">Start Date</label>
+           <label style={{color:"yellow"}}  className="text-xs font-semibold text-gray-500 uppercase">Start Date</label>
            <input type="date" className="premium-input w-auto bg-white" value={startDate} onChange={e => setStartDate(e.target.value)} />
         </div>
         <div className="flex flex-col gap-1">
-           <label className="text-xs font-semibold text-gray-500 uppercase">End Date</label>
+           <label style={{color:"yellow"}}  className="text-xs font-semibold text-gray-500 uppercase">End Date</label>
            <input type="date" className="premium-input w-auto bg-white" value={endDate} onChange={e => setEndDate(e.target.value)} />
         </div>
 
         <div className="flex flex-col gap-1 min-w-[150px]">
-           <label className="text-xs font-semibold text-gray-500 uppercase">Vendor</label>
+           <label style={{color:"yellow"}}  className="text-xs font-semibold text-gray-500 uppercase">Vendor</label>
            <select
                 className="premium-input w-full bg-white"
                 value={selectedVendor}
@@ -212,7 +212,7 @@ const round0 = (value) => {
         </div>
         
         <div className="flex-1 min-w-[200px]">
-           <label className="text-xs font-semibold text-gray-500 uppercase">Search</label>
+           <label style={{color:"yellow"}}  className="text-xs font-semibold text-gray-500 uppercase">Search</label>
            <input
             type="text"
             className="premium-input w-full bg-white"

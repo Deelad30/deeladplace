@@ -7,3 +7,25 @@
 .btn { padding:8px 12px; background:#0b5fff; color:#fff; border-radius:6px; border:none; cursor:pointer; }
 .form { display:flex; flex-direction:column; gap:10px; }
 .input { padding:8px 10px; border-radius:6px; border:1px solid #ddd; } */
+
+/* --- Product Main Grid Fix --- */
+.product-grid-1 {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.vendor-products {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-top: 15px;
+}
+
+/* Mobile specific overlap prevention */
+@media (max-width: 768px) {
+  .vendor-products {
+    grid-template-columns: 1fr; /* Stack singly on mobile */
+    gap: 15px;
+  }
+}

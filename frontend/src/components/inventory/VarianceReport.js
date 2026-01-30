@@ -101,11 +101,11 @@ const VarianceReport = () => {
 
       <div className="premium-card bg-gray-50 p-4 mb-6 flex flex-wrap gap-4 items-end border border-gray-200">
         <div className="flex flex-col gap-1">
-           <label className="text-xs font-semibold text-gray-500 uppercase">Start Date</label>
+           <label style={{color:"yellow"}} className="text-xs font-semibold text-gray-500 uppercase">Start Date</label>
            <input type="date" className="premium-input w-auto bg-white" value={startDate} onChange={e => setStartDate(e.target.value)} />
         </div>
         <div className="flex flex-col gap-1">
-           <label className="text-xs font-semibold text-gray-500 uppercase">End Date</label>
+           <label style={{color:"yellow"}}  className="text-xs font-semibold text-gray-500 uppercase">End Date</label>
            <input type="date" className="premium-input w-auto bg-white" value={endDate} onChange={e => setEndDate(e.target.value)} />
         </div>
         
@@ -114,6 +114,7 @@ const VarianceReport = () => {
             type="text"
             className="premium-input w-full bg-white"
             placeholder="Search materials..."
+            style={{marginBottom:"20px", marginTop:"20px"}}
             value={search}
             onChange={e => setSearch(e.target.value)}
           />

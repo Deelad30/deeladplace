@@ -79,15 +79,15 @@ const StockLedgerForm = ({ onSuccess }) => {
   return (
     <div id="ledger-form" className="premium-card">
         <div style={{ marginBottom: '24px', paddingBottom: '16px', borderBottom: '1px solid #e2e8f0' }}>
-            <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: '#1e293b' }}>New Stock Entry</h3>
-            <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#64748b' }}>Log inbound supplies, outbound usage, or waste.</p>
+            <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: 'yellow' }}>New Stock Entry</h3>
+            <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#fff' }}>Log inbound supplies, outbound usage, or waste.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="form-grid" style={{ gap: '24px' }}>
             
             {/* Type Selection */}
             <div className="form-group full-width">
-                <label className="premium-label">Movement Type</label>
+                <label style={{color:"yellow"}} className="premium-label">Movement Type</label>
                 <div className="movement-grid">
                     {[
                         { id: 'in', label: 'Inbound', icon: faArrowDown, color: '#22c55e', bg: '#dcfce7' },
@@ -125,7 +125,7 @@ const StockLedgerForm = ({ onSuccess }) => {
 
             {/* Item Selection (Searchable) */}
             <div className="form-group full-width">
-                <label className="premium-label">Select Item</label>
+                <label style={{color:"yellow"}} className="premium-label">Select Item</label>
                 <div style={{ position: 'relative' }}>
                     <input 
                         className="premium-input"
@@ -181,7 +181,7 @@ const StockLedgerForm = ({ onSuccess }) => {
 
             {/* Date & Qty */}
             <div className="form-group">
-                <label className="premium-label">Date</label>
+                <label style={{color:"yellow"}} className="premium-label">Date</label>
                 <input 
                     className="premium-input"
                     type="date" 

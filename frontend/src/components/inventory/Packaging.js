@@ -17,8 +17,24 @@ export default function PackagingPage() {
   const [openModal, setOpenModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [loadingAction, setLoadingAction] = useState(false);
+  const [lastAdded, setLastAdded] = useState(null); // Success feedback
   
-  const [form, setForm] = useState({ name: '', cost_per_unit: '' });
+  // Form state now includes helpers for calculation
+  const [form, setForm] = useState({ 
+      name: '', 
+      total_cost: '', 
+      input_qty: '1',
+      cost_per_unit: '' // Calculated
+  });
+
+  // Effect to calculate unit cost automatically
+  useEffect(() => {
+    const total = parseFloat(form.total_cost) || 0;
+    const qty = parseFloat(form.input_qty) || 1;
+    if (qty > 0) {
+        setForm(f => ({ ...f, cost_per_unit: (total / qty).toFixed(2) }));
+    }
+  }, [form.total_cost, form.input_qty]);
 
   // Search + Pagination
   const [search, setSearch] = useState('');
@@ -49,30 +65,54 @@ export default function PackagingPage() {
 
     setLoadingAction(true);
     try {
+      const payload = {
+          name: form.name,
+          cost_per_unit: form.cost_per_unit
+      };
+
       if (editingId) {
-        await updatePackaging(editingId, form);
+        await updatePackaging(editingId, payload);
         toast.success('Packaging updated.');
+        setOpenModal(false);
+        setEditingId(null);
       } else {
-        await createPackaging(form);
-        toast.success('Packaging added.');
+        await createPackaging(payload);
+        toast.success('Packaging added. Add another?');
+        setLastAdded(form.name);
+        
+        // Reset form for next entry
+        setForm({ 
+            name: '', 
+            total_cost: '', 
+            input_qty: '1',
+            cost_per_unit: '' 
+        });
+        // Keep modal open
+        return; // Early return to skip closing modal
       }
 
-      setOpenModal(false);
-      setEditingId(null);
-      setForm({ name: '', cost_per_unit: '' });
       loadPackaging();
     } catch (err) {
       toast.error('Error saving packaging.');
     } finally {
       setLoadingAction(false);
+      if (editingId) loadPackaging(); // Reload if we edited and closed
+      // If created, we didn't close, but ideally we should refresh the list in background or just wait. 
+      // Actually, we should reload to show it in table if it's visible.
+      if (!editingId) loadPackaging();
     }
   }
 
   function handleEdit(item) {
     setEditingId(item.id);
+    setLastAdded(null);
+    // Reverse engineer: Set total cost = unit cost, qty = 1
+    const unitCost = item.cost_per_unit;
     setForm({
       name: item.name,
-      cost_per_unit: item.cost_per_unit
+      total_cost: unitCost,
+      input_qty: '1',
+      cost_per_unit: unitCost
     });
     setOpenModal(true);
   }
@@ -126,7 +166,8 @@ export default function PackagingPage() {
         <button className="premium-btn primary" onClick={() => {
             setOpenModal(true);
             setEditingId(null);
-            setForm({ name: '', cost_per_unit: '' });
+            setLastAdded(null);
+            setForm({ name: '', total_cost: '', input_qty: '1', cost_per_unit: '' });
         }}>
             + Add Packaging
         </button>
@@ -188,27 +229,79 @@ export default function PackagingPage() {
         title={editingId ? 'Edit Packaging' : 'New Packaging'}
       >
         <div className="vendor-form">
-            <div className="form-group">
-                <label className="premium-label">Packaging Name</label>
-                <input
-                    className="premium-input"
-                    value={form.name}
-                    onChange={e => setForm({ ...form, name: e.target.value })}
-                    required
-                    placeholder="e.g. Cardboard Box"
-                />
-            </div>
+            
+            {/* Success Banner */}
+            {lastAdded && !editingId && (
+                <div style={{
+                    marginBottom: '16px',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    backgroundColor: '#f0fdf4',
+                    border: '1px solid #bbf7d0',
+                    color: '#166534',
+                    fontSize: '14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                }}>
+                    <span style={{fontSize: '18px'}}>✓</span>
+                    <div>
+                        <strong>Success!</strong> Added <u>{lastAdded}</u>.
+                        <div style={{fontSize: '12px', marginTop: '2px', opacity: 0.9}}>Ready for next item...</div>
+                    </div>
+                </div>
+            )}
 
-            <div className="form-group">
-                <label className="premium-label">Cost Per Unit (₦)</label>
-                <input
-                    className="premium-input"
-                    type="number"
-                    value={form.cost_per_unit}
-                    onChange={e => setForm({ ...form, cost_per_unit: e.target.value })}
-                    required
-                    placeholder="0.00"
-                />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxHeight: '50vh', overflowY: 'auto', paddingRight: '4px' }}>
+                <div className="form-group full-width">
+                    <label className="premium-label-2">Packaging Name</label>
+                    <input
+                        className="premium-input"
+                        value={form.name}
+                        onChange={e => setForm({ ...form, name: e.target.value })}
+                        required
+                        placeholder="e.g. Cardboard Box"
+                        autoFocus
+                    />
+                </div>
+
+                <div className="form-grid">
+                    <div className="form-group">
+                        <label className="premium-label-2">Total Pack Cost (₦)</label>
+                        <input
+                            className="premium-input"
+                            type="number"
+                            value={form.total_cost}
+                            onChange={e => setForm({ ...form, total_cost: e.target.value })}
+                            required
+                            placeholder="e.g. 5000"
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label className="premium-label-2">Qty in Pack</label>
+                        <input
+                            className="premium-input"
+                            type="number"
+                            value={form.input_qty}
+                            onChange={e => setForm({ ...form, input_qty: e.target.value })}
+                            required
+                            placeholder="e.g. 100"
+                        />
+                    </div>
+                </div>
+
+                <div className="form-group">
+                    <label className="premium-label-2">Calculated Unit Cost (₦)</label>
+                    <input
+                        className="premium-input"
+                        value={form.cost_per_unit || '0.00'}
+                        disabled
+                        style={{backgroundColor: '#f1f5f9', fontWeight: 'bold'}}
+                    />
+                    <div style={{fontSize: '12px', color: '#64748b', marginTop: '4px'}}>
+                        This is the cost per single item that will be used in recipes.
+                    </div>
+                </div>
             </div>
 
             <button className="submit-btn full-width" onClick={handleSave} disabled={loadingAction} style={{marginTop: '20px'}}>

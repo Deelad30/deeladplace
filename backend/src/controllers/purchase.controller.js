@@ -7,7 +7,7 @@ exports.getPurchases = async (req, res) => {
     const rows = await purchaseService.listPurchases(tenantId);
     res.json({ ok: true, items: rows });
   } catch (err) {
-    logger.error('Failed to get purchases', { error: err.message, tenantId });
+    logger.error('Failed to get purchases', { error: err.message, tenantId: req.user?.tenant_id });
     res.status(500).json({ ok: false, message: err.message });
   }
 };
@@ -21,7 +21,7 @@ exports.createPurchase = async (req, res) => {
 
     res.json({ ok: true, purchase: item });
   } catch (err) {
-    logger.error('Failed to create purchase', { error: err.message, tenantId, userId });
+    logger.error('Failed to create purchase', { error: err.message, tenantId: req.user?.tenant_id, userId: req.user?.id });
     res.status(500).json({ ok: false, message: err.message });
   }
 };
@@ -41,7 +41,7 @@ exports.updatePurchase = async (req, res) => {
 
     res.json({ ok: true, purchase: updated });
   } catch (err) {
-    logger.error('Failed to update purchase', { error: err.message, tenantId, purchaseId });
+    logger.error('Failed to update purchase', { error: err.message, tenantId: req.user?.tenant_id, purchaseId: req.params.id });
 
     if (err.code === 'INVALID_QTY') {
       return res.status(400).json({ ok: false, message: err.message });
@@ -62,15 +62,12 @@ exports.deletePurchase = async (req, res) => {
 
     res.json({ ok: true });
   } catch (err) {
-    logger.error('Failed to delete purchase', { error: err.message, tenantId, purchaseId });
+    logger.error('Failed to delete purchase', { error: err.message, tenantId: req.user?.tenant_id, purchaseId: req.params.id });
 
-    if (err.code === 'PURCHASE_USED') {
-      return res.status(400).json({
-        ok: false,
-        message: 'Purchase already used and cannot be deleted'
-      });
-    }
-
-    res.status(500).json({ ok: false, message: err.message });
+    // Pass through the specific error message
+    return res.status(400).json({
+      ok: false,
+      message: err.message
+    });
   }
 };

@@ -56,9 +56,9 @@ const button = (url, text) => `
 `;
 
 exports.welcomeEmail = (user, loginUrl) => layout(`
-  <h2 style="margin: 0 0 16px 0; font-size: 24px; font-weight: 600; color: ${brandColor};">Welcome to Deelad Place SaaS</h2>
+  <h2 style="margin: 0 0 16px 0; font-size: 24px; font-weight: 600; color: ${brandColor};">Welcome to DeeSoftwork SaaS</h2>
   <p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.6;">Hello ${user.name},</p>
-  <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6;">Your account has been successfully created. You now have access to the Deelad Place management system.</p>
+  <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6;">Your account has been successfully created. You now have access to the DeeSoftwork management system.</p>
   <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
     <tr><td style="font-size: 16px; line-height: 1.6;"><strong>Account Details</strong></td></tr>
     <tr>
@@ -75,7 +75,7 @@ exports.welcomeEmail = (user, loginUrl) => layout(`
 exports.loginNotification = (user, loginTime, resetPasswordUrl) => layout(`
   <h2 style="margin: 0 0 16px 0; font-size: 24px; font-weight: 600; color: ${brandColor};">Security Notification</h2>
   <p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.6;">Hello ${user.name},</p>
-  <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6;">We detected a new login to your Deelad Place account.</p>
+  <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6;">We detected a new login to your DeeSoftwork account.</p>
   <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
     <tr><td style="font-size: 16px; line-height: 1.6;"><strong>Login Details</strong></td></tr>
     <tr><td style="padding-top: 8px; font-size: 15px; line-height: 1.6;">Time: ${loginTime}<br />Account: ${user.email}</td></tr>
@@ -97,21 +97,21 @@ exports.passwordResetEmail = (user, resetLink) => layout(`
 exports.passwordResetConfirmation = (user) => layout(`
   <h2 style="margin: 0 0 16px 0; font-size: 24px; font-weight: 600; color: ${brandColor};">Password Changed Successfully</h2>
   <p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.6;">Hello ${user.name},</p>
-  <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6;">The password for your Deelad Place account has been successfully changed.</p>
+  <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6;">The password for your DeeSoftwork account has been successfully changed.</p>
   <p style="margin: 0 0 16px 0; font-size: 15px; line-height: 1.6; color: #444444;">If you did not make this change, please contact our support team immediately.</p>
   <p style="margin: 0; font-size: 15px; line-height: 1.6;">Best regards,<br /><strong>Dee Softwork Security Team</strong></p>
 `);
 
 exports.inviteEmail = (data) => layout(`
   <h2 style="margin: 0 0 16px 0; font-size: 24px; font-weight: 600; color: ${brandColor};">You’ve Been Invited</h2>
-  <p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.6;">${data.inviterName} (${data.inviterEmail}) has invited you to join their Deelad Place team.</p>
+  <p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.6;">${data.inviterName} (${data.inviterEmail}) has invited you to join their DeeSoftwork team.</p>
   <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6;">Click the button below to create your account and get started.</p>
   ${button(data.inviteLink, 'Accept Invitation')}
   <p style="margin: 0; font-size: 15px; line-height: 1.6;">Best regards,<br /><strong>Dee Softwork Team</strong></p>
 `);
 
 exports.inviteAcceptedEmail = (data) => layout(`
-  <h2 style="margin: 0 0 16px 0; font-size: 24px; font-weight: 600; color: ${brandColor};">Welcome to Deelad Place</h2>
+  <h2 style="margin: 0 0 16px 0; font-size: 24px; font-weight: 600; color: ${brandColor};">Welcome to DeeSoftwork</h2>
   <p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.6;">Hello ${data.name || data.email},</p>
   <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6;">Your account has been successfully activated. You can now log in and start using the system.</p>
   ${button(`${process.env.CLIENT_URL}/login`, 'Log In Now')}
@@ -131,7 +131,7 @@ exports.subscriptionSuccessEmail = (user, planType) => layout(`
   <h2 style="margin: 0 0 16px 0; font-size: 24px; font-weight: 600; color: ${brandColor};">Subscription Activated!</h2>
   <p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.6;">Hello ${user.name},</p>
   <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6;">Your subscription for the <strong>${planType}</strong> plan has been successfully activated.</p>
-  <p style="margin: 0 0 32px 0; font-size: 16px; line-height: 1.6;">Thank you for choosing Deelad Place.</p>
+  <p style="margin: 0 0 32px 0; font-size: 16px; line-height: 1.6;">Thank you for choosing DeeSoftwork.</p>
   <p style="margin: 0; font-size: 15px; line-height: 1.6;">Best regards,<br /><strong>Dee Softwork Team</strong></p>
 `);
 

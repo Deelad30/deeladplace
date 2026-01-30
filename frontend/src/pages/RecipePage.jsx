@@ -132,11 +132,15 @@ const RecipePage = () => {
     try {
       const res = await getRecipe(productId);
       const items = res.data.items || [];
+
       const mapped = items.map(item => {
-        const material = materials.find(m => m.id === item.material_id);
+        // Use loose equality (==) to handle String vs Number mismatch
+        const material = materials.find(m => m.id == item.material_id);
+        
         return {
           ...item,
-          material_name: material ? material.name : `#${item.material_id}`,
+          // Priority: 1. Name from API (already joined) 2. Name from lookup 3. Fallback ID
+          material_name: item.material_name || (material ? material.name : `#${item.material_id}`),
           recipe_qty: Number(item.recipe_qty)
         };
       });
@@ -153,10 +157,11 @@ const RecipePage = () => {
     try {
       const res = await getProductPackaging(productId);
       const mapped = (res.data.packaging || []).map(p => {
-        const pack = packagingList.find(pkg => pkg.id === p.packaging_id);
+        // Use loose equality to handle string/number mismatch
+        const pack = packagingList.find(pkg => pkg.id == p.packaging_id);
         return {
           ...p,
-          packaging_name: pack ? pack.name : "",
+          packaging_name: (pack ? pack.name : p.packaging_name) || "Unknown Packaging",
           cost_per_unit: pack ? Number(pack.cost_per_unit) : 0,
           qty: Number(p.qty),
           total_cost: pack ? (Number(pack.cost_per_unit) * Number(p.qty)).toFixed(2) : "0.00"
@@ -225,23 +230,28 @@ const RecipePage = () => {
   }, [productId]);
 
   // Load recipe & packaging after supporting arrays exist
-  useEffect(() => { if (materials.length) loadRecipe(); }, [materials]);
-  useEffect(() => { if (packagingList.length) loadProductPackaging(); }, [packagingList]);
+  useEffect(() => { if (materials.length) loadRecipe(); },
+   // eslint-disable-next-line
+  [materials]);
+  useEffect(() => { if (packagingList.length) loadProductPackaging(); },
+  // eslint-disable-next-line
+  [packagingList]);
 
   // ----------------- Handle Save Ingredient -----------------
   const handleSave = async () => {
     if (!formData.material_id || !formData.recipe_qty) return toast.error("Select material & enter qty");
-    setActionLoading(true);
+    setActionLoading(true); 
     try {
       const body = { material_id: formData.material_id, recipe_qty: Number(formData.recipe_qty) };
       if (editLine) {
         await updateRecipeItem(editLine.id, body);
         toast.success("Ingredient updated");
+        setModalOpen(false);
       } else {
         await addRecipeItem(productId, body);
-        toast.success("Ingredient added");
+        toast.success("Ingredient added. Add another?");
+        setFormData({ material_id: "", recipe_qty: "" }); // Reset & Keep Open
       }
-      setModalOpen(false);
       loadRecipe();
     } catch {
       toast.error("Failed to save ingredient");
@@ -271,11 +281,12 @@ const RecipePage = () => {
       if (editingPackaging) {
         await updateProductPackaging(editingPackaging.id, body);
         toast.success("Packaging updated");
+        setPackagingModal(false);
       } else {
         await addPackagingToProduct(body);
-        toast.success("Packaging added");
+        toast.success("Packaging added. Add another?");
+        setPackForm({ packaging_id: "", qty: "" }); // Reset & Keep Open
       }
-      setPackagingModal(false);
       loadProductPackaging();
     } catch {
       toast.error("Failed to save packaging");
@@ -306,11 +317,12 @@ const RecipePage = () => {
       if (editingLabour) {
         await updateProductLabour(editingLabour.id, body);
         toast.success("Labour updated");
+        setLabourModal(false);
       } else {
         await addLabourToProduct(body);
-        toast.success("Labour added");
+        toast.success("Labour added. Add another?");
+        setLabourForm({ labour_id: "", amount: "" }); // Reset & Keep Open
       }
-      setLabourModal(false);
       loadProductLabour();
     } catch {
       toast.error("Failed to save labour mapping");
@@ -340,11 +352,12 @@ const RecipePage = () => {
       if (editingOpex) {
         await updateProductOpex(editingOpex.id, body);
         toast.success("Opex updated");
+        setOpexModal(false);
       } else {
         await addOpexToProduct(body);
-        toast.success("Opex added");
+        toast.success("Opex added. Add another?");
+        setOpexForm({ opex_id: "", amount: "" }); // Reset & Keep Open
       }
-      setOpexModal(false);
       loadProductOpex();
     } catch {
       toast.error("Failed to save opex mapping");
@@ -439,16 +452,16 @@ const RecipePage = () => {
               >
                  <FontAwesomeIcon icon={faArrowLeft} color="#64748b" />
               </div>
-              <h2 className="page-title">Recipe Setup</h2>
+              <h2 style={{marginBottom:"0px"}} className="page-title">Recipe Setup</h2>
            </div>
         </div>
 
         {/* Batch Size & Margin Card */}
         <div className="premium-card" style={{marginBottom:'24px'}}>
-             <h3 style={{fontSize:'18px', fontWeight:'700', color:'#1e293b', marginBottom:'20px'}}>Batch & Margin Configuration</h3>
+             <h3 style={{fontSize:'18px', fontWeight:'700', color:'yellow', marginBottom:'20px'}}>Batch & Margin Configuration</h3>
              <div className="form-grid">
                  <div className="form-group">
-                    <label className="premium-label">Batch Size</label>
+                    <label style={{color:'white!important'}} className="premium-label-3">Batch Size</label>
                     <input 
                         className="premium-input"
                         type="number" 
@@ -459,7 +472,7 @@ const RecipePage = () => {
                     />
                  </div>
                  <div className="form-group">
-                    <label className="premium-label">Margin % (0.x)</label>
+                    <label className="premium-label-3">Margin % (0.x)</label>
                     <input 
                         className="premium-input"
                         type="number" 
@@ -475,7 +488,7 @@ const RecipePage = () => {
              </div>
              <button 
                 className="premium-btn primary"
-                style={{marginTop:'20px'}}
+                style={{marginTop:'20px', display:"flex" ,justifyContent:"center"}}
                 onClick={handleSaveBatchMargin} 
                 disabled={savingSettings}
              >
@@ -486,7 +499,7 @@ const RecipePage = () => {
         {/* Ingredients Table */}
         <div className="premium-card" style={{marginBottom:'24px'}}>
             <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px'}}>
-                <h3 style={{fontSize:'18px', fontWeight:'700', color:'#1e293b'}}>Ingredients</h3>
+                <h3 style={{fontSize:'18px', fontWeight:'700', color:'yellow'}}>Ingredients</h3>
                 <button 
                     className="premium-btn primary"
                     onClick={() => { setEditLine(null); setFormData({ material_id: "", recipe_qty: "" }); setModalOpen(true); }}
@@ -529,7 +542,7 @@ const RecipePage = () => {
         {/* Packaging Table */}
         <div className="premium-card" style={{marginBottom:'24px'}}>
             <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px'}}>
-                <h3 style={{fontSize:'18px', fontWeight:'700', color:'#1e293b'}}>Packaging</h3>
+                <h3 style={{fontSize:'18px', fontWeight:'700', color:'yellow'}}>Packaging</h3>
                 <button 
                     className="premium-btn primary"
                     onClick={() => { setEditingPackaging(null); setPackForm({ packaging_id: "", qty: "" }); setPackagingModal(true); }}
@@ -578,7 +591,7 @@ const RecipePage = () => {
              {/* Labour */}
              <div className="premium-card">
                  <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px'}}>
-                    <h3 style={{fontSize:'18px', fontWeight:'700', color:'#1e293b'}}>Direct Labour</h3>
+                    <h3 style={{fontSize:'18px', fontWeight:'700', color:'yellow'}}>Direct Labour</h3>
                     <button 
                         className="premium-btn primary"
                         onClick={() => { setEditingLabour(null); setLabourForm({ labour_id: "", amount: "" }); setLabourModal(true); }}
@@ -589,9 +602,6 @@ const RecipePage = () => {
                     <table className="premium-table">
                         <thead>
                             <tr>
-                                <th>Labour Item</th>
-                                <th>Amount/Batch</th>
-                                <th style={{textAlign:'right'}}>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -620,7 +630,7 @@ const RecipePage = () => {
              {/* Opex */}
              <div className="premium-card">
                  <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px'}}>
-                    <h3 style={{fontSize:'18px', fontWeight:'700', color:'#1e293b'}}>Direct Opex</h3>
+                    <h3 style={{fontSize:'18px', fontWeight:'700', color:'yellow'}}>Direct Opex</h3>
                     <button 
                         className="premium-btn primary"
                         onClick={() => { setEditingOpex(null); setOpexForm({ opex_id: "", amount: "" }); setOpexModal(true); }}
@@ -663,7 +673,7 @@ const RecipePage = () => {
         {/* Cost Analysis Panel */}
         <div className="premium-card" style={{borderLeft:'4px solid #d91f22'}}>
              <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'24px'}}>
-                 <h3 style={{fontSize:'20px', fontWeight:'800', color:'#1e293b'}}>Cost Analysis</h3>
+                 <h3 style={{fontSize:'20px', fontWeight:'800', color:'yellow'}}>Cost Analysis</h3>
                  <button 
                     className="premium-btn primary"
                     onClick={handleComputeCost}
@@ -675,7 +685,7 @@ const RecipePage = () => {
 
              {costResult && !computingCost && (
                 <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(300px, 1fr))', gap:'32px'}}>
-                    <div>
+                    <div style={{ background:"white", padding:"25px", borderRadius:"10px", boxShadow:"0 2px 8px rgba(0,0,0,0.1)"}}>
                         <h4 style={{marginBottom:'16px', color:'#64748b'}}>Breakdown Per Unit (Pie)</h4>
                         <ResponsiveContainer width="100%" height={300}>
                             <PieChart>
@@ -688,7 +698,7 @@ const RecipePage = () => {
                         </ResponsiveContainer>
                     </div>
 
-                    <div>
+                    <div style={{ background:"white", padding:"25px", borderRadius:"10px", boxShadow:"0 2px 8px rgba(0,0,0,0.1)"}}>
                         <h4 style={{marginBottom:'16px', color:'#64748b'}}>Breakdown Per Batch (Bar)</h4>
                         <ResponsiveContainer width="100%" height={300}>
                             <BarChart data={perBatchCostData}>
@@ -749,7 +759,7 @@ const RecipePage = () => {
 
                          <button 
                              className="submit-btn" 
-                             style={{marginTop:'24px', maxWidth:'300px'}}
+                             style={{marginTop:'24px', width:'100%', display:'flex', justifyContent:'center', alignItems:'center'}}
                              onClick={handleSaveStandardCost}
                              disabled={standardizingCost}
                          >
@@ -765,14 +775,14 @@ const RecipePage = () => {
         <Modal visible={modalOpen} title={editLine ? "Edit Ingredient" : "Add Ingredient"} onClose={() => setModalOpen(false)}>
             <div className="vendor-form">
                 <div className="form-group">
-                    <label className="premium-label">Material</label>
+                    <label className="premium-label-2">Material</label>
                     <select className="premium-input" value={formData.material_id} onChange={e => setFormData({ ...formData, material_id: e.target.value })}>
                         <option value="">Select Material</option>
                         {materials.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                     </select>
                 </div>
                 <div className="form-group">
-                    <label className="premium-label">Quantity Per Batch</label>
+                    <label className="premium-label-2">Quantity Per Batch</label>
                     <input className="premium-input" type="number" value={formData.recipe_qty} onChange={e => setFormData({ ...formData, recipe_qty: e.target.value })} />
                 </div>
                 <button className="submit-btn" onClick={handleSave} disabled={actionLoading}>{actionLoading ? "Saving..." : (editLine ? "Update" : "Save")}</button>
@@ -783,14 +793,14 @@ const RecipePage = () => {
         <Modal visible={packagingModal} title={editingPackaging ? "Edit Packaging" : "Add Packaging"} onClose={() => setPackagingModal(false)}>
             <div className="vendor-form">
                 <div className="form-group">
-                    <label className="premium-label">Packaging</label>
+                    <label className="premium-label-2">Packaging</label>
                     <select className="premium-input" value={packForm.packaging_id} onChange={e => setPackForm({ ...packForm, packaging_id: e.target.value })}>
                         <option value="">Select Packaging</option>
                         {packagingList.map(p => <option key={p.id} value={p.id}>{p.name} (₦{p.cost_per_unit})</option>)}
                     </select>
                 </div>
                 <div className="form-group">
-                    <label className="premium-label">Quantity</label>
+                    <label className="premium-label-2">Quantity</label>
                     <input className="premium-input" type="number" value={packForm.qty} onChange={e => setPackForm({ ...packForm, qty: e.target.value })} />
                 </div>
                 <button className="submit-btn" onClick={handleSavePackaging} disabled={actionLoading}>{actionLoading ? "Saving..." : (editingPackaging ? "Update" : "Save")}</button>
@@ -801,15 +811,28 @@ const RecipePage = () => {
         <Modal visible={labourModal} title={editingLabour ? "Edit Labour" : "Add Labour"} onClose={() => setLabourModal(false)}>
             <div className="vendor-form">
                 <div className="form-group">
-                    <label className="premium-label">Labour Item</label>
-                    <select className="premium-input" value={labourForm.labour_id} onChange={e => setLabourForm({ ...labourForm, labour_id: e.target.value })}>
+                    <label className="premium-label-2">Labour Item</label>
+                    <select className="premium-input" value={labourForm.labour_id} onChange={e => {
+                        const lid = e.target.value;
+                        const item = labourList.find(l => l.id == lid);
+                        let autoAmount = "";
+                        if (item) {
+                             // Calculate per-unit cost if estimated sales > 0
+                             // Amount / Estimated Sales
+                             if (Number(item.estimated_monthly_sales) > 0) {
+                                 autoAmount = (Number(item.amount) / Number(item.estimated_monthly_sales)).toFixed(2);
+                             }
+                        }
+                        setLabourForm({ ...labourForm, labour_id: lid, amount: autoAmount });
+                    }}>
                         <option value="">Select Labour</option>
                         {labourList.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
                     </select>
-                </div>
-                <div className="form-group">
-                    <label className="premium-label">Amount (₦)</label>
-                    <input className="premium-input" type="number" value={labourForm.amount} onChange={e => setLabourForm({ ...labourForm, amount: e.target.value })} />
+                    {labourForm.amount && (
+                        <div style={{marginTop:'8px', fontSize:'14px', color:'#94a3b8'}}>
+                            Cost per unit: <span style={{color:'#4ade80', fontWeight:'700', fontSize:'16px'}}>₦{Number(labourForm.amount).toLocaleString(undefined, {minimumFractionDigits:2})}</span>
+                        </div>
+                    )}
                 </div>
                 <button className="submit-btn" onClick={handleSaveLabour} disabled={actionLoading}>{actionLoading ? "Saving..." : (editingLabour ? "Update" : "Save")}</button>
             </div>
@@ -819,15 +842,27 @@ const RecipePage = () => {
         <Modal visible={opexModal} title={editingOpex ? "Edit Opex" : "Add Opex"} onClose={() => setOpexModal(false)}>
             <div className="vendor-form">
                 <div className="form-group">
-                    <label className="premium-label">Opex Item</label>
-                    <select className="premium-input" value={opexForm.opex_id} onChange={e => setOpexForm({ ...opexForm, opex_id: e.target.value })}>
+                    <label className="premium-label-2">Opex Item</label>
+                    <select className="premium-input" value={opexForm.opex_id} onChange={e => {
+                         const oid = e.target.value;
+                         const item = opexList.find(o => o.id == oid);
+                         let autoAmount = "";
+                         if (item) {
+                             // Calculate per-unit cost i.e. (Amount / Estimated Sales) for fixed allocation
+                             if (item.allocation_mode === 'fixed' && Number(item.estimated_monthly_sales) > 0) {
+                                 autoAmount = (Number(item.amount) / Number(item.estimated_monthly_sales)).toFixed(2);
+                             }
+                         }
+                         setOpexForm({ ...opexForm, opex_id: oid, amount: autoAmount });
+                    }}>
                         <option value="">Select Opex</option>
                         {opexList.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
                     </select>
-                </div>
-                <div className="form-group">
-                    <label className="premium-label">Amount (₦)</label>
-                    <input className="premium-input" type="number" value={opexForm.amount} onChange={e => setOpexForm({ ...opexForm, amount: e.target.value })} />
+                    {opexForm.amount && (
+                        <div style={{marginTop:'8px', fontSize:'14px', color:'#94a3b8'}}>
+                            Cost per unit: <span style={{color:'#4ade80', fontWeight:'700', fontSize:'16px'}}>₦{Number(opexForm.amount).toLocaleString(undefined, {minimumFractionDigits:2})}</span>
+                        </div>
+                    )}
                 </div>
                 <button className="submit-btn" onClick={handleSaveOpex} disabled={actionLoading}>{actionLoading ? "Saving..." : (editingOpex ? "Update" : "Save")}</button>
             </div>

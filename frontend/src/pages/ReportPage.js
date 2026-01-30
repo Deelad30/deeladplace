@@ -11,6 +11,7 @@ import '../../src/styles/pages/ReportsPage.css';
 import ProductVarianceReport from '../components/inventory/ProductVariance';
 import StockBalanceTable from '../components/inventory/StockBalanceTable';
 import StockMovementLog from '../components/inventory/StockMovementLog';
+import ScrollableTabs from '../components/common/ScrollableTabs';
 
 const ReportsPage = () => {
   const [activeTab, setActiveTab] = useState('sales'); // default tab
@@ -22,7 +23,7 @@ const ReportsPage = () => {
           </div>
 
           {/* --- Tabs --- */}
-          <div className="premium-tabs">
+          <ScrollableTabs>
             <button
               className={`tab-btn ${activeTab === 'sales' ? 'active' : ''}`}
               onClick={() => setActiveTab('sales')}
@@ -85,7 +86,7 @@ const ReportsPage = () => {
             >
               Stock Movements Log
             </button>
-          </div>
+          </ScrollableTabs>
 
           {/* --- Tab Content --- */}
           <div className="report-content">

@@ -13,6 +13,7 @@ export default function OpexPage() {
   const [openModal, setOpenModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [loadingAction, setLoadingAction] = useState(false);
+  const [lastAdded, setLastAdded] = useState(null); // Success feedback
 
   const [form, setForm] = useState({
     name: '',
@@ -87,20 +88,34 @@ export default function OpexPage() {
         await updateOpex(editingId, payload);
         toast.success("OPEX updated successfully");
         setEditingId(null);
+        setOpenModal(false);
+        setForm({
+          name: '',
+          allocation_mode: 'fixed',
+          amount: '',
+          percentage_value: '',
+          effective_from: '',
+          effective_to: '',
+          estimated_monthly_sales: ''
+        });
       } else {
         await createOpex(payload);
-        toast.success("OPEX added successfully");
+        toast.success("OPEX added. Add another?");
+        setLastAdded(form.name);
+        
+        // Reset form, keep dates/mode
+        setForm(f => ({
+          ...f,
+          name: '',
+          amount: '',
+          percentage_value: '',
+          estimated_monthly_sales: ''
+          // allocation_mode, dates retained
+        }));
+        
+        loadOpex();
+        return; // Keep open
       }
-
-      setForm({
-        name: '',
-        allocation_mode: 'fixed',
-        amount: '',
-        percentage_value: '',
-        effective_from: '',
-        effective_to: ''
-      });
-      setOpenModal(false);
       loadOpex();
     } catch (err) {
       console.error(err);
@@ -265,84 +280,110 @@ export default function OpexPage() {
         title={editingId ? 'Edit OPEX' : 'New Operational Expense'}
       >
         <div className="vendor-form">
-            <div className="form-group">
-                <label className="premium-label">Expense Name</label>
-                <input
-                    className="premium-input"
-                    value={form.name}
-                    onChange={e => setForm({ ...form, name: e.target.value })}
-                    placeholder="e.g. Rent, Utilities..."
-                />
-            </div>
-
-            <div className="form-group">
-                <label className="premium-label">Allocation Mode</label>
-                <select
-                    className="premium-input"
-                    value={form.allocation_mode}
-                    onChange={e => setForm({ ...form, allocation_mode: e.target.value })}
-                >
-                    <option value="fixed">Fixed Amount</option>
-                    <option value="percent_of_cogs">% of COGS</option>
-                </select>
-            </div>
-
-
-            {form.allocation_mode === 'fixed' && (
-              <div className="form-group">
-                <label className="premium-label">Fixed Amount (₦)</label>
-                <input
-                  className="premium-input"
-                  type="number"
-                  value={form.amount}
-                  onChange={e => setForm({ ...form, amount: e.target.value })}
-                  placeholder="0.00"
-                />
-              </div>
+            
+             {/* Success Banner */}
+            {lastAdded && !editingId && (
+                <div style={{
+                    marginBottom: '16px',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    backgroundColor: '#f0fdf4',
+                    border: '1px solid #bbf7d0',
+                    color: '#166534',
+                    fontSize: '14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                }}>
+                    <span style={{fontSize: '18px'}}>✓</span>
+                    <div>
+                        <strong>Success!</strong> Added <u>{lastAdded}</u>.
+                        <div style={{fontSize: '12px', marginTop: '2px', opacity: 0.9}}>Ready for next item...</div>
+                    </div>
+                </div>
             )}
 
-            {form.allocation_mode === 'percent_of_cogs' && (
-              <div className="form-group">
-                <label className="premium-label">Percentage Value (%)</label>
-                <input
-                  className="premium-input"
-                  type="number"
-                  value={form.percentage_value}
-                  onChange={e => setForm({ ...form, percentage_value: e.target.value })}
-                  placeholder="e.g. 5"
-                />
-              </div>
-            )}
-
-            <div className="form-group">
-                <label className="premium-label">Estimated Monthly Sales</label>
-                <input
-                    className="premium-input"
-                    type="number"
-                    value={form.estimated_monthly_sales}
-                    onChange={e => setForm({ ...form, estimated_monthly_sales: e.target.value })}
-                    placeholder="Optional"
-                />
-            </div>
-
-            <div className="form-grid">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxHeight: '50vh', overflowY: 'auto', paddingRight: '4px' }}>
                 <div className="form-group">
-                    <label className="premium-label">Start Date</label>
+                    <label className="premium-label-2">Expense Name</label>
                     <input
                         className="premium-input"
-                        type="date"
-                        value={form.effective_from}
-                        onChange={e => setForm({ ...form, effective_from: e.target.value })}
+                        value={form.name}
+                        onChange={e => setForm({ ...form, name: e.target.value })}
+                        placeholder="e.g. Rent, Utilities..."
+                        autoFocus
                     />
                 </div>
+
                 <div className="form-group">
-                    <label className="premium-label">End Date</label>
+                    <label className="premium-label-2">Allocation Mode</label>
+                    <select
+                        className="premium-input"
+                        value={form.allocation_mode}
+                        onChange={e => setForm({ ...form, allocation_mode: e.target.value })}
+                    >
+                        <option value="fixed">Fixed Amount</option>
+                        <option value="percent_of_cogs">% of COGS</option>
+                    </select>
+                </div>
+
+
+                {form.allocation_mode === 'fixed' && (
+                <div className="form-group">
+                    <label className="premium-label-2">Fixed Amount (₦)</label>
+                    <input
+                    className="premium-input"
+                    type="number"
+                    value={form.amount}
+                    onChange={e => setForm({ ...form, amount: e.target.value })}
+                    placeholder="0.00"
+                    />
+                </div>
+                )}
+
+                {form.allocation_mode === 'percent_of_cogs' && (
+                <div className="form-group">
+                    <label className="premium-label-2">Percentage Value (%)</label>
+                    <input
+                    className="premium-input"
+                    type="number"
+                    value={form.percentage_value}
+                    onChange={e => setForm({ ...form, percentage_value: e.target.value })}
+                    placeholder="e.g. 5"
+                    />
+                </div>
+                )}
+
+                <div className="form-group">
+                    <label className="premium-label-2">Estimated Monthly Sales</label>
                     <input
                         className="premium-input"
-                        type="date"
-                        value={form.effective_to}
-                        onChange={e => setForm({ ...form, effective_to: e.target.value })}
+                        type="number"
+                        value={form.estimated_monthly_sales}
+                        onChange={e => setForm({ ...form, estimated_monthly_sales: e.target.value })}
+                        placeholder="Optional"
                     />
+                </div>
+
+                <div className="form-grid">
+                    <div className="form-group">
+                        <label className="premium-label-2">Start Date</label>
+                        <input
+                            className="premium-input"
+                            type="date"
+                            value={form.effective_from}
+                            onChange={e => setForm({ ...form, effective_from: e.target.value })}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label className="premium-label-2">End Date</label>
+                        <input
+                            className="premium-input"
+                            type="date"
+                            value={form.effective_to}
+                            onChange={e => setForm({ ...form, effective_to: e.target.value })}
+                        />
+                    </div>
                 </div>
             </div>
 

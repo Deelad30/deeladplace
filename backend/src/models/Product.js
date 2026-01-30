@@ -169,7 +169,8 @@ class Product {
   static async delete(id, tenant_id) {
     const result = await database.query(
       `
-      DELETE FROM products
+      UPDATE products
+      SET is_active = false
       WHERE id = $1 AND tenant_id = $2
       RETURNING id
       `,

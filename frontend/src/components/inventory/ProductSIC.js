@@ -128,8 +128,8 @@ export default function ProductSICPage() {
     <div className="premium-card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '16px' }}>
           <div>
-            <h2 style={{ fontSize: '20px', fontWeight: '800', margin: 0, color: '#1e293b' }}>Daily Product SIC</h2>
-            <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#64748b' }}>Record daily finished goods inventory</p>
+            <h2 style={{ fontSize: '20px', fontWeight: '800', margin: 0, color: 'yellow' }}>Daily Product SIC</h2>
+            <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: 'white' }}>Record daily finished goods inventory</p>
           </div>
           
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
@@ -155,8 +155,8 @@ export default function ProductSICPage() {
 
       <form onSubmit={handleSubmit}>
         <div className="table-container" style={{ marginTop: '0', border: 'none', boxShadow: 'none' }}>
-           <div className="premium-table-wrapper">
-            <table className="premium-table">
+           <div className="premium-table-wrapper desktop-view" style={{ overflowX: 'auto', width: '100%', border: '1px solid #e2e8f0' }}>
+            <table className="premium-table" style={{ minWidth: '600px', width: '100%' }}>
             <thead>
                 <tr>
                     <th>Product</th>
@@ -226,6 +226,65 @@ export default function ProductSICPage() {
                 )}
             </tbody>
             </table>
+           </div>
+
+           {/* Mobile View (Cards) */}
+           <div className="mobile-view-cards">
+             {initialLoading ? (
+                  [...Array(3)].map((_, i) => (
+                    <div key={i} className="premium-card" style={{padding:'16px', height:'200px', animation:'pulse 1.5s infinite'}}></div>
+                  ))
+             ) : filteredRows.length === 0 ? (
+                <div className="empty-state" style={{textAlign:'center', padding:'20px'}}>No products found</div>
+             ) : (
+                filteredRows.map((r) => {
+                    const realIndex = rows.findIndex(at => at.product_id === r.product_id);
+                    return (
+                        <div key={r.product_id} className="premium-card" style={{padding:'16px', border: '1px solid #e2e8f0', marginBottom:'12px'}}>
+                            <div style={{display:'flex', justifyContent:'space-between', marginBottom:'12px'}}>
+                                <div>
+                                    <h4 style={{margin:0, fontWeight:'700', color:'#1e293b'}}>{r.name}</h4>
+                                    <span style={{fontSize:'12px', color:'#64748b'}}>Unit: {r.unit}</span>
+                                </div>
+                            </div>
+                            <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px'}}>
+                                <div>
+                                    <label style={{fontSize:'12px', color:'#64748b'}}>Opening</label>
+                                    <input 
+                                        type="number" min="0" className="premium-input" 
+                                        style={{padding:'8px', width:'100%'}}
+                                        value={r.opening_qty} onChange={e => handleChange(realIndex, 'opening_qty', e.target.value)} 
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{fontSize:'12px', color:'#64748b'}}>Closing</label>
+                                    <input 
+                                        type="number" min="0" className="premium-input" 
+                                        style={{padding:'8px', width:'100%'}}
+                                        value={r.closing_qty} onChange={e => handleChange(realIndex, 'closing_qty', e.target.value)} 
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{fontSize:'12px', color:'#64748b'}}>Produced</label>
+                                    <input 
+                                        type="number" min="0" className="premium-input" 
+                                        style={{padding:'8px', width:'100%'}}
+                                        value={r.issues_qty} onChange={e => handleChange(realIndex, 'issues_qty', e.target.value)} 
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{fontSize:'12px', color:'#64748b'}}>Waste</label>
+                                    <input 
+                                        type="number" min="0" className="premium-input" 
+                                        style={{padding:'8px', width:'100%'}}
+                                        value={r.waste_qty} onChange={e => handleChange(realIndex, 'waste_qty', e.target.value)} 
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })
+             )}
            </div>
         </div>
 
