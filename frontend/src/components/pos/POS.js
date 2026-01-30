@@ -221,7 +221,7 @@ const finishSale = async (options) => {
     0
   );
   
-  console.log(options);
+  
   
 
   const saleObj = {
