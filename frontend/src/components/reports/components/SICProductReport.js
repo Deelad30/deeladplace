@@ -30,9 +30,7 @@ const SICProductReport = () => {
       const cleanFilters = Object.fromEntries(
         Object.entries(filters).filter(([_, v]) => v !== "")
       );
-      const res = await sicService.getProductSICReport(cleanFilters);
-      console.log(res);
-      
+      const res = await sicService.getProductSICReport(cleanFilters);    
       if (res.data.success) setProductSIC(res.data.report);
     } catch (err) {
       console.error(err);
