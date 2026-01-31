@@ -74,8 +74,11 @@ const ProfitReport = () => {
 
   // ROUNDED Consistency (Audit Mode OFF)
   const totalRoundedProductProfit = enrichedProducts.reduce((sum, p) => sum + p.rounded_profit, 0);
+  const totalRoundedSales = enrichedProducts.reduce((sum, p) => sum + round100(p.total_sales), 0);
   const roundedExpenses = round100(netProfit?.total_expenses);
-  const consistentNetProfit = totalRoundedProductProfit - roundedExpenses;
+  
+  // User requested Net Profit = Total Sales - Total Expenses (ignoring COGS)
+  const consistentNetProfit = totalRoundedSales - roundedExpenses;
 
   // Values to display based on Audit Mode
   const displayProductProfit = auditMode ? exactTotalProductProfit : totalRoundedProductProfit;

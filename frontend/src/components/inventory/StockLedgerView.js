@@ -35,9 +35,9 @@ const StockLedgerView = () => {
         <div style={{ display: 'flex', flexDirection: 'column-reverse' }} className="stock-dashboard-layout">
             
             {/* Main Content: Stock Table */}
-            <div className="stock-main-content">
+            {/* <div className="stock-main-content">
                 <StockBalanceTable refreshTrigger={refreshKey} highlightId={highlightId} />
-            </div>
+            </div> */}
 
             {/* Sidebar: Actions & Alerts */}
             <div className="stock-sidebar">

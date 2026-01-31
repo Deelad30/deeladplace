@@ -299,24 +299,96 @@ exports.getPaymentSummary = async (req, res) => {
     // Build filters using shared utility (no payment_type filter for this endpoint)
     const { params, whereSql } = buildSalesFilters(tenantId, { start, end, vendor_id, user_id });
 
+    // Fetch individual sales with breakdown info instead of grouping
     const sql = `
-      SELECT ps.payment_method, SUM(ps.qty * (ps.selling_price + COALESCE(p.custom_commission, 0))) AS amount
+      SELECT 
+        ps.payment_method, 
+        ps.payment_breakdown,
+        ps.qty, 
+        ps.selling_price, 
+        COALESCE(p.custom_commission, 0) as custom_commission
       FROM pos_sales ps
       LEFT JOIN products p ON p.id = ps.product_id
       WHERE ps.tenant_id = $1
       ${whereSql}
-      GROUP BY ps.payment_method
     `;
 
     const rows = await db.query(sql, params);
-    const summary = {};
+    
+    // Initialize summary
+    const summary = {
+      cash: 0,
+      pos: 0, 
+      transfer: 0,
+      card: 0,
+      multiple: 0, 
+      other: 0
+    };
 
     rows.rows.forEach(r => {
-      const key = (r.payment_method || 'other').toLowerCase();
-      summary[key] = Number(r.amount);
+      let method = (r.payment_method || 'other').toLowerCase();
+      // Normalize 'pos' to 'card'
+      if (method === 'pos') method = 'card';
+
+      // Calculate total revenue for this line item (Product Price + Commission)
+      const totalItemRevenue = Number(r.qty) * (Number(r.selling_price) + Number(r.custom_commission));
+
+      if (method === 'multiple') {
+        // Parse breakdown
+        let breakdown = [];
+        try {
+          if (typeof r.payment_breakdown === 'string') {
+             breakdown = JSON.parse(r.payment_breakdown);
+          } else if (Array.isArray(r.payment_breakdown)) {
+             breakdown = r.payment_breakdown;
+          }
+        } catch (e) {
+          // ignore parse error
+        }
+
+        if (breakdown && breakdown.length > 0) {
+          let totalBreakdownSum = 0;
+          breakdown.forEach(b => totalBreakdownSum += Number(b.amount || 0));
+
+          if (totalBreakdownSum > 0) {
+            const ratio = totalItemRevenue / totalBreakdownSum;
+            
+            breakdown.forEach(p => {
+              let pMethod = (p.method || 'other').toLowerCase();
+              if (pMethod === 'pos') pMethod = 'card';
+              
+              const pAmount = Number(p.amount || 0) * ratio; // Prorate
+              summary[pMethod] = (summary[pMethod] || 0) + pAmount;
+            });
+          } else {
+             summary['multiple'] = (summary['multiple'] || 0) + totalItemRevenue;
+          }
+
+        } else {
+          // No breakdown info, dump into 'multiple'
+          summary['multiple'] = (summary['multiple'] || 0) + totalItemRevenue;
+        }
+
+      } else {
+        // Single payment method
+        summary[method] = (summary[method] || 0) + totalItemRevenue;
+      }
     });
 
-    res.json({ ok: true, payment_summary: summary });
+    // Final clean up: Round values and remove zeros
+    const finalSummary = {};
+    for (const [key, val] of Object.entries(summary)) {
+        const rounded = Math.round(val);
+        if (rounded > 0) {
+            finalSummary[key] = rounded;
+        }
+    }
+    
+    // Ensure standard keys exist if they are 0? No, charts usually prefer omitting or handling 0. 
+    // But for consistency let's ensure 'cash', 'card', 'transfer' at least exist if they are main ones?
+    // User complaint was "Others appeared". If Other is 0, it won't appear now.
+    
+    res.json({ ok: true, payment_summary: finalSummary });
 
   } catch (e) {
     logger.error("getPaymentSummary error", { error: e.message, tenantId });

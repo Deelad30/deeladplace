@@ -139,7 +139,7 @@ exports.getNetProfit = async (req, res) => {
         pp.total_sales,
         pp.total_product_profit,
         e.total_expenses,
-        (pp.total_product_profit - e.total_expenses) AS net_profit
+        (pp.total_sales - e.total_expenses) AS net_profit
       FROM product_profit pp, expenses e;
     `;
 

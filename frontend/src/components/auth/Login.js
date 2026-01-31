@@ -58,7 +58,7 @@ function Login() {
           const defaultRoute = ROLE_DEFAULT_ROUTE[role] || "/";
           navigate(defaultRoute);
         } else {
-          if (plan === "enterprise" || plan === "pro" || plan === "demo" || plan === "trial") {
+          if (["enterprise", "pro", "basic", "starter", "demo", "trial"].includes(plan)) {
             navigate("/dashboard");
           } else {
             navigate("/checkout");

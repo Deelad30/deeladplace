@@ -189,7 +189,6 @@ const StockLedgerForm = ({ onSuccess }) => {
                     onChange={e => setForm({...form, date: e.target.value})}
                 />
             </div>
-
             <div className="form-group">
                 <label className="premium-label">Quantity</label>
                 <input 
