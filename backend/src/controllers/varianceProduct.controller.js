@@ -107,7 +107,7 @@ exports.getProductVariance = async (req, res) => {
 
     return res.json({ ok: true, items });
   } catch (err) {
-    logger.error('Failed to get product variance', { error: err.message, tenantId, productId: req.query.productId });
+    logger.error('Failed to get product variance', { error: err.message, productId: req.query.productId });
     return res.status(500).json({ ok: false, error: err.message });
   }
 };

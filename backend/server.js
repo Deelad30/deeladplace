@@ -19,6 +19,11 @@ app.use(cors({
   credentials: true
 }));
 
+// Trust proxy for Render/production environments (required for express-rate-limit)
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 // Rate Limiting
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes

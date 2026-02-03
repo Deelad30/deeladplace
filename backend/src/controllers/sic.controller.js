@@ -321,7 +321,7 @@ async function getRawSICReport(req, res) {
 
 async function getProductSICReport(req, res) {
   const tenantId = req.user.tenant_id;
-  const { startDate, endDate, createdBy, productId } = req.query;
+  const { startDate, endDate, createdBy, productId, vendorId } = req.query;
 
   try {
     let filters = ["sp.tenant_id = $1"];

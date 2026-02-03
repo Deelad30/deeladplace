@@ -116,7 +116,7 @@ exports.getRawMaterialVariance = async (req, res) => {
 
     return res.json({ ok: true, items });
   } catch (err) {
-    logger.error('Failed to fetch raw material variance', { error: err.message, tenantId });
+    logger.error('Failed to fetch raw material variance', { error: err.message });
     return res.status(500).json({ ok: false, message: "Error computing raw variance" });
   }
 };

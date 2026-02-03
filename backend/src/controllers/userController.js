@@ -29,7 +29,7 @@ exports.getUserById = async (req, res) => {
       data: user
     });
   } catch (error) {
-    logger.error('Get user by ID error', { error: error.message, userId: id });
+    logger.error('Get user by ID error', { error: error.message, userId: req.params.id });
 
     return res.status(500).json({
       ok: false,
