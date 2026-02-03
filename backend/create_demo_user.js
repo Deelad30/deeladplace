@@ -5,7 +5,6 @@ const { v4: uuidv4 } = require('uuid');
 async function createDemoUser() {
   const client = await db.pool.connect();
   try {
-    console.log('Starting Demo User Creation...');
     await client.query('BEGIN');
 
     // 1. Create Tenant
