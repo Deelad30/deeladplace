@@ -50,7 +50,7 @@ exports.getProductVariance = async (req, res) => {
       GROUP BY p.id, p.name;
     `;
 
-    const result = await db.query(sql, [tenantId]);
+    const result = await db.query(sql, values);
 
     const items = result.rows.map(r => {
       const expectedQty = Number(r.expected_sales_qty);

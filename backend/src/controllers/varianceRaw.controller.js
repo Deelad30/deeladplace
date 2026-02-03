@@ -73,7 +73,7 @@ exports.getRawMaterialVariance = async (req, res) => {
       WHERE ${filters.join(" AND ")};
     `;
 
-    const result = await db.query(sql, [tenantId]);
+    const result = await db.query(sql, values);
 
     const items = result.rows.map(row => {
       const expected = Number(row.expected_usage);
