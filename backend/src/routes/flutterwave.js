@@ -23,7 +23,10 @@ const planMap = {
 const planPrices = {
   basic: 10000, 
   pro: 20000,
-  enterprise: 0 // Custom
+  enterprise: 0, // Custom
+  basic_annual: 10000 * 12, // 120,000 NGN
+  pro_annual: 20000 * 12,   // 240,000 NGN
+  enterprise_annual: 0
 };
 
 /**
@@ -80,10 +83,8 @@ router.post('/verify', async (req, res) => {
             // 3. Update User in DB
             const subscriptionCode = data.plan || `sub_${transaction_id}`; 
             
-            await database.query(
-                'UPDATE users SET plan_type = $1, subscription_code = $2 WHERE id = $3',
-                [planType, subscriptionCode, userId]
-            );
+            // This now also sets status = 'active' due to User model update
+            await User.updatePlan(userId, planType, subscriptionCode);
 
             // 4. Send Email
             const user = await User.findById(userId);
@@ -148,15 +149,15 @@ router.post('/webhook', express.json({ type: '*/*' }), async (req, res) => {
             if (user) {
                 // Determine Plan based on Amount (Fallback if plan_id isn't clear)
                 let newPlanType = user.plan_type; 
-                // You could map amounts back to plans: 
-                // 10000 -> basic, 20000 -> pro.
-                if (paidAmount >= 20000) newPlanType = 'pro';
+                
+                // Simple heuristic for webhook plan detection
+                if (paidAmount >= 240000) newPlanType = 'pro_annual';
+                else if (paidAmount >= 120000) newPlanType = 'basic_annual';
+                else if (paidAmount >= 20000) newPlanType = 'pro';
                 else if (paidAmount >= 10000) newPlanType = 'basic';
                 
-                await database.query(
-                    'UPDATE users SET plan_type = $1, subscription_code = $2, status = $3 WHERE id = $4',
-                    [newPlanType, data.plan || data.tx_ref, 'active', user.id]
-                );
+                // Use the shared model method to ensure status update
+                await User.updatePlan(user.id, newPlanType, data.plan || data.tx_ref);
                 
                 logger.info('User plan updated via Webhook', { userId: user.id, plan: newPlanType });
                 

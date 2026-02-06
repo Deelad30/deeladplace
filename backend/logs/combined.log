@@ -17067,3 +17067,21 @@
 {"level":"info","message":"\u001b[0mGET /api/reports/sales-reports?page=1&limit=20 \u001b[36m304\u001b[0m 1104.027 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-02-03 13:04:20"}
 {"level":"info","message":"\u001b[0mGET /api/reports/sales-reports?page=1&limit=20 \u001b[36m304\u001b[0m 580.528 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-02-03 13:04:21"}
 {"level":"info","message":"\u001b[0mGET /api/reports/sales-reports?page=1&limit=20 \u001b[36m304\u001b[0m 560.704 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-02-03 13:04:21"}
+{"level":"info","message":"Email service initialized with SMTP (smtp.gmail.com)","service":"deelad-place-api","timestamp":"2026-02-03 13:07:26"}
+{"env":"development","level":"info","message":"Server running on port 5000","service":"deelad-place-api","timestamp":"2026-02-03 13:07:26"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-02-05 18:44:15"}
+{"level":"info","message":"Updating user plan and activating account","planType":"pro_annual","service":"deelad-place-api","subscriptionCode":"sub_test_123","timestamp":"2026-02-05 18:44:16","userId":44}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-02-05 18:44:19"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-02-06 10:10:22"}
+{"level":"info","message":"Email service initialized with SMTP (smtp.gmail.com)","service":"deelad-place-api","timestamp":"2026-02-06 10:11:22"}
+{"env":"development","level":"info","message":"Server running on port 5000","service":"deelad-place-api","timestamp":"2026-02-06 10:11:26"}
+{"level":"info","message":"Email service initialized with SMTP (smtp.gmail.com)","service":"deelad-place-api","timestamp":"2026-02-06 10:15:18"}
+{"env":"development","level":"info","message":"Server running on port 5000","service":"deelad-place-api","timestamp":"2026-02-06 10:15:20"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-02-06 10:15:24"}
+{"level":"info","message":"Updating user plan and activating account","planType":"pro_annual","service":"deelad-place-api","subscriptionCode":"sub_test_discount_123","timestamp":"2026-02-06 10:15:25","userId":45}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-02-06 10:15:26"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-02-06 10:20:55"}
+{"level":"info","message":"Updating user plan and activating account","planType":"pro_annual","service":"deelad-place-api","subscriptionCode":"sub_test_discount_123","timestamp":"2026-02-06 10:20:56","userId":46}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-02-06 10:20:58"}
+{"level":"info","message":"Email service initialized with SMTP (smtp.gmail.com)","service":"deelad-place-api","timestamp":"2026-02-06 10:21:18"}
+{"env":"development","level":"info","message":"Server running on port 5000","service":"deelad-place-api","timestamp":"2026-02-06 10:21:18"}

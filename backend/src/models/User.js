@@ -47,13 +47,13 @@ class User {
   // UPDATE SUBSCRIPTION PLAN
   // -----------------------------
   static async updatePlan(userId, planType, subscriptionCode = null) {
-    logger.info("Updating user plan", { userId, planType, subscriptionCode });
+    logger.info("Updating user plan and activating account", { userId, planType, subscriptionCode });
 
     const result = await db.query(
       `UPDATE users 
-       SET plan_type = $1, subscription_code = $2 
+       SET plan_type = $1, subscription_code = $2, status = 'active'
        WHERE id = $3
-       RETURNING id, email, plan_type, subscription_code`,
+       RETURNING id, email, plan_type, subscription_code, status`,
       [planType, subscriptionCode, userId]
     );
 
