@@ -17085,3 +17085,5 @@
 {"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-02-06 10:20:58"}
 {"level":"info","message":"Email service initialized with SMTP (smtp.gmail.com)","service":"deelad-place-api","timestamp":"2026-02-06 10:21:18"}
 {"env":"development","level":"info","message":"Server running on port 5000","service":"deelad-place-api","timestamp":"2026-02-06 10:21:18"}
+{"level":"info","message":"Email service initialized with SMTP (smtp.gmail.com)","service":"deelad-place-api","timestamp":"2026-02-06 13:28:13"}
+{"env":"development","level":"info","message":"Server running on port 5000","service":"deelad-place-api","timestamp":"2026-02-06 13:28:13"}
