@@ -3,7 +3,7 @@ import ProductCard from './ProductCard';
 const ProductMainGrid = ({ vendors, onEdit, onDelete }) => {
   // Log all products for each vendor
   vendors.forEach(vendor => {
-    //console.log(`Vendor: ${vendor.vendor_id}`, vendor.products);
+ 
   });
 
   return (
