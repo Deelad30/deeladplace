@@ -17,7 +17,7 @@ const authenticateToken = async (req, res, next) => {
     
     // Verify user still exists in database
     const userResult = await database.query(
-      `SELECT u.id, u.name, u.email, u.role_id, r.name as role_name 
+      `SELECT u.id, u.name, u.email, u.role_id, u.tenant_id, r.name as role_name 
        FROM users u 
        JOIN roles r ON u.role_id = r.id 
        WHERE u.id = $1`,

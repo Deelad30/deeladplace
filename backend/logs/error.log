@@ -1017,3 +1017,20 @@
 {"error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":19,"timestamp":"2026-02-24 13:07:22"}
 {"error":"","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":19,"timestamp":"2026-02-24 13:11:56"}
 {"error":"Connection terminated unexpectedly","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":19,"timestamp":"2026-02-24 13:13:48"}
+{"error":"Connection closed unexpectedly","level":"error","message":"Failed to send email","service":"deelad-place-api","subject":"Security Alert: New Login detected","timestamp":"2026-02-24 22:20:10","to":"demo@deesoftwork.com.ng"}
+{"error":"Connection closed unexpectedly","level":"error","message":"Failed to send login notification","service":"deelad-place-api","timestamp":"2026-02-24 22:20:10","userId":36}
+{"error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":27,"timestamp":"2026-02-24 22:29:11"}
+{"error":"Connection terminated unexpectedly","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":27,"timestamp":"2026-02-24 22:31:16"}
+{"error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":27,"timestamp":"2026-02-24 22:31:51"}
+{"error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":27,"timestamp":"2026-02-24 22:32:52"}
+{"error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":27,"timestamp":"2026-02-24 22:34:42"}
+{"error":"Client network socket disconnected before secure TLS connection was established","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":27,"timestamp":"2026-02-24 22:36:14"}
+{"error":"","level":"error","message":"Failed to delete purchase","purchaseId":"329","service":"deelad-place-api","tenantId":27,"timestamp":"2026-02-24 22:41:04"}
+{"error":"Purchase not found","level":"error","message":"Failed to delete purchase","purchaseId":"999999","service":"deelad-place-api","tenantId":1,"timestamp":"2026-02-24 22:52:24"}
+{"error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":27,"timestamp":"2026-02-24 22:54:32"}
+{"error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":27,"timestamp":"2026-02-24 22:55:21"}
+{"error":"Authentication timed out","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":27,"timestamp":"2026-02-24 23:00:33"}
+{"error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":27,"timestamp":"2026-02-25 00:18:16"}
+{"error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":27,"timestamp":"2026-02-25 00:19:25"}
+{"error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":19,"timestamp":"2026-02-25 00:22:00"}
+{"error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":19,"timestamp":"2026-02-25 00:24:01"}

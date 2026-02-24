@@ -77,7 +77,8 @@ export default function MaterialPurchasesPage() {
         await loadAll(true); // Silent reload
     } catch (err) {
         console.error(err);
-        toast.error(err.response?.data?.message || 'Error deleting purchase');
+        const errorMsg = err.response?.data?.message || 'Error deleting purchase. Please try again.';
+        toast.error(errorMsg);
     } finally {
         setLoadingAction(false);
     }

@@ -13,7 +13,8 @@ class Sale {
       customer_price,
       customer_type,
       payment_type,
-      payment_breakdown
+      payment_breakdown,
+      tenant_id
     } = saleData;
 
     const result = await database.query(
@@ -26,8 +27,9 @@ class Sale {
         customer_price,
         customer_type,
         payment_type,
-        payment_breakdown
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+        payment_breakdown,
+        tenant_id
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
       RETURNING *`,
       [
         vendor_id,
@@ -38,7 +40,8 @@ class Sale {
         customer_price,
         customer_type,
         payment_type,
-        JSON.stringify(payment_breakdown || {})
+        JSON.stringify(payment_breakdown || {}),
+        tenant_id
       ]
     );
 
@@ -70,11 +73,11 @@ class Sale {
 
   
   // Get daily summary
-  static async getDailySummary({ vendor_id = null, startDate = null, endDate = null } = {}) {
+  static async getDailySummary({ tenant_id, vendor_id = null, startDate = null, endDate = null } = {}) {
     ({ startDate, endDate } = this.normalizeDates(startDate, endDate));
 
-    const params = [];
-    const where = [];
+    const params = [tenant_id];
+    const where = [`tenant_id = $1`];
 
     if (vendor_id) {
       params.push(vendor_id);
@@ -114,11 +117,11 @@ class Sale {
 
   // Overview stats for KPI cards
   // Overview stats for KPI cards
-  static async getOverview({ vendor_id = null, startDate = null, endDate = null } = {}) {
+  static async getOverview({ tenant_id, vendor_id = null, startDate = null, endDate = null } = {}) {
     ({ startDate, endDate } = this.normalizeDates(startDate, endDate));
 
-    const params = [];
-    const where = [];
+    const params = [tenant_id];
+    const where = [`tenant_id = $1`];
 
     if (vendor_id) {
       params.push(vendor_id);
@@ -152,11 +155,11 @@ class Sale {
 
   // Top products by revenue (or quantity) in a date range (default 30 days)
 // Top products
-  static async getTopProducts({ vendor_id = null, startDate = null, endDate = null, limit = 10 } = {}) {
+  static async getTopProducts({ tenant_id, vendor_id = null, startDate = null, endDate = null, limit = 10 } = {}) {
     ({ startDate, endDate } = this.normalizeDates(startDate, endDate));
 
-    const params = [];
-    const where = [];
+    const params = [tenant_id];
+    const where = [`s.tenant_id = $1`];
 
     if (vendor_id) {
       params.push(vendor_id);
@@ -195,11 +198,11 @@ class Sale {
 
   // Payment breakdown by sum(customer_price)
 // Payment summary
-  static async getPaymentSummary({ vendor_id = null, startDate = null, endDate = null } = {}) {
+  static async getPaymentSummary({ tenant_id, vendor_id = null, startDate = null, endDate = null } = {}) {
     ({ startDate, endDate } = this.normalizeDates(startDate, endDate));
 
-    const params = [];
-    const where = [];
+    const params = [tenant_id];
+    const where = [`tenant_id = $1`];
 
     if (vendor_id) {
       params.push(vendor_id);
@@ -241,11 +244,12 @@ static async getPaginatedSales({
   endDate = null,
   vendor_id = null,
   product_id = null,
-  payment_type = null
+  payment_type = null,
+  tenant_id
 } = {}) {
   const offset = (page - 1) * limit;
-  const params = [];
-  const where = [];
+  const params = [tenant_id];
+  const where = [`s.tenant_id = $1`];
 
   // Filter by start date
   if (startDate) {
@@ -309,9 +313,9 @@ static async getPaginatedSales({
 
 
   // Vendor summary: total sales and commission per vendor (optionally limited)
-  static async getVendorsSummary({ startDate = null, endDate = null, limit = 50 } = {}) {
-    const params = [];
-    const whereClauses = [];
+  static async getVendorsSummary({ tenant_id, startDate = null, endDate = null, limit = 50 } = {}) {
+    const params = [tenant_id];
+    const whereClauses = [`s.tenant_id = $1`];
 
     if (startDate) {
       params.push(startDate);

@@ -4,6 +4,7 @@ import ActiveBillsSkeleton from './ActiveBillsSkeleton';
 import { toast } from 'react-hot-toast';
 import { formatCurrency } from '../../utils/formatters';
 import { useAuth } from '../../context/AuthContext';
+import { ROLE_MAP } from '../../utils/roles';
 
 const ActiveBillsModal = ({ visible, onClose, onLoadBill, onPrintBill, onPrintKitchen, onRefresh, standalone = false }) => {
   const { user } = useAuth();
@@ -118,7 +119,7 @@ const ActiveBillsModal = ({ visible, onClose, onLoadBill, onPrintBill, onPrintKi
                         >
                           Bill
                         </button>
-                        {['admin', 'manager'].includes(user?.role) && (
+                        {['admin', 'manager'].includes(ROLE_MAP[user?.role_id]) && (
                           <button 
                             onClick={() => handleVoid(bill.id)}
                             style={{ background: 'transparent', border: 'none', color: 'var(--pos-danger)', padding: '4px 8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}

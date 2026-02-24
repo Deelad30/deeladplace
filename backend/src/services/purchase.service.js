@@ -288,7 +288,11 @@ async function deletePurchase(tenantId, purchaseId, userId = null) {
 
     await client.query('COMMIT');
   } catch (err) {
-    await client.query('ROLLBACK');
+    try {
+      await client.query('ROLLBACK');
+    } catch (rollbackErr) {
+      console.error('Rollback failed:', rollbackErr);
+    }
     throw err;
   } finally {
     client.release();

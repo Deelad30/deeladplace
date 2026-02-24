@@ -2,6 +2,7 @@ import React from 'react';
 import { formatCurrency } from '../../utils/formatters';
 import CartSkeleton from './CartSkeleton';
 import { useAuth } from '../../context/AuthContext';
+import { ROLE_MAP } from '../../utils/roles';
 
 const ShoppingCart = ({ cart, onUpdateQuantity, onRemoveItem, totals, onContinue, processing, loading, disabled, billNo, onBillNoChange, onSaveBill, onPrintBill, onPrintKitchen }) => {
     const { user } = useAuth();
@@ -88,9 +89,9 @@ const ShoppingCart = ({ cart, onUpdateQuantity, onRemoveItem, totals, onContinue
             </button>
             <button
               onClick={onContinue}
-              disabled={disabled || processing || user?.role === 'waiter'}
+              disabled={disabled || processing || ROLE_MAP[user?.role_id] === 'waiter'}
               className="process-sale-btn-premium"
-              title={user?.role === 'waiter' ? 'Waiters cannot settle sales' : ''}
+              title={ROLE_MAP[user?.role_id] === 'waiter' ? 'Waiters cannot settle sales' : ''}
             >
               {processing ? 'Processing...' : 'Settle Sale'}
             </button>

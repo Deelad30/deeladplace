@@ -62,12 +62,18 @@ exports.deletePurchase = async (req, res) => {
 
     res.json({ ok: true });
   } catch (err) {
-    logger.error('Failed to delete purchase', { error: err.message, tenantId: req.user?.tenant_id, purchaseId: req.params.id });
+    logger.error('Failed to delete purchase', { 
+      error: err.message, 
+      tenantId: req.user?.tenant_id, 
+      purchaseId: req.params.id 
+    });
 
-    // Pass through the specific error message
-    return res.status(400).json({
+    const clientErrors = ['PURCHASE_USED', 'NOT_FOUND', 'INVALID_QTY'];
+    const statusCode = clientErrors.includes(err.code) ? 400 : 500;
+
+    return res.status(statusCode).json({
       ok: false,
-      message: err.message
+      message: err.message || 'An unexpected error occurred while deleting the purchase'
     });
   }
 };

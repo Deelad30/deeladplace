@@ -36,7 +36,8 @@ const createSale = async (req, res) => {
       customer_price: totalCustomerPrice,
       customer_type,
       payment_type,
-      payment_breakdown
+      payment_breakdown,
+      tenant_id: req.user.tenant_id
     });
 
     res.status(201).json({ success: true, message: "Sale recorded successfully", sale });
@@ -57,7 +58,8 @@ const getSalesSummary = async (req, res) => {
     const summary = await Sale.getDailySummary({
       startDate: start,
       endDate: end,
-      vendor_id
+      vendor_id,
+      tenant_id: req.user.tenant_id
     });
 
     res.json({ success: true, summary });
@@ -78,7 +80,8 @@ const getOverview = async (req, res) => {
     const data = await Sale.getOverview({
       startDate: start,
       endDate: end,
-      vendor_id
+      vendor_id,
+      tenant_id: req.user.tenant_id
     });
 
     const overview = {
@@ -112,7 +115,8 @@ const getTopProducts = async (req, res) => {
       startDate: start,
       endDate: end,
       vendor_id,
-      limit: Number(limit)
+      limit: Number(limit),
+      tenant_id: req.user.tenant_id
     });
 
     res.json({ success: true, top_products: rows });
@@ -137,7 +141,8 @@ const getPaymentSummary = async (req, res) => {
     const summary = await Sale.getPaymentSummary({
       startDate: start,
       endDate: end,
-      vendor_id
+      vendor_id,
+      tenant_id: req.user.tenant_id
     });
 
     res.json({ success: true, payment_summary: summary });
@@ -170,7 +175,8 @@ const getSalesPaginated = async (req, res) => {
       endDate: end,
       vendor_id,
       product_id,
-      payment_type
+      payment_type,
+      tenant_id: req.user.tenant_id
     });
 
     res.json({ success: true, ...result });
@@ -197,7 +203,8 @@ const getVendorsSummary = async (req, res) => {
       startDate: start,
       endDate: end,
       vendor_id,
-      limit: Number(limit)
+      limit: Number(limit),
+      tenant_id: req.user.tenant_id
     });
 
     res.json({ success: true, vendors: rows });
