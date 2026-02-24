@@ -14,7 +14,7 @@ async function addWaiterRole() {
     
     process.exit(0);
   } catch (err) {
-    console.error("Failed to add 'waiter' role:", err);
+    console.error("Failed to add the 'waiter' role:", err);
     process.exit(1);
   }
 }
