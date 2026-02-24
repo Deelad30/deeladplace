@@ -12,7 +12,6 @@ async function checkLatestSale() {
     
     if (res.rows.length > 0) {
       const sale = res.rows[0];
-      console.log('Latest sale:');
       console.log(JSON.stringify(sale, null, 2));
       console.log('\ntransaction_id:', sale.transaction_id || 'NULL/EMPTY');
     } else {
