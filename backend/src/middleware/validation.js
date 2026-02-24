@@ -90,7 +90,8 @@ const schemas = {
     order_method: Joi.string().allow('', null),
     vendor_id: Joi.number().integer().positive().allow(null),
     commission: Joi.number().min(0).optional(),
-    shift_id: Joi.number().integer().positive().allow(null)
+    shift_id: Joi.number().integer().positive().allow(null),
+    transaction_id: Joi.string().optional()
   })
 };
 

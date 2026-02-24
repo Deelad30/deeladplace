@@ -3,7 +3,6 @@ import { formatCurrency } from '../../utils/formatters';
 
 const ProductGrid = ({ products, onAddToCart, vendors, disabled }) => {
       const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
-      //console.log(products);
       
   const getVendorName = (vendorId) => {
     const vendor = vendors.find(v => v.id === vendorId);
@@ -13,27 +12,41 @@ const ProductGrid = ({ products, onAddToCart, vendors, disabled }) => {
   return (
     <div className="product-grid">
       {products
-        .filter(product => product.selling_price !== null) // only show priced products
-        .map(product => (
-          <div key={product.id} className="product-card">
-            <div className="product-info">
-              <h4>{product.name}</h4>
-            <p style={{fontSize:"13px"}} className="commission">vendor: {getVendorName(product.vendor_id)}</p>
-              <div className="product-pricing">
-                <span className="price">{formatCurrency(round(product.selling_price))}</span>
-                <span className="commission">
-                  Commission: {formatCurrency(product.custom_commission)}
-                </span>
+        .filter(product => product.selling_price !== null) 
+        .map(product => {
+          const sellingPrice = round(Number(product.selling_price || 0));
+          const commission = Number(product.commission || product.custom_commission || 0);
+          const totalPrice = sellingPrice + commission;
+
+          return (
+            <div key={product.id} className="product-card premium">
+              <div className="product-visual">
+                <span className="product-initial">{product.name.charAt(0)}</span>
+              </div>
+              <div className="product-content">
+                <div className="product-header">
+                  <h4 title={product.name}>{product.name}</h4>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--pos-text-muted)' }}>{getVendorName(product.vendor_id)}</span>
+                </div>
+                
+                <div className="price-stack">
+                  <span className="value">{formatCurrency(totalPrice)}</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--pos-text-muted)' }}>
+                    {formatCurrency(sellingPrice)} + {formatCurrency(commission)}
+                  </span>
+                </div>
+
+                <button
+                  onClick={() => onAddToCart(product)}
+                  className="add-to-cart-btn premium"
+                  disabled={disabled}
+                >
+                  Add Item
+                </button>
               </div>
             </div>
-            <button
-              onClick={() => onAddToCart(product)}
-              className="add-to-cart-btn"
-            >
-              Add Item
-            </button>
-          </div>
-        ))}
+          );
+        })}
     </div>
   );
 };

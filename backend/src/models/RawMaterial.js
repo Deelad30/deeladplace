@@ -5,12 +5,12 @@ class RawMaterial {
   /**
    * CREATE (tenant-scoped)
    */
-  static async create({ tenant_id, name, unit, current_cost }) {
+  static async create({ tenant_id, name, measurement_unit, min_stock_level }) {
     const result = await database.query(
-      `INSERT INTO raw_materials (tenant_id, name, unit, current_cost)
+      `INSERT INTO raw_materials (tenant_id, name, measurement_unit, min_stock_level)
        VALUES ($1, $2, $3, $4)
-       RETURNING id, tenant_id, name, unit, current_cost, created_at, updated_at`,
-      [tenant_id, name, unit, current_cost]
+       RETURNING id, tenant_id, name, measurement_unit, min_stock_level, created_at`,
+      [tenant_id, name, measurement_unit, min_stock_level || 0]
     );
 
     return result.rows[0];
@@ -21,7 +21,7 @@ class RawMaterial {
    */
   static async findAll({ tenantId }) {
     const result = await database.query(
-      `SELECT id, tenant_id, name, measurement_unit, created_at
+      `SELECT id, tenant_id, name, measurement_unit, min_stock_level, created_at
        FROM raw_materials
        WHERE tenant_id = $1
        ORDER BY created_at DESC`,
@@ -36,7 +36,7 @@ class RawMaterial {
    */
   static async findById(id, { tenantId }) {
     const result = await database.query(
-      `SELECT id, tenant_id, name, unit, current_cost, created_at, updated_at
+      `SELECT id, tenant_id, name, measurement_unit, min_stock_level, created_at
        FROM raw_materials
        WHERE id = $1 AND tenant_id = $2`,
       [id, tenantId]
@@ -48,17 +48,16 @@ class RawMaterial {
   /**
    * UPDATE (tenant-scoped)
    */
-  static async update(id, { name, unit, current_cost }, { tenantId }) {
+  static async update(id, { name, measurement_unit, min_stock_level }, { tenantId }) {
     const result = await database.query(
       `UPDATE raw_materials
        SET name = $1,
-           unit = $2,
-           current_cost = $3,
-           updated_at = NOW()
+           measurement_unit = $2,
+           min_stock_level = $3
        WHERE id = $4
          AND tenant_id = $5
-       RETURNING id, tenant_id, name, unit, current_cost, created_at, updated_at`,
-      [name, unit, current_cost, id, tenantId]
+       RETURNING id, tenant_id, name, measurement_unit, min_stock_level, created_at`,
+      [name, measurement_unit, min_stock_level || 0, id, tenantId]
     );
 
     return result.rows[0];

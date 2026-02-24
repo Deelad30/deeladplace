@@ -39,6 +39,11 @@ class SalesService {
     return response.data;
   }
 
+  async getTransactionDetails(transactionId) {
+    const response = await api.get(`/reports/transaction/${transactionId}`);
+    return response.data;
+  }
+
 
   // -----------------------
   // OLD SALES ENDPOINTS (STILL USED BY SalesTable)

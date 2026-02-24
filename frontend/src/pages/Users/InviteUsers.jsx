@@ -18,12 +18,13 @@ const ROLE_DESCRIPTIONS = {
   auditor: "View-only access to reports and financial data for auditing purposes.",
   cashier: "Process sales, view daily transactions, and handle POS operations.",
   cashier_plus: "Process sales and manage limited stock adjustments.",
-  kitchen_staff: "View recipes and manage raw material usage."
+  kitchen_staff: "View recipes and manage raw material usage.",
+  waiter: "Place orders (Save to Bill) but cannot settle sales or void bills."
 };
 
 export default function InviteUsers() {
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("cashier");
+  const [role, setRole] = useState("waiter");
   const [invites, setInvites] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
@@ -122,6 +123,7 @@ export default function InviteUsers() {
                   <option value="cashier">Cashier</option>
                   <option value="cashier_plus">Cashier Plus</option>
                   <option value="kitchen_staff">Kitchen Staff</option>
+                  <option value="waiter">Waiter</option>
                 </select>
               </div>
 

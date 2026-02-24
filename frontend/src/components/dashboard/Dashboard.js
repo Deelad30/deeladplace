@@ -166,7 +166,7 @@ const SkeletonCard = () => (
         <>
       <StatCard
         title="Today's Product Profit"
-        value={formatCurrency(financialSummary.profit.today)}
+        value={formatCurrency(round(financialSummary.profit.today))}
         subtitle="Net Earnings"
         icon={faChartPie}
         color="success"
@@ -205,7 +205,7 @@ const SkeletonCard = () => (
         <>
         <StatCard
           title="Month Product Profit"
-          value={formatCurrency(financialSummary.profit.this_month)}
+          value={formatCurrency(round(financialSummary.profit.this_month))}
           subtitle="Net Earnings"
           icon={faCoins}
           color="success"

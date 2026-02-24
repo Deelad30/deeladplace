@@ -1,0 +1,90 @@
+--- SCHEMA ---
+[
+  {
+    "column_name": "id",
+    "data_type": "integer"
+  },
+  {
+    "column_name": "tenant_id",
+    "data_type": "integer"
+  },
+  {
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone"
+  },
+  {
+    "column_name": "min_stock_level",
+    "data_type": "numeric"
+  },
+  {
+    "column_name": "name",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "measurement_unit",
+    "data_type": "character varying"
+  }
+]
+--- DATA (First 10) ---
+[
+  {
+    "id": 343,
+    "name": "Tiger Nuts",
+    "min_stock_level": "10.00",
+    "measurement_unit": "pcs"
+  },
+  {
+    "id": 342,
+    "name": "Ginger",
+    "min_stock_level": "9.00",
+    "measurement_unit": "pcs"
+  },
+  {
+    "id": 341,
+    "name": "Cloves",
+    "min_stock_level": "40.00",
+    "measurement_unit": "pcs"
+  },
+  {
+    "id": 340,
+    "name": "Potatoes",
+    "min_stock_level": "40.00",
+    "measurement_unit": "pcs"
+  },
+  {
+    "id": 339,
+    "name": "banana",
+    "min_stock_level": "10.00",
+    "measurement_unit": "g"
+  },
+  {
+    "id": 338,
+    "name": "ice cubes",
+    "min_stock_level": "10.00",
+    "measurement_unit": "g"
+  },
+  {
+    "id": 337,
+    "name": "whip spray",
+    "min_stock_level": "10.00",
+    "measurement_unit": "g"
+  },
+  {
+    "id": 336,
+    "name": "coconut milk",
+    "min_stock_level": "10.00",
+    "measurement_unit": "ml"
+  },
+  {
+    "id": 335,
+    "name": "avocado",
+    "min_stock_level": "10.00",
+    "measurement_unit": "g"
+  },
+  {
+    "id": 334,
+    "name": "vanila essence",
+    "min_stock_level": "10.00",
+    "measurement_unit": "ml"
+  }
+]

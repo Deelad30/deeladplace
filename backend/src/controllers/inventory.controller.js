@@ -18,7 +18,6 @@ async function createMovement(req, res) {
     notes = null
   } = req.body;
 
-  // ✅ Validate required fields
   if (!item_type || !item_id || !movement_type || qty === undefined) {
     return res.status(400).json({
       success: false,
@@ -27,7 +26,6 @@ async function createMovement(req, res) {
   }
 
   try {
-    // 1️⃣ Record the stock movement
     const movement = await stockService.recordStockMovement({
       tenantId,
       itemType: item_type,
@@ -42,14 +40,9 @@ async function createMovement(req, res) {
       destination,
       notes
     });
-
-    // 2️⃣ Determine stock delta: inbound positive, outbound negative
-    // 'in' or 'vendor_delivery' or 'purchase' => inbound
-    // 'out' or 'issue' or 'waste' => outbound
     const inboundTypes = ['in', 'vendor_delivery', 'purchase', 'inbound'];
     const delta = inboundTypes.includes(movement_type) ? Number(qty) : -Number(qty);
 
-    // 3️⃣ Update stock balance
     const stock = await stockService.upsertStockBalance(
       tenantId,
       item_type,
@@ -58,7 +51,6 @@ async function createMovement(req, res) {
       cost_per_unit !== null ? cost_per_unit : undefined
     );
 
-    // 4️⃣ Check for Low Stock & Email (Async, don't block response)
     (async () => {
         try {
             if (item_type === 'material') {
@@ -87,8 +79,6 @@ async function createMovement(req, res) {
             logger.error('Failed to send low stock alert', { error: emailErr.message });
         }
     })();
-
-    // 5️⃣ Return full info
     res.json({ success: true, movement, stock });
 
   } catch (err) {
@@ -115,8 +105,6 @@ async function issueToProduction(req, res) {
       if (!item_id || qty === undefined) {
         return res.status(400).json({ success: false, message: 'item_id and qty required for each item' });
       }
-
-      // 1️⃣ Record stock movement (outbound)
       const movement = await stockService.recordStockMovement({
         tenantId,
         itemType: item_type,
@@ -127,8 +115,6 @@ async function issueToProduction(req, res) {
         reference,
         createdBy: userId
       });
-
-      // 2️⃣ Update stock balance
       const stock = await stockService.upsertStockBalance(
         tenantId,
         item_type,
@@ -157,7 +143,6 @@ async function recordProduction(req, res) {
   }
 
   try {
-    // 1️⃣ Check if product has a recipe
     const recipeRes = await db.query(
       `SELECT COUNT(*) AS cnt FROM recipes WHERE tenant_id = $1 AND product_id = $2`,
       [tenantId, product_id]
@@ -169,8 +154,6 @@ async function recordProduction(req, res) {
         message: 'Cannot record production: Product has no recipe defined'
       });
     }
-
-    // 2️⃣ Fetch latest TCOP (cost per unit)
     const costRes = await db.query(
       `SELECT TCOP FROM standard_costs 
        WHERE tenant_id = $1 AND product_id = $2
@@ -181,7 +164,6 @@ async function recordProduction(req, res) {
     const cost_per_unit = costRes.rows[0] ? Number(costRes.rows[0].tcop) : 0;
     const total_cost = cost_per_unit * qty;
 
-    // 3️⃣ Fetch vendor_id from product automatically
     const vendorRes = await db.query(
       `SELECT vendor_id FROM products WHERE id = $1 AND tenant_id = $2`,
       [product_id, tenantId]
@@ -189,7 +171,6 @@ async function recordProduction(req, res) {
 
     const vendor_id = vendorRes.rows[0] ? vendorRes.rows[0].vendor_id : null;
 
-    // 4️⃣ Insert stock movement
     const movementRes = await db.query(
       `INSERT INTO stock_movements 
        (tenant_id, item_type, item_id, movement_type, qty, cost_per_unit, total_cost, vendor_id, created_by)
@@ -198,7 +179,6 @@ async function recordProduction(req, res) {
       [tenantId, product_id, qty, cost_per_unit, total_cost, vendor_id, userId]
     );
 
-    // 5️⃣ Update stock balance (NO vendor_id now)
     const stock = await stockService.upsertStockBalance(tenantId, 'product', product_id, qty, cost_per_unit);
 
     res.json({
@@ -226,13 +206,15 @@ async function getLedger(req, res) {
     const query = `
       SELECT 
         sm.*,
-        rm.name as item_name,
-        rm.measurement_unit,
+        COALESCE(rm.name, p.name) as item_name,
+        COALESCE(rm.measurement_unit, 'unit') as measurement_unit,
         u.name as created_by_name
       FROM stock_movements sm
       LEFT JOIN raw_materials rm ON sm.item_id = rm.id AND sm.item_type = 'material'
+      LEFT JOIN products p ON sm.item_id = p.id AND sm.item_type = 'product'
       LEFT JOIN users u ON sm.created_by = u.id
       WHERE sm.tenant_id = $1
+        AND sm.movement_type IN ('in', 'out', 'waste')
       ORDER BY sm.created_at DESC
       LIMIT 100
     `;

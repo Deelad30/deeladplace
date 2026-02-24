@@ -85,6 +85,7 @@ const reportsRoutes = require('./src/routes/reports.routes');
 const userRoutes = require('./src/routes/userRoutes');
 const productLabourRoutes = require('./src/routes/productLabour.routes');
 const productOpexRoutes = require('./src/routes/productOpex.routes');
+const posBillRoutes = require('./src/routes/posBills.routes');
 
 
 // Use routes
@@ -112,6 +113,7 @@ app.use('/api/costing', costingRoutes);
 app.use('/api/sic', sicRoutes);
 app.use('/api/inventory', invRoutes);
 app.use('/api/pos', posRoutes);
+app.use('/api/pos/bills', posBillRoutes);
 app.use('/api/standard', standardRoutes);
 app.use('/api/stocks', stocksRoutes);
 app.use('/api/product-labour', productLabourRoutes);

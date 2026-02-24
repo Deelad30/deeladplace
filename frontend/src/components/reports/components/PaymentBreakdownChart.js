@@ -7,9 +7,14 @@ import {
 // Updated color palette with more variety
 const COLORS = ['#4caf50', '#2196f3', '#ff9800', '#9c27b0', '#00bcd4'];
 
-const PaymentBreakdownChart = ({ data = {} }) => {
+const PaymentBreakdownChart = ({ data = {}, auditMode = false }) => {
+  const round100 = (num) => Math.round(num / 100) * 100;
+
   // data is object: { cash: 120000, pos: 45000, transfer: 35000 }
-  const entries = Object.entries(data || {}).map(([k, v]) => ({ name: k || 'unknown', value: Number(v) }));
+  const entries = Object.entries(data || {}).map(([k, v]) => ({ 
+    name: k || 'unknown', 
+    value: Number(auditMode ? v : round100(Number(v))) 
+  }));
   const filtered = entries.filter(e => e.value > 0);
   
   return (
@@ -19,7 +24,7 @@ const PaymentBreakdownChart = ({ data = {} }) => {
           <Pie data={filtered} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={48} outerRadius={80} paddingAngle={3}>
             {filtered.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
           </Pie>
-          <Tooltip formatter={(value) => new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(value)} />
+          <Tooltip formatter={(value) => new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: auditMode ? 2 : 0 }).format(value)} />
           <Legend verticalAlign="bottom" />
         </PieChart>
       </ResponsiveContainer>

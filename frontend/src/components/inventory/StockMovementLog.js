@@ -133,16 +133,16 @@ const StockMovementLog = () => {
                                     <td style={tdStyle}>
                                         <span style={{ 
                                             padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: '700',
-                                            background: isIn ? '#dcfce7' : isOut ? '#f1f5f9' : '#fee2e2',
-                                            color: isIn ? '#16a34a' : isOut ? '#64748b' : '#ef4444'
+                                            background: move.movement_type === 'in' ? '#dcfce7' : move.movement_type === 'out' ? '#f1f5f9' : '#fee2e2',
+                                            color: move.movement_type === 'in' ? '#16a34a' : move.movement_type === 'out' ? '#64748b' : '#ef4444'
                                         }}>
-                                            {isIn ? 'INBOUND' : isOut ? 'OUTBOUND' : 'WASTE'}
+                                            {move.movement_type === 'in' ? 'INBOUND' : move.movement_type === 'out' ? 'OUTBOUND' : 'WASTE'}
                                         </span>
                                     </td>
 
                                     <td style={tdStyle}>
-                                        <span style={{ fontWeight: '700', color: isIn ? '#16a34a' : '#ef4444' }}>
-                                            {isIn ? '+' : '-'}{Number(move.qty).toFixed(2)}
+                                        <span style={{ fontWeight: '700', color: move.movement_type === 'in' ? '#16a34a' : '#ef4444' }}>
+                                            {move.movement_type === 'in' ? '+' : '-'}{Math.abs(Number(move.qty)).toFixed(2)}
                                         </span>
                                     </td>
 

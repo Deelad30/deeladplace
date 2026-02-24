@@ -68,6 +68,39 @@ exports.getSalesPaginated = async (req, res) => {
 };
 
 
+exports.getTransactionDetails = async (req, res) => {
+  const tenantId = req.user.tenant_id;
+  const { transactionId } = req.params;
+
+  try {
+    const sql = `
+      SELECT
+        ps.*,
+        p.name AS product_name,
+        p.custom_commission,
+        COALESCE(ps.vendor_id, p.vendor_id) AS vendor_id,
+        u.name AS sold_by
+      FROM pos_sales ps
+      LEFT JOIN products p ON p.id = ps.product_id
+      LEFT JOIN users u ON u.id = ps.user_id
+      WHERE ps.tenant_id = $1 AND ps.transaction_id = $2
+      ORDER BY ps.created_at ASC
+    `;
+
+    const result = await db.query(sql, [tenantId, transactionId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ ok: false, message: 'Transaction not found' });
+    }
+
+    res.json({ ok: true, items: result.rows });
+  } catch (err) {
+    logger.error("getTransactionDetails error", { error: err.message, tenantId, transactionId });
+    res.status(500).json({ ok: false, message: err.message });
+  }
+};
+
+
 exports.getSalesReport = async (req, res) => {
   const tenantId = req.user.tenant_id;
   try {

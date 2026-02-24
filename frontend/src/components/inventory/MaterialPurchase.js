@@ -32,7 +32,8 @@ export default function MaterialPurchasesPage() {
     purchase_price: '',
     vendor_id: '',
     purchase_date: '',
-    measurement_unit: 'pcs'
+    measurement_unit: 'pcs',
+    min_stock_level: ''
   });
 
   // Search and pagination
@@ -60,7 +61,8 @@ export default function MaterialPurchasesPage() {
       purchase_price: p.purchase_price,
       vendor_id: p.vendor_id,
       purchase_date: formattedDate || '',
-      measurement_unit: p.measurement_unit || 'pcs'
+      measurement_unit: p.measurement_unit || 'pcs',
+      min_stock_level: p.min_stock_level || ''
     });
     setOpenModal(true);
   }
@@ -144,9 +146,9 @@ export default function MaterialPurchasesPage() {
         } else {
             await createPurchase(materialData);
             toast.success('Purchase recorded. Add another?');
-            // Keep modal open, just reset form
+            // Keep modal open, but clear lastAdded if we auto-transition
             setLastAdded(materialData.material_name);
-            setEditingId(null); // Ensure we remain in create mode
+            setEditingId(null);
         }
         
         // Reset form but keep date/vendor if convenient? No, user requested "add as much purchase", usually implies fresh form or maybe sticky fields. 
@@ -156,9 +158,10 @@ export default function MaterialPurchasesPage() {
             material_name: '',
             purchase_qty: '',
             purchase_price: '',
-            vendor_id: form.vendor_id, // Keep vendor selected for convenience
-            purchase_date: form.purchase_date, // Keep date selected for convenience
-            measurement_unit: 'pcs'
+            vendor_id: form.vendor_id, 
+            purchase_date: form.purchase_date,
+            measurement_unit: 'pcs',
+            min_stock_level: ''
         });
 
         loadAll();
@@ -205,9 +208,9 @@ export default function MaterialPurchasesPage() {
                   material_name: '',
                   purchase_qty: '',
                   purchase_price: '',
-                  vendor_id: '',
-                  purchase_date: new Date().toISOString().split('T')[0], // Default to today
-                  measurement_unit: 'pcs'
+                  purchase_date: new Date().toISOString().split('T')[0],
+                  measurement_unit: 'pcs',
+                  min_stock_level: ''
               });
               setOpenModal(true);
           }}>
@@ -330,7 +333,16 @@ export default function MaterialPurchasesPage() {
                         list="material-list"
                         placeholder="Search existing or type new..."
                         value={form.material_name}
-                        onChange={e => setForm({ ...form, material_name: e.target.value })}
+                        onChange={e => {
+                            const val = e.target.value;
+                            const mat = materials.find(m => m.name.toLowerCase() === val.toLowerCase());
+                            setForm({ 
+                                ...form, 
+                                material_name: val,
+                                min_stock_level: mat ? mat.min_stock_level : form.min_stock_level,
+                                measurement_unit: mat ? mat.measurement_unit : form.measurement_unit
+                            });
+                        }}
                         autoFocus
                     />
                     <datalist id="material-list">
@@ -350,18 +362,17 @@ export default function MaterialPurchasesPage() {
                 </div>
 
                 <div className="form-group">
-                    <label className="premium-label-2">Unit</label>
+                    <label className="premium-label-2">Threshold (Par Level)</label>
                     <input
                         className="premium-input"
-                        list="unit-list"
-                        placeholder="e.g. kg, pcs"
-                        value={form.measurement_unit}
-                        onChange={e => setForm({ ...form, measurement_unit: e.target.value })}
+                        type="number"
+                        placeholder="0.00"
+                        value={form.min_stock_level}
+                        onChange={e => setForm({ ...form, min_stock_level: e.target.value })}
                     />
-                    <datalist id="unit-list">
-                        <option value="pcs" /><option value="kg" /><option value="ltr" />
-                        <option value="pack" /><option value="box" />
-                    </datalist>
+                    <small style={{display: 'block', fontSize: '11px', color: '#64748b', marginTop: '4px'}}>
+                        Min stock balance before alert.
+                    </small>
                 </div>
 
                 <div className="form-group">

@@ -1,30 +1,31 @@
 // Map role_id (from database) → role name (used in frontend)
 export const ROLE_MAP = {
-  1: "admin",
-  2: "manager",
-  3: "accountant",
-  4: "inventory_officer",
-  5: "store_keeper",
-  6: "auditor",
-  7: "cashier",
-  8: "cashier_plus",
-  9: "kitchen_staff",
-  // Optional fallback:
-  0: "staff"
+  "1": "admin",
+  "2": "manager",
+  "3": "accountant",
+  "4": "inventory_officer",
+  "5": "store_keeper",
+  "6": "auditor",
+  "7": "cashier",
+  "8": "cashier_plus",
+  "9": "kitchen_staff",
+  "10": "waiter",
+  "0": "staff"
 };
 
 
 export const ROLE_DEFAULT_ROUTE = {
-  admin: "/dashboard",
-  manager: "/dashboard",
-  cashier: "/pos",
-  cashier_plus: "/pos",
-  kitchen_staff: "/inventory",
-  inventory_officer: "/inventory",
-  accountant: "/expenses",
-  auditor: "/reports",
-  store_keeper: "/products",
-  staff: "/pos"
+  "admin": "/dashboard",
+  "manager": "/dashboard",
+  "cashier": "/pos",
+  "cashier_plus": "/pos",
+  "kitchen_staff": "/inventory",
+  "inventory_officer": "/inventory",
+  "accountant": "/expenses",
+  "auditor": "/reports",
+  "store_keeper": "/products",
+  "waiter": "/pos",
+  "staff": "/pos"
 };
 
 
@@ -92,6 +93,10 @@ export const ROLE_PERMISSIONS = {
 
   kitchen_staff: {
     stock: true, //raw only
+  },
+
+  waiter: {
+    pos: true
   },
 
   staff: {

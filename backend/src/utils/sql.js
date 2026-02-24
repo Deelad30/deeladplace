@@ -111,6 +111,7 @@ const LIST_ITEMS = `    SELECT
       m.id,
       m.name,
       m.measurement_unit,
+      m.min_stock_level,
       COALESCE(
         (SELECT SUM(CASE WHEN movement_type='in' THEN qty ELSE 0 END) 
            - SUM(CASE WHEN movement_type='out' THEN qty ELSE 0 END)
@@ -131,13 +132,13 @@ const LIST_ITEMS = `    SELECT
 `;
 
 const CREATE_MATERIAL= `
-INSERT INTO raw_materials (tenant_id, name, measurement_unit)
-    VALUES ($1,$2,$3)
+INSERT INTO raw_materials (tenant_id, name, measurement_unit, min_stock_level)
+    VALUES ($1,$2,$3,$4)
     RETURNING *
 `;
 
 const UPDATE_MATERIAL = `UPDATE raw_materials
-    SET name=$2, measurement_unit=$3
+    SET name=$2, measurement_unit=$3, min_stock_level=$5
     WHERE id=$1 AND tenant_id=$4
     RETURNING *
 `;
@@ -149,6 +150,7 @@ const DELETE_MATERIAL = `
 const LIST_PURCHASES = `SELECT 
         p.*, 
         m.name AS material_name,
+        m.min_stock_level,
         v.name AS vendor_name
     FROM material_purchases p
     JOIN raw_materials m ON m.id=p.material_id

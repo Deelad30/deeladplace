@@ -15,7 +15,8 @@ const PrivateRoute = ({ requiredSection = null, children = null }) => {
   if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
 
   // 1. Resolve Role Robustly
-  const rawRole = (ROLE_MAP[user.role_id] || user.role || "staff")
+  const roleId = String(user.role_id || "");
+  const rawRole = (ROLE_MAP[roleId] || user.role || "staff")
     .toString()
     .toLowerCase()
     .trim()
@@ -62,7 +63,7 @@ const PrivateRoute = ({ requiredSection = null, children = null }) => {
         location.pathname === "/dashboard"; // Ignore if momentarily landing on dashboard
 
     if (!isTransitioning) {
-       toast.error("Unauthorized access redirected", { id: 'auth-error' });
+       toast.error(`Unauthorized access for "${role}": Redirected`, { id: 'auth-error' });
     }
 
     return <Navigate to={ROLE_DEFAULT_ROUTE[role] || "/"} replace />;

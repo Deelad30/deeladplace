@@ -228,9 +228,45 @@ const resetPassword = async (req, res) => {
 };
 
 
+/**
+ * ============================
+ *        GET CURRENT USER
+ * ============================
+ */
+async function getMe(req, res) {
+  try {
+    const userId = req.user.id || req.user.userId;
+    const result = await db.query(
+      `SELECT id, email, name, tenant_id, role_id,
+              plan_type, subscription_code, status
+       FROM users
+       WHERE id = $1`,
+      [userId]
+    );
+
+    const user = result.rows[0];
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    res.json({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      tenant_id: user.tenant_id,
+      role_id: user.role_id,
+      plan: user.plan_type,
+      subscription_code: user.subscription_code,
+      status: user.status
+    });
+  } catch (err) {
+    logger.error('getMe failed', { error: err.message, userId: req.user?.id });
+    res.status(500).json({ error: 'Failed to fetch user' });
+  }
+}
+
 module.exports = {
   signup,
   login,
   forgotPassword,
   resetPassword,
+  getMe
 };

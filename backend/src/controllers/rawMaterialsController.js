@@ -12,13 +12,14 @@ exports.createRawMaterial = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Missing tenant ID' });
     }
 
-    const { name, unit, current_cost } = req.body;
+    const { name, unit, current_cost, min_stock_level } = req.body;
 
     const material = await RawMaterial.create({
       tenant_id: tenantId,
       name,
       unit,
-      current_cost
+      current_cost,
+      min_stock_level
     });
 
     res.status(201).json({

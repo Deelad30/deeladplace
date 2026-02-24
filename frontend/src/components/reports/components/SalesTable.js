@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { salesService } from '../../../services/salesService';
 import { toast } from 'react-hot-toast';
+import { openPrintWindow } from '../../../utils/printHelpers';
 import './SalesTable.css';
 
 const SalesTable = ({ filters, vendors, auditMode = false }) => {
@@ -38,7 +39,6 @@ const fetchPage = useCallback(async (p = 1) => {
       setData(res.items);
       setTotalPages(res.total_pages || 1);
       setTotalRows(res.total_rows || res.items.length || 0);
-      toast(`Loaded page ${p}`, { icon: '📄' });
     } else {
       setData([]);
       setTotalPages(1);
@@ -69,6 +69,56 @@ useEffect(() => {
   };
   const closeModal = () => setSelectedSale(null);
 
+  const handleReprint = async (sale) => {
+    if (!sale || !sale.transaction_id) {
+      toast.error('Transaction ID missing for this sale');
+      return;
+    }
+
+    const t = toast.loading('Fetching transaction items...');
+    try {
+      const res = await salesService.getTransactionDetails(sale.transaction_id);
+      if (res && res.ok && res.items) {
+        // Aggregate items and calculate totals
+        const items = res.items;
+        const totalAmount = items.reduce((sum, item) => 
+          sum + (Number(item.selling_price) + Number(item.custom_commission || 0)) * item.qty, 0
+        );
+
+        // Reconstruct the breakdown (can be fetched from any of the same items)
+        let breakdown = [];
+        try {
+          const firstItem = items[0];
+          if (typeof firstItem.payment_breakdown === 'string') {
+            breakdown = JSON.parse(firstItem.payment_breakdown);
+          } else if (Array.isArray(firstItem.payment_breakdown)) {
+            breakdown = firstItem.payment_breakdown;
+          }
+        } catch (e) {
+          console.error('Failed to parse breakdown', e);
+        }
+
+        const saleToPrint = {
+          date: sale.created_at,
+          transaction_id: sale.transaction_id,
+          items: items,
+          totalAmount: totalAmount,
+          payment: {
+            breakdown: breakdown
+          }
+        };
+
+        openPrintWindow(saleToPrint, vendors);
+        toast.success('Print window opened', { id: t });
+      } else {
+        toast.error('Could not find transaction items', { id: t });
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to reprint receipt', { id: t });
+    }
+  };
+
   return (
     <>
       <div style={{ padding: 12 }}>
@@ -88,6 +138,7 @@ useEffect(() => {
                 <th>Customer Price</th>
                 <th>Commission</th>
                 <th>Payment</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -99,7 +150,7 @@ useEffect(() => {
                 </tr>
               ) : data.length === 0 ? (
                 <tr>
-                  <td colSpan="7" style={{ textAlign: 'center', padding: 28, color: 'var(--color-muted)' }}>
+                  <td colSpan="9" style={{ textAlign: 'center', padding: 28, color: 'var(--color-muted)' }}>
                     No sales found
                   </td>
                 </tr>
@@ -113,6 +164,25 @@ useEffect(() => {
                   <td>{new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: auditMode ? 2 : 0 }).format(Number(auditMode ? row.selling_price : round100(row.selling_price)) + Number(auditMode ? row.commission : round100(row.commission)))}</td>
                   <td>{new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: auditMode ? 2 : 0 }).format(Number(auditMode ? row.commission : round100(row.commission)))}</td>
                   <td><span className="row-badge">{row.payment_method || 'unknown'}</span></td>
+                  <td>
+                    {row.transaction_id ? (
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleReprint(row); }}
+                        style={{ 
+                          background: 'none', 
+                          border: 'none', 
+                          cursor: 'pointer', 
+                          fontSize: '18px',
+                          color: 'var(--color-primary)'
+                        }}
+                        title="Reprint Receipt"
+                      >
+                        🖨️
+                      </button>
+                    ) : (
+                      <span style={{ color: 'var(--color-muted)' }}>-</span>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -133,7 +203,7 @@ useEffect(() => {
         <div className="modal-overlay">
           <div className="modal-content">
             <button className="modal-close" onClick={closeModal}>×</button>
-            <h2>Sale Details</h2>
+            <h2 style={{ marginBottom: '15px' }}>Sale Details</h2>
 
             <div className="modal-tabs">
               <button className={activeTab === 'details' ? 'active' : ''} onClick={() => setActiveTab('details')}>Details</button>
@@ -171,7 +241,13 @@ useEffect(() => {
                   {selectedSale.payment_method === 'multiple' && selectedSale.payment_breakdown && (
                     <ul>
                       {selectedSale.payment_breakdown.map((p, idx) => (
-                        <li key={idx}>{p.method}: {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(p.amount)}</li>
+                        <li key={idx}>
+                          {p.method}: {new Intl.NumberFormat('en-NG', { 
+                            style: 'currency', 
+                            currency: 'NGN', 
+                            maximumFractionDigits: auditMode ? 2 : 0 
+                          }).format(Number(auditMode ? p.amount : round100(p.amount)))}
+                        </li>
                       ))}
                     </ul>
                   )}

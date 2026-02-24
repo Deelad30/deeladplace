@@ -1,29 +1,14 @@
-const { Pool } = require('pg');
-require('dotenv').config();
+const db = require('./src/config/database');
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
-});
-
-async function check() {
+async function checkMaterials() {
   try {
-    const res = await pool.query(`
-      SELECT ps.id, p.name, ps.payment_breakdown
-      FROM pos_sales ps
-      JOIN products p ON ps.product_id = p.id
-      WHERE ps.shift_id = 76
-    `);
-    res.rows.forEach(row => {
-        console.log(`Sale ID: ${row.id} - ${row.name}`);
-        console.log(JSON.stringify(row.payment_breakdown, null, 2));
-    });
-
-    await pool.end();
+    const res = await db.query('SELECT id, name, min_stock_level FROM raw_materials ORDER BY updated_at DESC LIMIT 5');
+    console.table(res.rows);
+    process.exit(0);
   } catch (err) {
     console.error(err);
     process.exit(1);
   }
 }
 
-check();
+checkMaterials();

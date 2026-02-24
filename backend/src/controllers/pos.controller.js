@@ -16,7 +16,8 @@ async function recordSale(req, res) {
     order_method,
     vendor_id,
     commission = 0,
-    shift_id
+    shift_id,
+    transaction_id
   } = req.body;
 
   try {
@@ -25,8 +26,8 @@ async function recordSale(req, res) {
   `INSERT INTO pos_sales
     (tenant_id, user_id, product_id, qty, selling_price,
      payment_method, order_method,
-     vendor_id, commission, shift_id, payment_breakdown)
-   VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+     vendor_id, commission, shift_id, payment_breakdown, transaction_id)
+   VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
    RETURNING *`,
   [
     tenantId,
@@ -39,7 +40,8 @@ async function recordSale(req, res) {
     vendor_id,
     commission,
     shift_id,
-    JSON.stringify(payment_breakdown)
+    JSON.stringify(payment_breakdown),
+    transaction_id
   ]
 );
 

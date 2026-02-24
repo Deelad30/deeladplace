@@ -1,0 +1,32 @@
+[
+  {
+    "id": 65,
+    "name": "Ginger LK",
+    "min_stock_level": "3.00",
+    "tenant_id": 23
+  },
+  {
+    "id": 343,
+    "name": "Tiger Nuts",
+    "min_stock_level": "80.00",
+    "tenant_id": 19
+  },
+  {
+    "id": 112,
+    "name": "Ginger SA",
+    "min_stock_level": "3.00",
+    "tenant_id": 23
+  },
+  {
+    "id": 286,
+    "name": "ginger",
+    "min_stock_level": "3.00",
+    "tenant_id": 29
+  },
+  {
+    "id": 342,
+    "name": "Ginger",
+    "min_stock_level": "3.00",
+    "tenant_id": 19
+  }
+]

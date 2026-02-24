@@ -11,7 +11,7 @@ export default function RawMaterialsPage() {
   const [materials, setMaterials] = useState([]);
   const [openModal, setOpenModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [form, setForm] = useState({ name: '', measurement_unit: '' });
+  const [form, setForm] = useState({ name: '', measurement_unit: '', min_stock_level: 0 });
 
   // Search and pagination
   const [search, setSearch] = useState('');
@@ -49,7 +49,7 @@ export default function RawMaterialsPage() {
         await createMaterial(form);
         toast.success('Material added.');
       }
-      setForm({ name: '', measurement_unit: '' });
+      setForm({ name: '', measurement_unit: '', min_stock_level: 0 });
       setOpenModal(false);
       loadMaterials();
     } catch (err) {
@@ -61,7 +61,8 @@ export default function RawMaterialsPage() {
     setEditingId(material.id);
     setForm({
       name: material.name,
-      measurement_unit: material.measurement_unit
+      measurement_unit: material.measurement_unit,
+      min_stock_level: material.min_stock_level || 0
     });
     setOpenModal(true);
   }
@@ -80,6 +81,7 @@ export default function RawMaterialsPage() {
   const columns = [
     { key: 'name', label: 'Name' },
     { key: 'measurement_unit', label: 'Unit' },
+    { key: 'min_stock_level', label: 'Threshold' },
     { key: 'stock_balance', label: 'Stock' },
     { key: 'avg_cost', label: 'Avg Cost' },
     { key: 'actions', label: 'Actions' }
@@ -139,9 +141,8 @@ const tableData = paginated.map(mat => ({
         title="Raw Materials"
         actionLabel="Add Material"
         onAction={() => {
-          setOpenModal(true);
           setEditingId(null);
-          setForm({ name: '', measurement_unit: '' });
+          setForm({ name: '', measurement_unit: '', min_stock_level: 0 });
         }}
       />
 
@@ -227,10 +228,21 @@ const tableData = paginated.map(mat => ({
         </div>
 
         <div className="form-group">
-          <label>Measurement Unit</label>
+          <label>Unit</label>
           <input
             value={form.measurement_unit}
             onChange={e => setForm({ ...form, measurement_unit: e.target.value })}
+            placeholder="e.g. g, ml, kg, pcs"
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Threshold (Par Level)</label>
+          <input
+            type="number"
+            value={form.min_stock_level}
+            onChange={e => setForm({ ...form, min_stock_level: e.target.value })}
           />
         </div>
 

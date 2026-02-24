@@ -17,8 +17,11 @@ const authenticateToken = async (req, res, next) => {
     
     // Verify user still exists in database
     const userResult = await database.query(
-      'SELECT id, name, email, role FROM users WHERE id = $1',
-      [decoded.id]
+      `SELECT u.id, u.name, u.email, u.role_id, r.name as role_name 
+       FROM users u 
+       JOIN roles r ON u.role_id = r.id 
+       WHERE u.id = $1`,
+      [decoded.userId || decoded.id]
     );
 
     if (userResult.rows.length === 0) {
@@ -28,7 +31,11 @@ const authenticateToken = async (req, res, next) => {
       });
     }
 
-    req.user = userResult.rows[0];
+    const userData = userResult.rows[0];
+    req.user = {
+      ...userData,
+      role: userData.role_name // Map role_name to role for compatibility with other middlewares
+    };
     next();
   } catch (error) {
     return res.status(403).json({
@@ -58,8 +65,19 @@ const requireManagerOrAdmin = (req, res, next) => {
   next();
 };
 
+const requireNonWaiter = (req, res, next) => {
+  if (req.user.role === 'waiter') {
+    return res.status(403).json({
+      success: false,
+      message: 'Waiters are not allowed to perform this action'
+    });
+  }
+  next();
+};
+
 module.exports = {
   authenticateToken,
   requireAdmin,
-  requireManagerOrAdmin
+  requireManagerOrAdmin,
+  requireNonWaiter
 };

@@ -6,6 +6,7 @@ import { faHistory, faCheckCircle, faExclamationCircle } from '@fortawesome/free
 const StockBalanceTable = ({ limit, refreshTrigger, highlightId }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Ref to store row elements: { [id]: element }
   const rowRefs = React.useRef({});
@@ -64,7 +65,7 @@ const StockBalanceTable = ({ limit, refreshTrigger, highlightId }) => {
       label: 'Stock Level',
       render: (row) => {
           const val = Number(row.current_stock);
-          const min = Number(row.min_stock_level || 10); 
+          const min = Number(row.min_stock_level || 0); 
           const pct = Math.min((val / (min * 3)) * 100, 100); // Visual scaling
 
           return (
@@ -130,6 +131,10 @@ const StockBalanceTable = ({ limit, refreshTrigger, highlightId }) => {
     }
   ];
 
+  const filteredData = data.filter(item => 
+    item.name && item.name.includes(searchTerm)
+  );
+
   if (loading) return (
       <div className="premium-card">
           <div className="skeleton-line" style={{ height: '40px', marginBottom: '20px' }}></div>
@@ -139,18 +144,63 @@ const StockBalanceTable = ({ limit, refreshTrigger, highlightId }) => {
 
   return (
     <div className="premium-card">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', flexWrap: 'wrap', gap: '15px' }}>
         <div>
             <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: 'yellow' }}>Stock Balance</h3>
             <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#fff' }}>Real-time inventory levels</p>
         </div>
-        <button 
-            className="item-action-btn view" 
-            onClick={loadData}
-            title="Refresh"
-        >
-            <FontAwesomeIcon icon={faHistory} /> Refresh
-        </button>
+
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flex: 1, justifyContent: 'flex-end', minWidth: '300px' }}>
+          <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
+            <input 
+              type="text" 
+              placeholder="Search items (case-sensitive)..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px 15px',
+                borderRadius: '8px',
+                border: '1px solid rgba(255,255,255,0.2)',
+                background: 'rgba(255,255,255,0.1)',
+                color: 'white',
+                fontSize: '14px',
+                outline: 'none',
+                transition: 'all 0.3s ease'
+              }}
+              onFocus={(e) => e.target.style.border = '1px solid yellow'}
+              onBlur={(e) => e.target.style.border = '1px solid rgba(255,255,255,0.2)'}
+            />
+            {searchTerm && (
+              <button 
+                onClick={() => setSearchTerm('')}
+                style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  opacity: 0.7
+                }}
+              >
+                ×
+              </button>
+            )}
+          </div>
+
+          <button 
+              className="item-action-btn view" 
+              onClick={loadData}
+              title="Refresh"
+              style={{ whiteSpace: 'nowrap' }}
+          >
+              <FontAwesomeIcon icon={faHistory} /> Refresh
+          </button>
+        </div>
       </div>
 
       <div className="table-container" style={{ marginTop: 0, border: 'none', boxShadow: 'none' }}>
@@ -166,15 +216,15 @@ const StockBalanceTable = ({ limit, refreshTrigger, highlightId }) => {
                     </tr>
                 </thead>
                 <tbody>
-                    {data.length === 0 ? (
+                    {filteredData.length === 0 ? (
                         <tr>
                             <td colSpan={columns.length} className="empty-state">
                                 <div style={{ fontSize: '40px', marginBottom: '10px' }}>📦</div>
-                                <div>No inventory data found</div>
+                                <div>{searchTerm ? `No items found matching "${searchTerm}"` : 'No inventory data found'}</div>
                             </td>
                         </tr>
                     ) : (
-                        data.map((row, i) => {
+                        filteredData.map((row, i) => {
                             const isHighlighted = highlightId && (String(row.item_id) === String(highlightId) || String(row.id) === String(highlightId));
                             const highlightStyle = isHighlighted ? { background: '#fff7ed' } : {};
                             
@@ -199,14 +249,14 @@ const StockBalanceTable = ({ limit, refreshTrigger, highlightId }) => {
 
         {/* Mobile Card View */}
         <div className="mobile-view-cards">
-            {data.length === 0 ? (
+            {filteredData.length === 0 ? (
                 <div className="empty-state">
                     <div style={{ fontSize: '40px', marginBottom: '10px' }}>📦</div>
-                    <div>No inventory data found</div>
+                    <div>{searchTerm ? `No items found matching "${searchTerm}"` : 'No inventory data found'}</div>
                 </div>
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    {data.map((row, i) => (
+                    {filteredData.map((row, i) => (
                          <div key={i} className="premium-mobile-card" style={{
                              background: 'white',
                              padding: '16px',

@@ -15,8 +15,11 @@ async function createPurchase(tenantId, data, userId = null) {
     purchase_qty,
     vendor_id,
     purchase_date,
-    measurement_unit
+    measurement_unit,
+    min_stock_level
   } = data;
+
+  console.log('[DEBUG] createPurchase input:', { material_id, material_name, min_stock_level });
 
   // 1️⃣ Handle dynamic material creation if material_id is missing but name is provided
   if (!material_id && material_name) {
@@ -25,11 +28,16 @@ async function createPurchase(tenantId, data, userId = null) {
     
     if (existingRes.rows.length > 0) {
       material_id = existingRes.rows[0].id;
+      // Update existing material metadata if provided
+      await db.query(`UPDATE raw_materials SET min_stock_level = $1, measurement_unit = COALESCE($2, measurement_unit) WHERE id = $3 AND tenant_id = $4`, [min_stock_level || 0, measurement_unit, material_id, tenantId]);
     } else {
       // Create new raw material
-      const newMatRes = await db.query(SQL.CREATE_MATERIAL, [tenantId, material_name, measurement_unit || 'pcs']);
+      const newMatRes = await db.query(SQL.CREATE_MATERIAL, [tenantId, material_name, measurement_unit || 'pcs', min_stock_level || 0]);
       material_id = newMatRes.rows[0].id;
     }
+  } else if (material_id) {
+        // If material ID is provided directly, also update metadata if provided
+         await db.query(`UPDATE raw_materials SET min_stock_level = $1, measurement_unit = COALESCE($2, measurement_unit) WHERE id = $3 AND tenant_id = $4`, [min_stock_level || 0, measurement_unit, material_id, tenantId]);
   }
 
   if (!material_id) {
@@ -76,7 +84,9 @@ async function updatePurchase(tenantId, purchaseId, data, userId = null) {
     purchase_qty,
     purchase_price,
     vendor_id,
-    purchase_date
+    purchase_date,
+    measurement_unit,
+    min_stock_level
   } = data;
 
   const res = await db.query(
@@ -91,6 +101,17 @@ async function updatePurchase(tenantId, purchaseId, data, userId = null) {
   }
 
   const oldPurchase = res.rows[0];
+
+  // Update material metadata if provided
+  if (material_id) {
+    await db.query(
+      `UPDATE raw_materials 
+       SET min_stock_level = $1, 
+           measurement_unit = COALESCE($2, measurement_unit) 
+       WHERE id = $3 AND tenant_id = $4`,
+      [min_stock_level || 0, measurement_unit, material_id, tenantId]
+    );
+  }
 
   const usageRes = await db.query(
     `SELECT COALESCE(SUM(qty),0) AS used_qty 

@@ -15,6 +15,8 @@ router.get(
   require("../controllers/salesReportController").getSalesReport
 );
 
+router.get("/transaction/:transactionId", auth, requireTenant, reports.getTransactionDetails);
+
 router.get('/sales-overview', auth, requireTenant, reports.getSalesOverview);
 router.get('/sales-reports', auth, requireTenant, reports.getSalesPaginated);
 router.get('/sales-summary',  auth, requireTenant, reports.getSalesSummary);
