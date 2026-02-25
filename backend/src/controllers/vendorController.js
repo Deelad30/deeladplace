@@ -137,6 +137,15 @@ exports.deleteVendor = async (req, res) => {
 
   } catch (error) {
     logger.error("Delete vendor error", { error: error.message, tenantId, vendorId });
+    
+    // Check for foreign key constraint violation (e.g., related products, expenses, or purchases)
+    if (error.code === '23503') {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot delete vendor: This vendor is linked to existing records (products, expenses, or purchases). Please remove those records first."
+      });
+    }
+
     res.status(500).json({
       success: false,
       message: "Error deleting vendor"

@@ -146,7 +146,8 @@ const VendorList = () => {
       fetchVendors();
     } catch (error) {
       console.error(error);
-      setToast({ message: "Error deleting vendor", type: "error" });
+      const errorMessage = error.response?.data?.message || "Error deleting vendor";
+      setToast({ message: errorMessage, type: "error" });
     } finally {
       setCreating(false);
     }

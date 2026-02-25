@@ -22541,3 +22541,7 @@
 {"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-02-25 00:28:57"}
 {"level":"info","message":"\u001b[0mGET /api/vendors \u001b[36m304\u001b[0m 5847.466 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-02-25 00:28:57"}
 {"level":"info","message":"\u001b[0mGET /api/vendors \u001b[36m304\u001b[0m 315.748 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-02-25 00:28:57"}
+{"level":"info","message":"Email service initialized with SMTP (smtp.gmail.com)","service":"deelad-place-api","timestamp":"2026-02-25 00:32:14"}
+{"env":"development","level":"info","message":"Server running on port 5000","service":"deelad-place-api","timestamp":"2026-02-25 00:32:15"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-02-25 11:32:56"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-02-25 11:33:03"}
