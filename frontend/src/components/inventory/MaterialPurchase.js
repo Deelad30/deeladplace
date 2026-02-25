@@ -388,6 +388,28 @@ export default function MaterialPurchasesPage() {
                 </div>
 
                 <div className="form-group">
+                    <label className="premium-label-2">Measurement Unit</label>
+                    <input
+                        className="premium-input"
+                        list="unit-list"
+                        placeholder="pcs, kg, Liters..."
+                        value={form.measurement_unit}
+                        onChange={e => setForm({ ...form, measurement_unit: e.target.value })}
+                    />
+                    <datalist id="unit-list">
+                        <option value="pcs" />
+                        <option value="kg" />
+                        <option value="g" />
+                        <option value="Liters" />
+                        <option value="ml" />
+                        <option value="Meters" />
+                        <option value="Rolls" />
+                        <option value="Pack" />
+                        <option value="Carton" />
+                    </datalist>
+                </div>
+
+                <div className="form-group">
                     <label className="premium-label-2">Date</label>
                     <input
                         className="premium-input"

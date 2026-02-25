@@ -172,10 +172,11 @@ async function updatePurchase(tenantId, purchaseId, data, userId = null) {
          purchase_qty=$2,
          purchase_price=$3,
          vendor_id=$4,
-         purchase_date=$5
-     WHERE id=$6 AND tenant_id=$7
+         purchase_date=$5,
+         measurement_unit=$6
+     WHERE id=$7 AND tenant_id=$8
      RETURNING *`,
-    [material_id, purchase_qty, purchase_price, vendor_id, purchase_date, purchaseId, tenantId]
+    [material_id, purchase_qty, purchase_price, vendor_id, purchase_date, measurement_unit, purchaseId, tenantId]
   );
 
   return updateRes.rows[0];
