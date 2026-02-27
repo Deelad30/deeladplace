@@ -84,7 +84,12 @@ async function inviteUser(req, res) {
 
     res.json({ ok: true, message: "Invite sent successfully" });
   } catch (err) {
-    logger.error("Invite Error", { error: err.message, tenantId: inviter?.tenant_id, inviterId: inviter?.userId, email });
+    logger.error("Invite Error", { 
+      error: err.message, 
+      tenantId: req.user?.tenant_id, 
+      inviterId: req.user?.userId, 
+      email: req.body?.email 
+    });
     res.status(500).json({ error: "Internal server error" });
   }
 }
@@ -216,7 +221,7 @@ async function acceptInvite(req, res) {
     });
 
   } catch (err) {
-    logger.error("Accept Invite Error", { error: err.message, token });
+    logger.error("Accept Invite Error", { error: err.message, token: req.body?.token });
     return res.status(500).json({ error: "Internal server error" });
   }
 }
@@ -292,7 +297,11 @@ async function cancelInvite(req, res) {
 
     res.json({ ok: true, message: 'User access revoked and invite cancelled' });
   } catch (err) {
-    logger.error("Cancel Invite Error", { error: err.message, tenantId: user?.tenant_id, inviteId: id });
+    logger.error("Cancel Invite Error", { 
+      error: err.message, 
+      tenantId: req.user?.tenant_id, 
+      inviteId: req.params?.id 
+    });
     res.status(500).json({ error: 'Internal server error' });
   }
 }
@@ -318,7 +327,11 @@ async function deleteInvite(req, res) {
 
     res.json({ ok: true, message: 'Cancelled invite deleted successfully' });
   } catch (err) {
-    logger.error("Delete Invite Error", { error: err.message, tenantId: user?.tenant_id, inviteId: id });
+    logger.error("Delete Invite Error", { 
+      error: err.message, 
+      tenantId: req.user?.tenant_id, 
+      inviteId: req.params?.id 
+    });
     res.status(500).json({ error: 'Internal server error' });
   }
 }
