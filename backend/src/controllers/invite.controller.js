@@ -47,13 +47,13 @@ async function inviteUser(req, res) {
       return res.status(400).json({ error: 'A pending invite already exists for this email' });
     }
 
-    // Check if active user exists
+    // Check if active user exists globally
     const activeUserRes = await db.query(
-      'SELECT * FROM users WHERE email = $1 AND tenant_id = $2 AND status = $3',
-      [email, inviter.tenant_id, 'active']
+      'SELECT id FROM users WHERE email = $1 AND status = $2',
+      [email, 'active']
     );
     if (activeUserRes.rows.length > 0) {
-      return res.status(400).json({ error: 'This user is already active' });
+      return res.status(400).json({ error: 'This user is already active in the system' });
     }
 
     const token = uuidv4();
@@ -129,16 +129,64 @@ async function acceptInvite(req, res) {
      * ==========================================================
      */
     const existingUserRes = await db.query(
-      `SELECT id, status FROM users 
-       WHERE email = $1 AND tenant_id = $2`,
-      [invite.email, invite.tenant_id]
+      `SELECT id, tenant_id, status FROM users 
+       WHERE email = $1`,
+      [invite.email]
     );
 
     const existingUser = existingUserRes.rows[0];
 
     /**
      * ==========================================================
-     * 2️⃣ IF USER EXISTS AND IS INACTIVE → REACTIVATE THEM
+     * 2️⃣ IF USER EXISTS IN ANOTHER TENANT
+     * ==========================================================
+     */
+    if (existingUser && existingUser.tenant_id !== invite.tenant_id) {
+      if (existingUser.status === 'active') {
+        return res.status(400).json({ 
+          error: 'This email is already registered with another organization.' 
+        });
+      }
+      
+      // If user is inactive in another tenant, allow "claiming" them
+      const updatedUserRes = await db.query(
+        `UPDATE users 
+         SET tenant_id = $1,
+             role_id = $2,
+             name = $3,
+             password_hash = $4,
+             status = 'active',
+             plan_type = $5,
+             subscription_code = $6
+         WHERE id = $7
+         RETURNING id, email, tenant_id, role_id, status`,
+        [
+          invite.tenant_id,
+          invite.role_id,
+          finalName,
+          password_hash,
+          invite.inviter_plan,
+          invite.inviter_subscription,
+          existingUser.id
+        ]
+      );
+
+      // Mark invite as accepted
+      await db.query(
+        `UPDATE user_invites SET status = 'accepted' WHERE id = $1`,
+        [invite.id]
+      );
+
+      return res.json({
+        ok: true,
+        message: "User account transferred and activated successfully",
+        user: updatedUserRes.rows[0]
+      });
+    }
+
+    /**
+     * ==========================================================
+     * 3️⃣ IF USER EXISTS IN SAME TENANT AND IS INACTIVE → REACTIVATE
      * ==========================================================
      */
     if (existingUser && existingUser.status === 'inactive') {
@@ -177,18 +225,18 @@ async function acceptInvite(req, res) {
 
     /**
      * ==========================================================
-     * 3️⃣ IF USER EXISTS AND IS ACTIVE → BLOCK
+     * 4️⃣ IF USER EXISTS IN SAME TENANT AND IS ACTIVE → BLOCK
      * ==========================================================
      */
     if (existingUser && existingUser.status === 'active') {
       return res
         .status(400)
-        .json({ error: 'User with this email already exists' });
+        .json({ error: 'User with this email already exists in your organization' });
     }
 
     /**
      * ==========================================================
-     * 4️⃣ USER DOES NOT EXIST → CREATE NEW USER
+     * 5️⃣ USER DOES NOT EXIST → CREATE NEW USER
      * ==========================================================
      */
     const newUserRes = await db.query(
@@ -283,13 +331,13 @@ async function cancelInvite(req, res) {
       return res.json({ ok: true, message: 'Pending invite cancelled successfully' });
     }
 
-    // If already accepted, deactivate user account
+    // If already accepted, delete user account
     await db.query(
-      'UPDATE users SET status = $1 WHERE email = $2 AND tenant_id = $3',
-      ['inactive', invite.email, user.tenant_id]
+      'DELETE FROM users WHERE email = $1 AND tenant_id = $2',
+      [invite.email, user.tenant_id]
     );
 
-    // Optionally, mark invite as cancelled as well
+    // Mark invite as cancelled
     await db.query(
       'UPDATE user_invites SET status = $1 WHERE id = $2',
       ['cancelled', id]
