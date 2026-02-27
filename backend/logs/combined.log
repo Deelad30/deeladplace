@@ -22758,3 +22758,7 @@
 {"level":"info","message":"\u001b[0mGET /api/inventory/balance \u001b[36m304\u001b[0m 612.693 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-02-27 17:50:39"}
 {"level":"info","message":"\u001b[0mGET /api/vendors \u001b[36m304\u001b[0m 845.351 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-02-27 17:50:45"}
 {"level":"info","message":"\u001b[0mGET /api/vendors \u001b[36m304\u001b[0m 302.077 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-02-27 17:50:45"}
+{"level":"info","message":"Email service initialized with SMTP (smtp.gmail.com)","service":"deelad-place-api","timestamp":"2026-02-27 17:53:22"}
+{"env":"development","level":"info","message":"Server running on port 5000","service":"deelad-place-api","timestamp":"2026-02-27 17:53:23"}
+{"level":"info","message":"Email service initialized with SMTP (smtp.gmail.com)","service":"deelad-place-api","timestamp":"2026-02-27 17:53:25"}
+{"env":"development","level":"info","message":"Server running on port 5000","service":"deelad-place-api","timestamp":"2026-02-27 17:53:26"}
