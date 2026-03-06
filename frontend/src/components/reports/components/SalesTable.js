@@ -135,8 +135,9 @@ useEffect(() => {
                 <th>Sold by</th>
                 <th>Vendor</th>
                 <th>Qty</th>
-                <th>Customer Price</th>
-                <th>Commission</th>
+                <th>Unit Price</th>
+                <th>Unit Comm.</th>
+                <th>Total</th>
                 <th>Payment</th>
                 <th>Action</th>
               </tr>
@@ -161,8 +162,9 @@ useEffect(() => {
                   <td>{row.sold_by || "-"}</td>
                   <td>{vendors.find(v => v.id === row.vendor_id)?.name || row.vendor_id}</td>
                   <td>{row.qty}</td>
-                  <td>{new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: auditMode ? 2 : 0 }).format(Number(auditMode ? row.selling_price : round100(row.selling_price)) + Number(auditMode ? row.commission : round100(row.commission)))}</td>
-                  <td>{new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: auditMode ? 2 : 0 }).format(Number(auditMode ? row.commission : round100(row.commission)))}</td>
+                  <td>{new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: auditMode ? 2 : 0 }).format(Number(row.selling_price))}</td>
+                  <td>{new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: auditMode ? 2 : 0 }).format(Number(row.commission) / Number(row.qty))}</td>
+                  <td>{new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: auditMode ? 2 : 0 }).format((Number(row.selling_price) + (Number(row.commission) / Number(row.qty))) * Number(row.qty))}</td>
                   <td><span className="row-badge">{row.payment_method || 'unknown'}</span></td>
                   <td>
                     {row.transaction_id ? (
@@ -218,17 +220,21 @@ useEffect(() => {
                   <p><strong>Product:</strong> {selectedSale.product_name || `#${selectedSale.product_id}`}</p>
                   <p><strong>Vendor:</strong> {vendors.find(v => v.id === selectedSale.vendor_id)?.name || selectedSale.vendor_id}</p>
                   <p><strong>Quantity:</strong> {selectedSale.qty}</p>
-                   <p><strong>Commission:</strong> {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: auditMode ? 2 : 0 }).format(Number(auditMode ? selectedSale.commission : round100(selectedSale.commission)))}</p>
+                   <p><strong>Unit Commission:</strong> {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: auditMode ? 2 : 0 }).format(Number(selectedSale.commission) / Number(selectedSale.qty))}</p>
                 </>
               )}
 
               {activeTab === 'customer' && (
                 <>
                   <p><strong>Customer Type:</strong> {selectedSale.order_method || 'Unknown'}</p>
-                 <p><strong>Customer Price:</strong> {
+                 <p><strong>Unit Price:</strong> {
   new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: auditMode ? 2 : 0 }).format(
-    Number(auditMode ? selectedSale.selling_price : round100(selectedSale.selling_price || 0)) + 
-    Number(auditMode ? selectedSale.commission : round100(selectedSale.commission || 0))
+    Number(selectedSale.selling_price)
+  )
+}</p>
+                 <p><strong>Total:</strong> {
+  new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: auditMode ? 2 : 0 }).format(
+    (Number(selectedSale.selling_price) + (Number(selectedSale.commission) / Number(selectedSale.qty))) * Number(selectedSale.qty)
   )
 }</p>
 

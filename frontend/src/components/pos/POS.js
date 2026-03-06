@@ -52,7 +52,7 @@ const POS = () => {
   const [activeBillsCount, setActiveBillsCount] = useState(0);
   const [loadingCart, setLoadingCart] = useState(false);
 
-  const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
+  const round = (num) => num;
   
 
 
@@ -499,12 +499,12 @@ const handleCloseShift = async () => {
     if (shiftSales.length) {
       const tableColumns = ["#", "Product", "Qty", "Price (₦)", "Commission (₦)", "Total (₦)", "Time"];
       const tableRows = shiftSales.map((sale, i) => {
-        const total = Number(round(sale.selling_price)) * Number(sale.qty) + Number(sale.commission || 0);
+        const total = (Number(sale.selling_price) + Number(sale.commission || 0)) * Number(sale.qty);
         return [
           i + 1,
           sale.product_name,
           sale.qty,
-          Number(round(sale.selling_price)).toLocaleString(),
+          Number(sale.selling_price).toLocaleString(),
           Number(sale.commission || 0).toLocaleString(),
           total.toLocaleString(),
           new Date(sale.created_at).toLocaleTimeString()

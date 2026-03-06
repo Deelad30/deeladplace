@@ -1046,3 +1046,12 @@
 {"error":"Authentication timed out","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":27,"timestamp":"2026-02-27 17:18:41"}
 {"error":"Connection terminated unexpectedly","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":27,"timestamp":"2026-02-27 17:28:47"}
 {"error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":27,"timestamp":"2026-02-27 17:31:28"}
+{"email":"muhammadsaniharuna44@gmail.com","error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Login failed","service":"deelad-place-api","timestamp":"2026-03-06 12:48:19"}
+{"error":"","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":19,"timestamp":"2026-03-06 12:52:55"}
+{"error":"Authentication timed out","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":19,"timestamp":"2026-03-06 12:54:37"}
+{"error":"","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":19,"timestamp":"2026-03-06 12:55:55"}
+{"error":"","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":19,"timestamp":"2026-03-06 13:10:56"}
+{"error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":19,"timestamp":"2026-03-06 13:12:45"}
+{"error":"","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":19,"timestamp":"2026-03-06 13:15:00"}
+{"error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":19,"timestamp":"2026-03-06 13:15:48"}
+{"error":"","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":19,"timestamp":"2026-03-06 13:17:09"}

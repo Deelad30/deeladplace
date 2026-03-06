@@ -33,9 +33,9 @@ const KPISection = ({ overview = {}, auditMode = false }) => {
   } = overview;
 
   // Revenue uses ceil, Commission uses standard round in your original code
-  const displayRevenue = auditMode ? total_revenue : ceil100(total_revenue);
-  const displayCommission = auditMode ? total_commission : round100(total_commission);
-  const displayAOV = auditMode ? average_order_value : round100(average_order_value);
+  const displayRevenue = total_revenue;
+  const displayCommission = total_commission;
+  const displayAOV = average_order_value;
   
   // Calculate Proceeds (Net)
   const proceeds = Number(displayRevenue) - Number(displayCommission);
