@@ -12,12 +12,12 @@ const ProductCard = ({ product, onEdit, onDelete }) => {
       <h3>{product.name}</h3>
       
       <p>
-        <span style={{ fontWeight: "700" }}>Price:</span> ₦{product.vendor_price}
+        <span style={{ fontWeight: "700" }}>Price:</span> ₦{Number(product.vendor_price || 0).toLocaleString()}
       </p>
 
       {showCommission && (
         <p>
-          <span style={{ fontWeight: "700" }}>Commission:</span> ₦{product.custom_commission}
+          <span style={{ fontWeight: "700" }}>Commission:</span> ₦{Number(product.custom_commission || 0).toLocaleString()}
         </p>
       )}
 

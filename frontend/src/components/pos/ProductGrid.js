@@ -1,8 +1,8 @@
 import React from 'react';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency, roundPrice } from '../../utils/formatters';
 
 const ProductGrid = ({ products, onAddToCart, vendors, disabled }) => {
-      const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
+      const round = roundPrice;
       
   const getVendorName = (vendorId) => {
     const vendor = vendors.find(v => v.id === vendorId);

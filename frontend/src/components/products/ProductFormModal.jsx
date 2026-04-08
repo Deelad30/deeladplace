@@ -32,7 +32,13 @@ const ProductFormModal = ({ product, onClose, onSubmit }) => {
   }, [product]);
 
   useEffect(() => {
-    if (product) setFormData(product);
+    if (product) {
+      setFormData({
+        ...product,
+        vendor_price: product.vendor_price ? Number(product.vendor_price) : '',
+        custom_commission: product.custom_commission ? Number(product.custom_commission) : ''
+      });
+    }
   }, [product]);
 
   const handleChange = (e) => {

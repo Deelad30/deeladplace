@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getUser } from '../../api/users';
 import ProductGrid from './ProductGrid';
 import ShoppingCart from './ShoppingCart';
@@ -18,6 +18,7 @@ import { toast } from 'react-hot-toast';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { openPrintWindow } from '../../utils/printHelpers';
+import { roundPrice } from '../../utils/formatters';
 import '../../../src/styles/components/POS.css';
 
 const currency = (n) =>
@@ -52,7 +53,7 @@ const POS = () => {
   const [activeBillsCount, setActiveBillsCount] = useState(0);
   const [loadingCart, setLoadingCart] = useState(false);
 
-  const round = (num) => num;
+  const round = roundPrice;
   
 
 

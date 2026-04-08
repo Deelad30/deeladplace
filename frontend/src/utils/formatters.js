@@ -5,6 +5,11 @@ export const formatCurrency = (amount) => {
   }).format(amount);
 };
 
+export const roundPrice = (num, nearest = 100) => {
+  const n = Number(num || 0);
+  return Math.round(n / nearest) * nearest;
+};
+
 export const formatDate = (date) => {
   return new Date(date).toLocaleDateString('en-GB');
 };

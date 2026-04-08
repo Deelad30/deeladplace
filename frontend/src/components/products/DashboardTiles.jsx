@@ -10,15 +10,15 @@ const DashboardTiles = ({ summary }) => {
     { 
       title: 'Average Price', 
       value: summary.avg_vendor_price != null 
-      ? `₦ ${Number(summary.avg_vendor_price).toFixed(2)}` 
-      : '₦ 0.00',
+      ? `₦ ${Math.round(Number(summary.avg_vendor_price)).toLocaleString()}` 
+      : '₦ 0',
       color: "#16A34A"
     },
     { 
       title: 'Average Commission', 
       value: summary.avg_commission != null 
-  ? `₦ ${Number(summary.avg_commission).toFixed(2)}` 
-  : '₦ 0.00', 
+  ? `₦ ${Math.round(Number(summary.avg_commission)).toLocaleString()}` 
+  : '₦ 0', 
    color: "#4B5563"
     },
   ];

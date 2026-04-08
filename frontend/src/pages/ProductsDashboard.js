@@ -11,6 +11,7 @@ import {
 } from "../api/products";
 import Modal from "../components/common/Modal"; // Standard Modal
 import { useNavigate } from "react-router-dom";
+import { roundPrice } from "../utils/formatters";
 import "../styles/shared/PremiumShared.css"; // Shared Premium Styles
 
 // Import FontAwesome
@@ -19,11 +20,7 @@ import { faBox, faCheckCircle, faMoneyBillWave, faFilter, faSearch } from "@fort
 
 // Helper for rounding
 // Helper for smart rounding (nearest 100 for large numbers, integer for small)
-const round = (num) => {
-  const n = Number(num || 0);
-  if (n >= 1000) return Math.round(n / 100) * 100;
-  return Math.round(n);
-};
+const round = roundPrice;
 
 const ProductsDashboard = () => {
   const [products, setProducts] = useState([]);

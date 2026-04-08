@@ -1,12 +1,12 @@
 import React from 'react';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency, roundPrice } from '../../utils/formatters';
 import CartSkeleton from './CartSkeleton';
 import { useAuth } from '../../context/AuthContext';
 import { ROLE_MAP } from '../../utils/roles';
 
 const ShoppingCart = ({ cart, onUpdateQuantity, onRemoveItem, totals, onContinue, processing, loading, disabled, billNo, onBillNoChange, onSaveBill, onPrintBill, onPrintKitchen }) => {
     const { user } = useAuth();
-    const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;    
+    const round = roundPrice;    
   return (
     <div className="shopping-cart">
       <div className="cart-header" style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
