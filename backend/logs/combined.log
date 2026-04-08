@@ -23065,3 +23065,44 @@
 {"level":"info","message":"\u001b[0mGET /api/vendors \u001b[36m304\u001b[0m 308.629 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-03-06 14:19:54"}
 {"level":"info","message":"\u001b[0mGET /api/vendors \u001b[36m304\u001b[0m 317.526 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-03-06 14:19:59"}
 {"level":"info","message":"\u001b[0mGET /api/vendors \u001b[36m304\u001b[0m 366.169 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-03-06 14:20:00"}
+{"level":"info","message":"Email service initialized with SMTP (smtp.gmail.com)","service":"deelad-place-api","timestamp":"2026-04-08 15:02:08"}
+{"env":"development","level":"info","message":"Server running on port 5000","service":"deelad-place-api","timestamp":"2026-04-08 15:02:22"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-04-08 15:07:14"}
+{"level":"info","message":"\u001b[0mPOST /api/auth/login \u001b[32m200\u001b[0m 6029.102 ms - 374\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-08 15:07:15"}
+{"level":"info","message":"\u001b[0mGET /api/reports/profit-summary \u001b[32m200\u001b[0m 694.474 ms - 47\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-08 15:07:16"}
+{"level":"info","message":"\u001b[0mGET /api/reports/profit-summary \u001b[36m304\u001b[0m 805.236 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-08 15:07:17"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-04-08 15:07:18"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-04-08 15:07:18"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-04-08 15:07:18"}
+{"level":"info","message":"\u001b[0mGET /api/inventory/balance \u001b[32m200\u001b[0m 3047.939 ms - 3309\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-08 15:07:18"}
+{"level":"info","message":"\u001b[0mGET /api/inventory/balance \u001b[36m304\u001b[0m 547.716 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-08 15:07:19"}
+{"level":"info","message":"Expense Summary","service":"deelad-place-api","tenantId":19,"thisMonthExpense":0,"timestamp":"2026-04-08 15:07:19","todayExpense":0}
+{"level":"info","message":"\u001b[0mGET /api/reports/expense-summary \u001b[32m200\u001b[0m 3434.972 ms - 48\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-08 15:07:19"}
+{"level":"info","message":"\u001b[0mGET /api/reports/sales \u001b[32m200\u001b[0m 3564.659 ms - 120277\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-08 15:07:19"}
+{"level":"info","message":"Expense Summary","service":"deelad-place-api","tenantId":19,"thisMonthExpense":0,"timestamp":"2026-04-08 15:07:19","todayExpense":0}
+{"level":"info","message":"\u001b[0mGET /api/reports/expense-summary \u001b[36m304\u001b[0m 662.197 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-08 15:07:19"}
+{"level":"info","message":"\u001b[0mGET /api/reports/sales \u001b[36m304\u001b[0m 605.588 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-08 15:07:19"}
+{"level":"info","message":"Email sent to muhammadsaniharuna44@gmail.com via SMTP","service":"deelad-place-api","subject":"Security Alert: New Login detected","timestamp":"2026-04-08 15:07:21"}
+{"level":"info","message":"\u001b[0mGET /vendors \u001b[33m404\u001b[0m 4.589 ms - 52\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-08 15:08:01"}
+{"level":"info","message":"\u001b[0mGET /vendors \u001b[33m404\u001b[0m 2.281 ms - 52\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-08 15:08:01"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-04-08 15:08:04"}
+{"level":"info","message":"\u001b[0mGET /api/products/all?page=1&limit=100 \u001b[32m200\u001b[0m 4114.235 ms - 1180\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-08 15:08:05"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-04-08 15:08:05"}
+{"level":"info","message":"\u001b[0mGET /api/products/all?page=1&limit=100 \u001b[36m304\u001b[0m 835.839 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-08 15:08:06"}
+{"level":"info","message":"\u001b[0mGET /api/inventory/balance \u001b[36m304\u001b[0m 5402.228 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-08 15:08:06"}
+{"level":"info","message":"\u001b[0mGET /api/inventory/balance \u001b[36m304\u001b[0m 1258.256 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-08 15:08:07"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-04-08 15:09:12"}
+{"level":"info","message":"\u001b[0mGET /api/inventory/balance \u001b[36m304\u001b[0m 12556.619 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-08 15:09:13"}
+{"level":"info","message":"\u001b[0mPUT /api/products/23 \u001b[31m500\u001b[0m 18.412 ms - 73\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-08 15:09:38"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-04-08 15:10:04"}
+{"level":"info","message":"\u001b[0mGET /api/inventory/balance \u001b[36m304\u001b[0m 4029.651 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-08 15:10:05"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-04-08 15:11:05"}
+{"level":"info","message":"\u001b[0mGET /api/inventory/balance \u001b[36m304\u001b[0m 5491.340 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-08 15:11:06"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-04-08 15:12:06"}
+{"level":"info","message":"\u001b[0mGET /api/inventory/balance \u001b[36m304\u001b[0m 6651.242 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-08 15:12:07"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-04-08 15:13:05"}
+{"level":"info","message":"\u001b[0mGET /api/inventory/balance \u001b[36m304\u001b[0m 4553.702 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-08 15:13:06"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-04-08 15:14:05"}
+{"level":"info","message":"\u001b[0mGET /api/inventory/balance \u001b[36m304\u001b[0m 4970.743 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-08 15:14:06"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-04-08 15:15:09"}
+{"level":"info","message":"\u001b[0mGET /api/inventory/balance \u001b[36m304\u001b[0m 11230.841 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-08 15:15:12"}

@@ -49,7 +49,8 @@ const ProductsDashboard = () => {
     category_id: 1,
     description: "",
     commission: "",
-    vendor_id: ""
+    vendor_id: "",
+    vendor_price: ""
   });
 
   // Stats
@@ -124,6 +125,7 @@ const ProductsDashboard = () => {
         ...formData,
         category_id: formData.category_id || 1,
         vendor_id: formData.vendor_id ? Number(formData.vendor_id) : null,
+        vendor_price: parseFloat(formData.vendor_price) || 0,
         custom_commission: parseFloat(formData.commission) || 0
       };
       delete dataToSend.commission;
@@ -153,8 +155,9 @@ const ProductsDashboard = () => {
       sku: product.sku,
       category_id: 1, // Defaulting to 1 as per legacy code
       description: product.description,
-      commission: product.commission || "",
-      vendor_id: product.vendor_id || ""
+      commission: product.custom_commission || product.commission || "",
+      vendor_id: product.vendor_id || "",
+      vendor_price: product.vendor_price || ""
     });
     setModalOpen(true);
   };
@@ -253,7 +256,7 @@ const ProductsDashboard = () => {
              className="premium-btn primary"
              onClick={() => {
                setEditProduct(null);
-               setFormData({ name: "", sku: "", category_id: 1, description: "", commission: "", vendor_id: "" });
+               setFormData({ name: "", sku: "", category_id: 1, description: "", commission: "", vendor_id: "", vendor_price: "" });
                setModalOpen(true);
              }}
            >
@@ -401,6 +404,16 @@ const ProductsDashboard = () => {
                                 onChange={e => setFormData({ ...formData, sku: e.target.value })}
                                 placeholder="store keeping unit-001"
                             />
+                        </div>
+                        <div className="form-group">
+                              <label className="premium-label-2">Vendor Price</label>
+                              <input
+                                className="premium-input"
+                                type="number"
+                                value={formData.vendor_price}
+                                onChange={e => setFormData({ ...formData, vendor_price: e.target.value })}
+                                placeholder="0.00"
+                              />
                         </div>
                         <div className="form-group">
                              <label className="premium-label-2">Commission</label>

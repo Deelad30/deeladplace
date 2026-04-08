@@ -69,6 +69,16 @@ const schemas = {
     description: Joi.string().max(1000).allow('')
   }),
 
+  productUpdate: Joi.object({
+    name: Joi.string().min(1).max(200),
+    sku: Joi.string(),
+    vendor_id: Joi.number().integer().positive().allow(null),
+    vendor_price: Joi.number().min(0),
+    custom_commission: Joi.number().min(0),
+    category_id: Joi.number().integer().positive(),
+    description: Joi.string().max(1000).allow('')
+  }),
+
   forgotPassword: Joi.object({
     email: Joi.string().email().required()
   }),
