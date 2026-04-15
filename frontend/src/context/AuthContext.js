@@ -64,7 +64,7 @@ export function AuthProvider({ children }) {
    --------------------------------*/
   useEffect(() => {
     async function init() {
-      if (token && !user) {
+      if (token) {
         try {
           const res = await getCurrentUser(); // /auth/me
           setUser(res.data);

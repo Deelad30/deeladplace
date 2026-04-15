@@ -50,8 +50,8 @@ const SubscribeButton = ({ user, planType, amount, billingCycle, className, chil
       console.log("Verifying Transaction:", { transaction_id, backendPlanType, userId: user.id });
       try {
           // USE LOCALHOST FOR TESTING
-          // const API_URL = "https://deeladplace-production.up.railway.app"; 
-          const API_URL = "http://localhost:5000"; 
+          const API_URL = "https://deeladplace-production.up.railway.app"; 
+          //const API_URL = "http://localhost:5000"; 
           
           const res = await axios.post(`${API_URL}/api/flutterwave/verify`, {
               transaction_id,
@@ -60,6 +60,12 @@ const SubscribeButton = ({ user, planType, amount, billingCycle, className, chil
           });
 
           if (res.data.success) {
+              // Update user in localStorage immediately so reload has fresh data
+              const storedUser = JSON.parse(localStorage.getItem('user')) || {};
+              storedUser.plan = backendPlanType;
+              storedUser.status = 'active';
+              localStorage.setItem('user', JSON.stringify(storedUser));
+
               onStatusChange('success', planType); // Update to Success
           } else {
               alert(`Verification failed: ${res.data.error || "Unknown error"}`);

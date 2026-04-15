@@ -58,7 +58,8 @@ function Login() {
           const defaultRoute = ROLE_DEFAULT_ROUTE[role] || "/";
           navigate(defaultRoute);
         } else {
-          if (["enterprise", "pro", "basic", "starter", "demo", "trial"].includes(plan)) {
+          if (plan && ["enterprise", "pro", "basic", "starter", "demo", "trial",
+              "basic_annual", "pro_annual", "enterprise_annual"].includes(plan)) {
             navigate("/dashboard");
           } else {
             navigate("/checkout");
