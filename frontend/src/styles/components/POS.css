@@ -88,6 +88,38 @@
   vertical-align: middle;
 }
 
+.offline-badge {
+  background: #6b7280;
+  color: white;
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-left: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.sync-badge {
+  background: #10b981; /* Green */
+  color: white;
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-left: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  animation: pulse-sync 2s infinite;
+}
+
+@keyframes pulse-sync {
+  0% { opacity: 1; }
+  50% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
 .pos-tab-content {
   flex: 1;
   display: flex;

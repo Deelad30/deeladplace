@@ -15,7 +15,8 @@ exports.createExpense = async (req, res) => {
       category,
       supplier,
       vendor_id,
-      expense_date
+      expense_date,
+      status
     } = req.body;
 
     const expense = await Expense.create({
@@ -25,7 +26,8 @@ exports.createExpense = async (req, res) => {
       category,
       supplier,
       vendor_id,
-      expense_date: expense_date || new Date()
+      expense_date: expense_date || new Date(),
+      status: status || 'unsettled'
     });
 
     res.status(201).json({
@@ -138,6 +140,35 @@ exports.deleteExpense = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to delete expense'
+    });
+  }
+};
+
+
+exports.settleExpense = async (req, res) => {
+  try {
+    const tenantId = req.user.tenant_id;
+    const { id } = req.params;
+
+    const settledExpense = await Expense.settle(id, { tenantId });
+
+    if (!settledExpense) {
+      return res.status(404).json({
+        success: false,
+        message: "Expense not found"
+      });
+    }
+
+    res.json({
+      success: true,
+      expense: settledExpense
+    });
+
+  } catch (error) {
+    logger.error('Settle expense error', { error: error.message, tenantId, expenseId: id });
+    res.status(500).json({
+      success: false,
+      message: 'Failed to settle expense'
     });
   }
 };

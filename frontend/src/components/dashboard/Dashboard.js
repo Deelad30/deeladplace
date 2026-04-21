@@ -14,7 +14,7 @@ import "../../../src/styles/components/Dashboard.css";
 const COLORS = ["#22c55e", "#3b82f6", "#f59e0b", "#ef4444"];
 
 const Dashboard = () => {
-  const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
+  const round = (num, nearest = 1) => Math.round(num / nearest) * nearest;
   const [summary, setSummary] = useState({ today: {}, this_month: {} });
   const [dailyData, setDailyData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -79,8 +79,13 @@ const fetchSalesSummary = async () => {
       (a, b) => new Date(a.date) - new Date(b.date)
     );
 
+    // 30 Days Chart Data
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const chartData = dailyArray.filter(d => new Date(d.date) >= thirtyDaysAgo);
+
     setDailyData(
-      dailyArray.map(d => ({
+      chartData.map(d => ({
         date: new Date(d.date).toLocaleDateString("en-US", {
           month: "short",
           day: "numeric"
@@ -92,7 +97,10 @@ const fetchSalesSummary = async () => {
     );
 
     // Compute today + month summary
-    const todayKey = new Date().toISOString().split("T")[0];
+    const now = new Date();
+    const todayKey = now.toISOString().split("T")[0];
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
 
     const today = grouped[todayKey] || {
       revenue: 0,
@@ -102,9 +110,12 @@ const fetchSalesSummary = async () => {
 
     const this_month = dailyArray.reduce(
       (acc, d) => {
-        acc.revenue += d.revenue;
-        acc.commission += d.commission;
-        acc.transactions += d.transactions;
+        const itemDate = new Date(d.date);
+        if (itemDate.getMonth() === currentMonth && itemDate.getFullYear() === currentYear) {
+          acc.revenue += d.revenue;
+          acc.commission += d.commission;
+          acc.transactions += d.transactions;
+        }
         return acc;
       },
       { revenue: 0, commission: 0, transactions: 0 }

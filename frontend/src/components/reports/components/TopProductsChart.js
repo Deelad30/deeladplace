@@ -50,7 +50,7 @@ const TopProductsChart = ({ data = [] }) => {
             }
           />
 
-          <YAxis type="category" hide />
+          <YAxis type="category" dataKey="name" hide />
 
           <Tooltip
             formatter={(value, name, props) => [

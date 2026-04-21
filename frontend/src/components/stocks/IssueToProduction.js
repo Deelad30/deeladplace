@@ -27,6 +27,7 @@ export default function IssueToProduction() {
       material_id: r.material_id,
       material_name: r.material_name || `Material ${r.material_id}`,
       base_qty: Number(r.recipe_qty),
+      measurement_unit: r.measurement_unit,
       required_qty: Number(r.recipe_qty) * qtyToProduce
     }));
 
@@ -107,6 +108,7 @@ export default function IssueToProduction() {
               <th>Raw Material</th>
               <th>Recipe Qty</th>
               <th>Required Qty</th>
+              <th>Unit</th>
             </tr>
           </thead>
           <tbody>
@@ -115,6 +117,7 @@ export default function IssueToProduction() {
                 <td>{r.material_name}</td>
                 <td>{r.base_qty}</td>
                 <td>{r.required_qty}</td>
+                <td>{r.measurement_unit}</td>
               </tr>
             ))}
           </tbody>

@@ -96,8 +96,37 @@ const SICProductReport = () => {
       </div>
 
       <div className="export-actions">
-        <button onClick={() => exportToCSV(productSIC, "product_sic.csv")}>CSV</button>
-        <button onClick={() => exportToPDF(productSIC, "Product SIC Report")}>PDF</button>
+        <button onClick={() => {
+          const headers = ["Product", "Opening", "Produced", "Waste", "Closing", "Actual Sales", "Expected Expected", "Variance", "Value"];
+          const rows = productSIC.map(p => [
+            p.product_name || `ID: ${p.product_id}`,
+            p.opening_qty,
+            p.issues_qty,
+            p.waste_qty,
+            p.closing_qty,
+            p.system_sales,
+            p.expected_sales,
+            p.variance,
+            p.variance_value
+          ]);
+          exportToCSV(headers, rows, "product_sic_report.csv");
+        }}>CSV</button>
+
+        <button onClick={() => {
+          const headers = ["Product", "Opening", "Produced", "Waste", "Closing", "Actual Sales", "Expected Expected", "Variance", "Value"];
+          const rows = productSIC.map(p => [
+            p.product_name || `ID: ${p.product_id}`,
+            p.opening_qty,
+            p.issues_qty,
+            p.waste_qty,
+            p.closing_qty,
+            p.system_sales,
+            p.expected_sales,
+            p.variance,
+            p.variance_value
+          ]);
+          exportToPDF("Product SIC Report", headers, rows, "product_sic_report.pdf");
+        }}>PDF</button>
       </div>
       {loading ? (
         <SkeletonCard height={300} />

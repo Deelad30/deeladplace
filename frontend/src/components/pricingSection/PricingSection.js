@@ -51,8 +51,6 @@ const SubscribeButton = ({ user, planType, amount, billingCycle, className, chil
       try {
           // USE LOCALHOST FOR TESTING
           const API_URL = "https://deeladplace-production.up.railway.app"; 
-          //const API_URL = "http://localhost:5000"; 
-          
           const res = await axios.post(`${API_URL}/api/flutterwave/verify`, {
               transaction_id,
               planType: backendPlanType,

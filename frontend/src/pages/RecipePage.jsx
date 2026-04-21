@@ -48,7 +48,7 @@ const RecipePage = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editLine, setEditLine] = useState(null);
   const [formData, setFormData] = useState({ material_id: "", recipe_qty: "" });
-  const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
+  const round = (num, nearest = 1) => Math.round(num / nearest) * nearest;
 
   // --- Packaging
   const [packagingList, setPackagingList] = useState([]);
@@ -63,9 +63,11 @@ const RecipePage = () => {
   const [computingCost, setComputingCost] = useState(false);
   const [standardizingCost, setStandardizingCost] = useState(false);
 
-  // --- Batch & Margin
+  // --- Batch & Margin & Selling Price
   const [batchSize, setBatchSize] = useState(1);
   const [marginPercent, setMarginPercent] = useState(0);
+  const [sellingPrice, setSellingPrice] = useState("");
+  const [tcop, setTcop] = useState(0);
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsLoading, setSettingsLoading] = useState(true);
 
@@ -141,7 +143,8 @@ const RecipePage = () => {
           ...item,
           // Priority: 1. Name from API (already joined) 2. Name from lookup 3. Fallback ID
           material_name: item.material_name || (material ? material.name : `#${item.material_id}`),
-          recipe_qty: Number(item.recipe_qty)
+          recipe_qty: Number(item.recipe_qty),
+          unit_cost: Number(item.unit_cost || 0)
         };
       });
       setRecipeItems(mapped);
@@ -196,7 +199,7 @@ const RecipePage = () => {
     setOpexLoading(false);
   };
 
-  // ----------------- Load Batch & Margin -----------------
+  // ----------------- Load Batch, Margin & Price -----------------
   const loadProductSettings = async () => {
     setSettingsLoading(true);
     try {
@@ -204,6 +207,8 @@ const RecipePage = () => {
       if (res.data.settings) {
         setBatchSize(res.data.settings.batch_qty || 1);
         setMarginPercent(res.data.settings.margin_percent || 0);
+        setSellingPrice(res.data.settings.selling_price || "");
+        setTcop(res.data.settings.tcop || 0);
       }
     } catch(err) {
       console.error(err);
@@ -377,13 +382,39 @@ const RecipePage = () => {
     }
   };
 
+  // ----------------- Handlers for Margin & Selling Price --------------
+  const handleMarginChange = (val) => {
+    if (val === "") {
+      setMarginPercent("");
+      return;
+    }
+    const margin = Number(val);
+    setMarginPercent(margin);
+    if (tcop > 0 && margin < 1 && margin >= 0) {
+      setSellingPrice(Math.round(tcop / (1 - margin)));
+    }
+  };
+
+  const handleSellingPriceChange = (val) => {
+    if (val === "") {
+      setSellingPrice("");
+      return;
+    }
+    const price = Number(val);
+    setSellingPrice(price);
+    if (tcop > 0 && price > 0) {
+      setMarginPercent(Number(((price - tcop) / price).toFixed(4)));
+    }
+  };
+
   // ----------------- Handle Compute Cost -----------------
   const handleComputeCost = async () => {
     if (!batchSize || batchSize <= 0) return toast.error("Enter a valid batch size before computing");
     setComputingCost(true);
     try {
-      const res = await computeCost(productId, { batchQty: batchSize, marginPercent });
+      const res = await computeCost(productId, { batchQty: batchSize, marginPercent, sellingPrice });
       setCostResult(res.data.cost);
+      setTcop(res.data.cost.TCOP);
       toast.success("Cost computed successfully!");
     } catch {
       toast.error("Failed to compute cost");
@@ -397,6 +428,7 @@ const RecipePage = () => {
     try {
       await standardize(productId, { marginPercent });
       toast.success("Standard cost saved successfully!");
+      navigate("/products");
     } catch (err) {
       console.error(err);
       toast.error("Failed to save standard cost");
@@ -404,17 +436,17 @@ const RecipePage = () => {
     setStandardizingCost(false);
   };
 
-  // ----------------- Handle Save Batch & Margin -----------------
+  // ----------------- Handle Save Configuration -----------------
   const handleSaveBatchMargin = async () => {
     if (!batchSize || batchSize <= 0) return toast.error("Batch size must be greater than 0");
     if (marginPercent < 0 || marginPercent > 1) return toast.error("Margin must be between 0 and 1 (0.x)");
     setSavingSettings(true);
     try {
-      await saveProductSettings(productId, { batch_qty: batchSize, margin_percent: marginPercent });
-      toast.success("Batch size & margin saved successfully");
+      await saveProductSettings(productId, { batch_qty: batchSize, margin_percent: marginPercent, selling_price: sellingPrice || 0 });
+      toast.success("Configuration saved successfully");
     } catch(err) {
       console.error(err);
-      toast.error("Failed to save batch size & margin");
+      toast.error("Failed to save configuration");
     }
     setSavingSettings(false);
   };
@@ -425,16 +457,25 @@ const RecipePage = () => {
     { name: "Packaging", value: costResult.packaging_cost },
     { name: "Labour", value: costResult.labour_cost },
     { name: "OPEX", value: costResult.opex_cost },
-    { name: "COGS", value: costResult.COGS },
-  ] : [];
+  ].filter(item => item.value > 0) : [];
 
   const perBatchCostData = costResult ? [
     { name: "Recipe", value: costResult.recipe_cost * batchSize },
     { name: "Packaging", value: costResult.packaging_cost * batchSize },
     { name: "Labour", value: costResult.labour_cost * batchSize },
     { name: "OPEX", value: costResult.opex_cost * batchSize },
-    { name: "COGS", value: costResult.COGS * batchSize },
-  ] : [];
+  ].filter(item => item.value > 0) : [];
+
+  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + radius * Math.cos(-midAngle * (Math.PI / 180));
+    const y = cy + radius * Math.sin(-midAngle * (Math.PI / 180));
+    return (
+      <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize="12" fontWeight="bold">
+        {`${(percent * 100).toFixed(0)}%`}
+      </text>
+    );
+  };
 
 
   // ----------------- Render -----------------
@@ -456,10 +497,19 @@ const RecipePage = () => {
            </div>
         </div>
 
-        {/* Batch Size & Margin Card */}
+        {/* Batch Size Configuration Card */}
         <div className="premium-card" style={{marginBottom:'24px'}}>
-             <h3 style={{fontSize:'18px', fontWeight:'700', color:'yellow', marginBottom:'20px'}}>Batch & Margin Configuration</h3>
-             <div className="form-grid">
+             <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                 <h3 style={{fontSize:'18px', fontWeight:'700', color:'yellow'}}>Batch Configuration</h3>
+                 <button 
+                    className="premium-btn primary"
+                    onClick={handleSaveBatchMargin} 
+                    disabled={savingSettings}
+                 >
+                    {savingSettings ? "Saving..." : "Save Batch"}
+                 </button>
+             </div>
+             <div className="form-grid" style={{marginTop:'20px'}}>
                  <div className="form-group">
                     <label style={{color:'white!important'}} className="premium-label-3">Batch Size</label>
                     <input 
@@ -470,30 +520,11 @@ const RecipePage = () => {
                         min="1"
                         disabled={savingSettings}
                     />
-                 </div>
-                 <div className="form-group">
-                    <label className="premium-label-3">Margin % (0.x)</label>
-                    <input 
-                        className="premium-input"
-                        type="number" 
-                        value={marginPercent} 
-                        onChange={e => setMarginPercent(Number(e.target.value))} 
-                        step="0.01" 
-                        min="0" 
-                        max="1" 
-                        placeholder="e.g. 0.2"
-                        disabled={savingSettings}
-                    />
+                    <small style={{color:'#94a3b8', display:'block', marginTop:'8px'}}>
+                        Number of units produced in a single batch. All recipe quantities entered below should be for this batch size.
+                    </small>
                  </div>
              </div>
-             <button 
-                className="premium-btn primary"
-                style={{marginTop:'20px', display:"flex" ,justifyContent:"center"}}
-                onClick={handleSaveBatchMargin} 
-                disabled={savingSettings}
-             >
-                {savingSettings ? "Saving Settings..." : "Save Configuration"}
-             </button>
         </div>
 
         {/* Ingredients Table */}
@@ -513,17 +544,23 @@ const RecipePage = () => {
                         <tr>
                             <th>Material</th>
                             <th>Qty/Batch</th>
+                            <th>Unit</th>
+                            <th>Cost/Qty</th>
                             <th style={{textAlign:'right'}}>Actions</th>
                         </tr>
                      </thead>
                      <tbody>
                         {recipeItems.length === 0 ? (
-                            <tr><td colSpan="3" className="empty-state">No ingredients added yet.</td></tr>
+                            <tr><td colSpan="4" className="empty-state">No ingredients added yet.</td></tr>
                         ) : (
                             recipeItems.map(item => (
                                 <tr key={item.id}>
                                     <td style={{fontWeight:'600'}}>{item.material_name}</td>
                                     <td>{item.recipe_qty}</td>
+                                    <td style={{color:'#64748b', fontSize:'13px'}}>{item.measurement_unit}</td>
+                                    <td style={{color: '#10b981', fontWeight: '700'}}>
+                                        ₦{(item.unit_cost * item.recipe_qty).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                                    </td>
                                     <td style={{textAlign:'right'}}>
                                         <div className="actions-cell">
                                             <button className="item-action-btn edit" onClick={() => { setEditLine(item); setFormData({ material_id: item.material_id, recipe_qty: item.recipe_qty }); setModalOpen(true); }}>Edit</button>
@@ -670,6 +707,54 @@ const RecipePage = () => {
              </div>
         </div>
 
+        {/* Margin & Selling Price Configuration Card */}
+        <div className="premium-card" style={{marginBottom:'24px'}}>
+             <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px'}}>
+                 <h3 style={{fontSize:'18px', fontWeight:'700', color:'yellow'}}>Margin & Selling Price Configuration</h3>
+                 {!tcop ? (
+                     <span style={{color: '#ef4444', fontSize: '13px', fontWeight: '500'}}>Compute cost first to enable auto-calculation</span>
+                 ) : (
+                     <span style={{color: '#10b981', fontSize: '13px', fontWeight: '500'}}>Auto-calculation enabled (TCOP: ₦{Number(tcop).toLocaleString()})</span>
+                 )}
+             </div>
+             <div className="form-grid">
+                 <div className="form-group">
+                    <label className="premium-label-3">Margin % (0.x)</label>
+                    <input 
+                        className="premium-input"
+                        type="number" 
+                        value={marginPercent} 
+                        onChange={e => handleMarginChange(e.target.value)} 
+                        step="0.01" 
+                        min="0" 
+                        max="1" 
+                        placeholder="e.g. 0.2"
+                        disabled={savingSettings}
+                    />
+                 </div>
+                 <div className="form-group">
+                    <label className="premium-label-3">Selling Price (₦)</label>
+                    <input 
+                        className="premium-input"
+                        type="number" 
+                        value={sellingPrice} 
+                        onChange={e => handleSellingPriceChange(e.target.value)} 
+                        min="0" 
+                        placeholder="e.g. 5000"
+                        disabled={savingSettings}
+                    />
+                 </div>
+             </div>
+             <button 
+                className="premium-btn primary"
+                style={{marginTop:'20px', display:"flex" ,justifyContent:"center"}}
+                onClick={handleSaveBatchMargin} 
+                disabled={savingSettings}
+             >
+                {savingSettings ? "Saving Settings..." : "Save Margin & Price"}
+             </button>
+        </div>
+
         {/* Cost Analysis Panel */}
         <div className="premium-card" style={{borderLeft:'4px solid #d91f22'}}>
              <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'24px'}}>
@@ -689,7 +774,17 @@ const RecipePage = () => {
                         <h4 style={{marginBottom:'16px', color:'#64748b'}}>Breakdown Per Unit (Pie)</h4>
                         <ResponsiveContainer width="100%" height={300}>
                             <PieChart>
-                                <Pie data={perUnitCostData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} fill="#8884d8" label={({value}) => `₦${round(value).toLocaleString()}`}>
+                                <Pie 
+                                    data={perUnitCostData} 
+                                    dataKey="value" 
+                                    nameKey="name" 
+                                    cx="50%" 
+                                    cy="50%" 
+                                    outerRadius={80} 
+                                    fill="#8884d8" 
+                                    labelLine={false}
+                                    label={renderCustomizedLabel}
+                                >
                                     {perUnitCostData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                                 </Pie>
                                 <ReTooltip formatter={(value) => `₦${Number(value).toLocaleString()}`} />
@@ -783,7 +878,12 @@ const RecipePage = () => {
                 </div>
                 <div className="form-group">
                     <label className="premium-label-2">Quantity Per Batch</label>
-                    <input className="premium-input" type="number" value={formData.recipe_qty} onChange={e => setFormData({ ...formData, recipe_qty: e.target.value })} />
+                    <div style={{display:'flex', gap:'8px', alignItems:'center'}}>
+                        <input className="premium-input" type="number" value={formData.recipe_qty} onChange={e => setFormData({ ...formData, recipe_qty: e.target.value })} style={{flex:1}} />
+                        <span style={{color:'#94a3b8', fontSize:'14px', fontWeight:'600', minWidth:'40px'}}>
+                            {materials.find(m => m.id == formData.material_id)?.measurement_unit || ""}
+                        </span>
+                    </div>
                 </div>
                 <button className="submit-btn" onClick={handleSave} disabled={actionLoading}>{actionLoading ? "Saving..." : (editLine ? "Update" : "Save")}</button>
             </div>

@@ -4,7 +4,7 @@ import { formatCurrency } from "../../utils/formatters";
 import "../../../src/styles/components/DashboardCard.css";
 
 const DashboardCard = ({ title, value, subtitle, icon, color = "#22c55e" }) => {
-    const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
+    const round = (num, nearest = 1) => Math.round(num / nearest) * nearest;
   return (
     <div className="dashboard-card" style={{ borderLeftColor: color }}>
       <div className="card-content">

@@ -78,8 +78,9 @@ const VendorProductChart = ({ data = [], auditMode = false }) => {
             <YAxis 
                 type="category" 
                 dataKey="name" 
-                width={100} 
+                width={140} 
                 tick={{ fontSize: 11 }}
+                tickFormatter={(value) => value && value.length > 20 ? value.substring(0, 20) + '...' : value}
                 axisLine={false}
                 tickLine={false}
             />

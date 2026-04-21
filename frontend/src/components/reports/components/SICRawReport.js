@@ -116,8 +116,40 @@ const SICRawReport = () => {
 
       {/* Export */}
       <div className="export-actions">
-        <button onClick={() => exportToCSV(filteredSIC, "raw_sic.csv")}>CSV</button>
-        <button onClick={() => exportToPDF(filteredSIC, "Raw SIC Report")}>PDF</button>
+        <button onClick={() => {
+          const headers = ["Material", "Unit", "Submitted By", "Opening", "Issues", "Waste", "Closing", "Actual Usage", "Expected Usage", "Variance", "Value"];
+          const rows = filteredSIC.map(r => [
+            r.material_name || `ID: ${r.material_id}`,
+            r.measurement_unit,
+            r.submitted_by,
+            r.opening_qty,
+            r.issues_qty,
+            r.waste_qty,
+            r.closing_qty,
+            r.system_usage,
+            r.expected_usage,
+            r.variance,
+            r.variance_value
+          ]);
+          exportToCSV(headers, rows, "raw_sic_report.csv");
+        }}>CSV</button>
+        
+        <button onClick={() => {
+          const headers = ["Material", "Unit", "Opening", "Issues", "Waste", "Closing", "Actual Usage", "Expected Usage", "Variance", "Value"];
+          const rows = filteredSIC.map(r => [
+            r.material_name || `ID: ${r.material_id}`,
+            r.measurement_unit,
+            r.opening_qty,
+            r.issues_qty,
+            r.waste_qty,
+            r.closing_qty,
+            r.system_usage,
+            r.expected_usage,
+            r.variance,
+            r.variance_value
+          ]);
+          exportToPDF("Raw Materials SIC Report", headers, rows, "raw_sic_report.pdf");
+        }}>PDF</button>
       </div>
 
       {/* Cards */}
@@ -133,16 +165,16 @@ const SICRawReport = () => {
               <div key={r.id} className={`product-card ${auditMode ? 'audit-border' : ''}`}>
                 <h4>{r.material_name || `ID: ${r.material_id}`}</h4>
                 <p>Submitted by: {r.submitted_by}</p>
-                <p>Opening: {r.opening_qty}</p>
-                <p>New Issues: {r.issues_qty}</p>
-                <p>Waste: {r.waste_qty}</p>
-                <p>Closing: {r.closing_qty}</p>
+                <p>Opening: {r.opening_qty} {r.measurement_unit}</p>
+                <p>New Issues: {r.issues_qty} {r.measurement_unit}</p>
+                <p>Waste: {r.waste_qty} {r.measurement_unit}</p>
+                <p>Closing: {r.closing_qty} {r.measurement_unit}</p>
                 <hr />
-                <p>Actual Usage: <strong>{r.system_usage}</strong></p>
-                <p>Expected Usage: <strong>{r.expected_usage}</strong></p>
+                <p>Actual Usage: <strong>{r.system_usage} {r.measurement_unit}</strong></p>
+                <p>Expected Usage: <strong>{r.expected_usage} {r.measurement_unit}</strong></p>
                 
                 <strong className={r.variance >= 0 ? "profit" : "loss"}>
-                  Variance: {variance} (₦{Number(varianceValue).toLocaleString(undefined, { maximumFractionDigits: auditMode ? 2 : 0 })})
+                  Variance: {variance} {r.measurement_unit} (₦{Number(varianceValue).toLocaleString(undefined, { maximumFractionDigits: auditMode ? 2 : 0 })})
                 </strong>
                 
                 <div className={`remark-badge ${r.variance < 0 ? 'over' : (r.variance > 0 ? 'under' : 'good')}`}>

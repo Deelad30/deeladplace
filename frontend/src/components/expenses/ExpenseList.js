@@ -16,6 +16,7 @@ const ExpenseList = ({ refreshFlag, onEditExpense, hideActions = false  }) => {
   const [loading, setLoading] = useState(true);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [expenseToDelete, setExpenseToDelete] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("");
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -58,7 +59,7 @@ const ExpenseList = ({ refreshFlag, onEditExpense, hideActions = false  }) => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, categoryFilter, dateFilter]);
+  }, [searchQuery, categoryFilter, dateFilter, statusFilter, vendorFilter]);
 
   const filteredExpenses = expenses.filter((exp) => {
     const expDate = new Date(exp.expense_date);
@@ -67,6 +68,7 @@ const ExpenseList = ({ refreshFlag, onEditExpense, hideActions = false  }) => {
 
     const matchesCategory = !categoryFilter || exp.category === categoryFilter;
     const matchesVendor = !vendorFilter || exp.vendor_id == vendorFilter;
+    const matchesStatus = !statusFilter || exp.status === statusFilter;
     const matchesSearch =
       !searchQuery ||
       exp.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -74,7 +76,7 @@ const ExpenseList = ({ refreshFlag, onEditExpense, hideActions = false  }) => {
     const matchesFrom = !fromDate || expDate >= fromDate;
     const matchesTo = !toDate || expDate <= toDate;
 
-    return matchesVendor && matchesCategory && matchesSearch && matchesFrom && matchesTo;
+    return matchesVendor && matchesCategory && matchesSearch && matchesFrom && matchesTo && matchesStatus;
   });
 
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -108,6 +110,17 @@ const ExpenseList = ({ refreshFlag, onEditExpense, hideActions = false  }) => {
 
   const handleEdit = (expense) => {
     if (onEditExpense) onEditExpense(expense);
+  };
+
+  const handleSettle = async (id) => {
+    try {
+      await expenseService.settleExpense(id);
+      toast.success("Expense settled successfully");
+      fetchExpenses();
+    } catch (error) {
+      console.error("Settle error:", error);
+      toast.error("Failed to settle expense");
+    }
   };
 
   const renderPageNumbers = () => {
@@ -169,16 +182,21 @@ const ExpenseList = ({ refreshFlag, onEditExpense, hideActions = false  }) => {
           value={dateFilter.to}
           onChange={(e) => setDateFilter((prev) => ({ ...prev, to: e.target.value }))}
         />
-        <select
-  value={vendorFilter}
-  onChange={(e) => setVendorFilter(e.target.value)}
->
-  <option value="">All Vendors</option>
-  {vendors.map(v => (
-    <option key={v.id} value={v.id}>{v.name}</option>
-  ))}
-</select>
-      </div>
+  <select
+    value={vendorFilter}
+    onChange={(e) => setVendorFilter(e.target.value)}
+  >
+    <option value="">All Vendors</option>
+    {vendors.map(v => (
+      <option key={v.id} value={v.id}>{v.name}</option>
+    ))}
+  </select>
+  <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+    <option value="">All Status</option>
+    <option value="unsettled">Unsettled</option>
+    <option value="settled">Settled</option>
+  </select>
+</div>
 
       <div className="premium-table-wrapper">
         <table className="premium-table">
@@ -190,6 +208,7 @@ const ExpenseList = ({ refreshFlag, onEditExpense, hideActions = false  }) => {
               <th>Supplier</th>
               <th>Vendor</th>
               <th>Date</th>
+              <th>Status</th>
               {!hideActions && <th>Actions</th>}
             </tr>
           </thead>
@@ -203,8 +222,18 @@ const ExpenseList = ({ refreshFlag, onEditExpense, hideActions = false  }) => {
                 <td>{exp.vendor_name || "-"}</td>
                 <td>{new Date(exp.expense_date).toLocaleDateString()}</td>
                 <td>
+                  <span className={`status-badge ${exp.status === 'settled' ? 'settled' : 'unsettled'}`}>
+                    {exp.status || 'unsettled'}
+                  </span>
+                </td>
+                <td>
                     {!hideActions && (
                     <div className="action-buttons">
+                      {exp.status === 'unsettled' && (
+                        <button className="item-action-btn view settle-btn" onClick={() => handleSettle(exp.id)}>
+                          Settle
+                        </button>
+                      )}
                       <button className="item-action-btn view" onClick={() => handleEdit(exp)}>
                         Edit
                       </button>
@@ -242,9 +271,19 @@ const ExpenseList = ({ refreshFlag, onEditExpense, hideActions = false  }) => {
               <span className="card-label">Date</span>
               <span>{new Date(exp.expense_date).toLocaleDateString()}</span>
             </div>
+
+            <div className="card-row">
+              <span className="card-label">Status</span>
+              <span className={`status-badge ${exp.status === 'settled' ? 'settled' : 'unsettled'}`}>
+                {exp.status || 'unsettled'}
+              </span>
+            </div>
             
             {!hideActions && (
               <div className="card-actions">
+                 {exp.status === 'unsettled' && (
+                   <button className="primary-btn settle-btn" onClick={() => handleSettle(exp.id)}>Settle</button>
+                 )}
                  <button className="secondary-btn" onClick={() => handleEdit(exp)}>Edit</button>
                  <button className="danger-btn" onClick={() => confirmDelete(exp)}>Delete</button>
               </div>

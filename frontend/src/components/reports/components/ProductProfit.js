@@ -127,8 +127,30 @@ const ProfitReport = () => {
 
       {/* Export */}
       <div className="export-actions">
-        <button onClick={() => exportToCSV(enrichedProducts)}>CSV</button>
-        <button onClick={() => exportToPDF(enrichedProducts, netProfit)}>PDF</button>
+        <button onClick={() => {
+          const headers = ["Product", "Sales", "Cost", "Profit", "Margin %"];
+          const rows = enrichedProducts.map(p => [
+            p.product_name,
+            p.total_sales,
+            p.total_cost,
+            p.gross_profit,
+            `${p.profit_margin.toFixed(1)}%`
+          ]);
+          exportToCSV(headers, rows, "profit_report.csv");
+        }}>CSV</button>
+
+        <button onClick={() => {
+          const headers = ["Product", "Sales", "Cost", "Profit", "Margin %"];
+          const rows = enrichedProducts.map(p => [
+            p.product_name,
+            p.total_sales,
+            p.total_cost,
+            p.gross_profit,
+            `${p.profit_margin.toFixed(1)}%`
+          ]);
+          const summary = `Net Profit: ₦${Number(netProfit?.net_profit || 0).toLocaleString()}`;
+          exportToPDF("Profit Report", headers, rows, "profit_report.pdf", summary);
+        }}>PDF</button>
       </div>
 
       {/* Profit Cards */}

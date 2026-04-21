@@ -115,37 +115,49 @@ exports.updateVendor = async (req, res) => {
 exports.deleteVendor = async (req, res) => {
   const tenantId = req.user.tenant_id;
   const vendorId = req.params.id;
-  try {
+  
+  const database = require('../config/database');
 
+  try {
     if (!tenantId) {
       return res.status(400).json({ success: false, message: "Missing tenant ID" });
     }
 
+    // Start a transaction
+    await database.query('BEGIN');
+
+    // 1. Soft delete the vendor (Prefixes name and sets is_deleted = true)
     const deleted = await Vendor.delete(vendorId, { tenantId });
 
     if (!deleted) {
+      await database.query('ROLLBACK');
       return res.status(404).json({
         success: false,
         message: "Vendor not found"
       });
     }
 
+    // 2. Deactivate all products belonging to this vendor
+    await database.query(
+      `UPDATE products 
+       SET is_active = false, 
+           updated_at = NOW() 
+       WHERE vendor_id = $1 AND tenant_id = $2`,
+      [vendorId, tenantId]
+    );
+
+    // Commit the transaction
+    await database.query('COMMIT');
+
     res.json({
       success: true,
-      message: "Vendor deleted successfully"
+      message: "Vendor and related data (products) successfully deleted/deactivated. Historical financial records were preserved."
     });
 
   } catch (error) {
+    await database.query('ROLLBACK');
     logger.error("Delete vendor error", { error: error.message, tenantId, vendorId });
     
-    // Check for foreign key constraint violation (e.g., related products, expenses, or purchases)
-    if (error.code === '23503') {
-      return res.status(400).json({
-        success: false,
-        message: "Cannot delete vendor: This vendor is linked to existing records (products, expenses, or purchases). Please remove those records first."
-      });
-    }
-
     res.status(500).json({
       success: false,
       message: "Error deleting vendor"

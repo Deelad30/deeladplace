@@ -142,7 +142,7 @@ const StockMovementLog = () => {
 
                                     <td style={tdStyle}>
                                         <span style={{ fontWeight: '700', color: move.movement_type === 'in' ? '#16a34a' : '#ef4444' }}>
-                                            {move.movement_type === 'in' ? '+' : '-'}{Math.abs(Number(move.qty)).toFixed(2)}
+                                            {move.movement_type === 'in' ? '+' : '-'}{Math.abs(Number(move.qty)).toFixed(2)} {move.measurement_unit}
                                         </span>
                                     </td>
 

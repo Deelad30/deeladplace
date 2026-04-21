@@ -303,7 +303,7 @@ async function getRawSICReport(req, res) {
     }
 
     const sql = `
-      SELECT sr.*, m.name AS material_name, u.name AS submitted_by
+      SELECT sr.*, m.name AS material_name, m.measurement_unit, u.name AS submitted_by
       FROM sic_raw_materials sr
       LEFT JOIN raw_materials m ON m.id = sr.material_id
       LEFT JOIN users u ON u.id = sr.created_by

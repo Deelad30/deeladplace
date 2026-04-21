@@ -12,14 +12,15 @@ class Expense {
     category,
     supplier,
     vendor_id,
-    expense_date
+    expense_date,
+    status = 'unsettled'
   }) {
 
     const result = await database.query(
-      `INSERT INTO expenses (tenant_id, description, amount, category, supplier, vendor_id, expense_date)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
-       RETURNING id, tenant_id, description, amount, category, supplier, vendor_id, expense_date, created_at, updated_at`,
-      [tenant_id, description, amount, category, supplier, vendor_id, expense_date]
+      `INSERT INTO expenses (tenant_id, description, amount, category, supplier, vendor_id, expense_date, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING id, tenant_id, description, amount, category, supplier, vendor_id, expense_date, status, created_at, updated_at`,
+      [tenant_id, description, amount, category, supplier, vendor_id, expense_date, status]
     );
 
     return result.rows[0];
@@ -51,7 +52,7 @@ class Expense {
     const result = await database.query(
       `SELECT category, SUM(amount) AS total_amount
        FROM expenses
-       WHERE tenant_id = $1
+       WHERE tenant_id = $1 AND status = 'settled'
        GROUP BY category
        ORDER BY total_amount DESC`,
       [tenantId]
@@ -82,21 +83,39 @@ class Expense {
    * Update expense (tenant-scoped)
    */
   static async update(id, expenseData, { tenantId }) {
-    const { description, amount, category, supplier, vendor_id, expense_date } = expenseData;
+    const { description, amount, category, supplier, vendor_id, expense_date, status } = expenseData;
 
     const result = await database.query(
       `UPDATE expenses
-       SET description = $1,
-           amount = $2,
-           category = $3,
-           supplier = $4,
-           vendor_id = $5,
-           expense_date = $6,
+        SET description = $1,
+            amount = $2,
+            category = $3,
+            supplier = $4,
+            vendor_id = $5,
+            expense_date = $6,
+            status = $7,
+            updated_at = NOW()
+        WHERE id = $8
+          AND tenant_id = $9
+        RETURNING id, tenant_id, description, amount, category, supplier, vendor_id, expense_date, status, created_at, updated_at`,
+      [description, amount, category, supplier, vendor_id, expense_date, status, id, tenantId]
+    );
+
+    return result.rows[0];
+  }
+
+
+  /**
+   * Settle an expense (tenant-scoped)
+   */
+  static async settle(id, { tenantId }) {
+    const result = await database.query(
+      `UPDATE expenses
+       SET status = 'settled',
            updated_at = NOW()
-       WHERE id = $7
-         AND tenant_id = $8
-       RETURNING id, tenant_id, description, amount, category, supplier, vendor_id, expense_date, created_at, updated_at`,
-      [description, amount, category, supplier, vendor_id, expense_date, id, tenantId]
+       WHERE id = $1 AND tenant_id = $2
+       RETURNING id, status`,
+      [id, tenantId]
     );
 
     return result.rows[0];

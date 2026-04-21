@@ -231,3 +231,64 @@
   margin-top: 12px;
   justify-content: flex-end;
 }
+
+/* Status Badges */
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: capitalize;
+    display: inline-block;
+}
+
+.status-badge.settled {
+    background-color: #e6f7ed;
+    color: #1a8754;
+}
+
+.status-badge.unsettled {
+    background-color: #fff4e5;
+    color: #ff9800;
+}
+
+/* Settle Button */
+.settle-btn {
+    background-color: #1a8754 !important;
+    color: white !important;
+    border: none;
+}
+
+.settle-btn:hover {
+    background-color: #156d43 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(26, 135, 84, 0.2);
+}
+
+.item-action-btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+}
+
+.item-action-btn.view {
+    background: #f0fdf4;
+    color: #166534;
+}
+
+.item-action-btn.view:hover {
+    background: #dcfce7;
+}
+
+.item-action-btn.delete {
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+.item-action-btn.delete:hover {
+    background: #fee2e2;
+}

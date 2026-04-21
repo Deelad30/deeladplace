@@ -11,7 +11,7 @@ const ProductVarianceReport = () => {
   const [endDate, setEndDate] = useState("");
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
-const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
+const round = (num, nearest = 1) => Math.round(num / nearest) * nearest;
  const [vendors, setVendors] = useState([]);
   const [selectedVendor, setSelectedVendor] = useState('');
   const [search, setSearch] = useState('');

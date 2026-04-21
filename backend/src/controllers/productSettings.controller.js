@@ -7,7 +7,7 @@ async function getProductSettings(req, res) {
 
   try {
     const result = await db.query(
-      `SELECT batch_qty, margin_percent FROM products WHERE id=$1 AND tenant_id=$2`,
+      `SELECT batch_qty, margin_percent, selling_price, tcop FROM products WHERE id=$1 AND tenant_id=$2`,
       [productId, tenantId]
     );
 
@@ -23,17 +23,17 @@ async function getProductSettings(req, res) {
 async function saveProductSettings(req, res) {
   const productId = Number(req.params.id);
   const tenantId = req.user.tenant_id;
-  const { batch_qty, margin_percent } = req.body;
+  const { batch_qty, margin_percent, selling_price } = req.body;
 
   if (batch_qty <= 0) return res.status(400).json({ error: "Batch quantity must be > 0" });
 
   try {
     const result = await db.query(
       `UPDATE products
-       SET batch_qty=$1, margin_percent=$2
-       WHERE id=$3 AND tenant_id=$4
+       SET batch_qty=$1, margin_percent=$2, selling_price=$3
+       WHERE id=$4 AND tenant_id=$5
        RETURNING *`,
-      [batch_qty, margin_percent, productId, tenantId]
+      [batch_qty, margin_percent, selling_price, productId, tenantId]
     );
 
     res.json({ ok: true, product: result.rows[0] });

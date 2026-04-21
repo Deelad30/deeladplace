@@ -46,7 +46,8 @@ const GET_LABOUR_FOR_PRODUCT = `
 `;
 
 const GET_OPEX_FOR_PRODUCT = `
-  SELECT po.id, po.opex_id, po.amount, o.name AS opex_name
+  SELECT po.id, po.opex_id, po.amount, o.name AS opex_name, 
+         o.allocation_mode, o.percentage_value
   FROM product_opex po
   JOIN opex_items o ON o.id = po.opex_id
   WHERE po.product_id = $1 AND po.tenant_id = $2

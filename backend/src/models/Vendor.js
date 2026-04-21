@@ -8,7 +8,7 @@ class Vendor {
     const result = await database.query(
       `SELECT id, tenant_id, name, description, is_active, created_at, updated_at
        FROM vendors
-       WHERE tenant_id = $1
+       WHERE tenant_id = $1 AND is_deleted = false
        ORDER BY name`,
       [tenantId]
     );
@@ -66,7 +66,10 @@ class Vendor {
    */
   static async delete(id, { tenantId }) {
     const result = await database.query(
-      `DELETE FROM vendors
+      `UPDATE vendors
+       SET is_deleted = true,
+           name = CONCAT('[DELETED] ', name),
+           updated_at = NOW()
        WHERE id = $1 AND tenant_id = $2
        RETURNING id`,
       [id, tenantId]

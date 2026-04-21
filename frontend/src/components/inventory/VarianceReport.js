@@ -70,9 +70,10 @@ const VarianceReport = () => {
     doc.text("Variance Report", 14, 16);
     autoTable(doc, {
       startY: 20,
-      head: [['Material', 'Expected', 'Actual', 'Variance Qty', 'Cost', 'Variance Value', 'Remark']],
+      head: [['Material', 'Unit', 'Expected', 'Actual', 'Variance Qty', 'Cost', 'Variance Value', 'Remark']],
       body: filteredData.map(item => [
         item.material_name,
+        item.measurement_unit,
         round0(item.expected_usage),
         round0(item.actual_usage),
         round0(item.variance_qty),
@@ -130,6 +131,7 @@ const VarianceReport = () => {
           <thead>
             <tr>
               <th>Material</th>
+              <th>Unit</th>
               <th className="text-right">Expected Usage</th>
               <th className="text-right">Actual Usage</th>
               <th className="text-right">Variance Qty</th>
@@ -153,6 +155,7 @@ const VarianceReport = () => {
               filteredData.map(item => (
                 <tr key={item.material_id}>
                   <td className="font-medium text-gray-700">{item.material_name}</td>
+                  <td>{item.measurement_unit}</td>
                   <td className="text-right">{round0(item.expected_usage)}</td>
                   <td className="text-right">{round0(item.actual_usage)}</td>
                   <td className={`text-right font-medium ${item.variance_qty < 0 ? 'text-red-600' : 'text-green-600'}`}>

@@ -22,6 +22,7 @@ router.get('/sales-reports', auth, requireTenant, reports.getSalesPaginated);
 router.get('/sales-summary',  auth, requireTenant, reports.getSalesSummary);
 router.get('/top-products',   auth, requireTenant, reports.getTopProducts);
 router.get('/payment-summary',auth, requireTenant, reports.getPaymentSummary);
+router.get('/customer-type-summary', auth, requireTenant, reports.getCustomerTypeSummary);
 router.get('/vendor-performance', auth, requireTenant, reports.getVendorPerformance);
 
 router.get('/profit-summary', auth, requireTenant, reports.getProfitSummary);

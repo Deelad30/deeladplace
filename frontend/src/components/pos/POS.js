@@ -52,40 +52,59 @@ const POS = () => {
   const [activeBillId, setActiveBillId] = useState(null);
   const [activeBillsCount, setActiveBillsCount] = useState(0);
   const [loadingCart, setLoadingCart] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const round = roundPrice;
   
 
 
- useEffect(() => {
-  async function initShift() {
-    try {
-      const res = await openShift();
-      const shiftId = res.data.shift.id;
+  useEffect(() => {
+    async function initShift() {
+      if (!navigator.onLine) {
+        const savedShift = localStorage.getItem('current_shift_id');
+        if (savedShift) {
+          setCurrentShiftId(savedShift);
+          console.log('Working in offline mode with shift:', savedShift);
+        }
+        return;
+      }
+      try {
+        const res = await openShift();
+        const shiftId = res.data.shift.id;
 
-      setCurrentShiftId(shiftId);
-      localStorage.setItem('current_shift_id', shiftId);
+        setCurrentShiftId(shiftId);
+        localStorage.setItem('current_shift_id', shiftId);
 
-      toast.success('Shift started successfully');
-    } catch (err) {
-      console.error(err);
-      toast.error('Failed to open shift');
+        toast.success('Shift started successfully');
+      } catch (err) {
+        console.error(err);
+        toast.error('Failed to open shift');
+      }
     }
-  }
 
-  initShift();
-}, []);
+    initShift();
+  }, [isOnline]); // Re-run when online status changes
 
 
   // --- Fetch Vendors & Products ---
   const fetchVendors = useCallback(async () => {
     try {
       const res = await vendorService.getAllVendors();
-      setVendors(res.data.vendors);
-      setAppVendors(res.data.vendors);
+      const fetchedVendors = res.data.vendors;
+      setVendors(fetchedVendors);
+      setAppVendors(fetchedVendors);
+      localStorage.setItem('cached_vendors', JSON.stringify(fetchedVendors));
     } catch (err) {
       console.error(err);
-      toast.error('Failed to fetch vendors');
+      const cached = localStorage.getItem('cached_vendors');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        setVendors(parsed);
+        setAppVendors(parsed);
+        toast('Using cached vendors (Offline)', { icon: '📴' });
+      } else {
+        toast.error('Failed to fetch vendors');
+      }
     }
   }, [setAppVendors]);
 
@@ -99,29 +118,49 @@ const POS = () => {
   }, []);
 
   const fetchAllProducts = useCallback(async () => {
-  setLoadingSkeleton(true); 
-  try {
-    const res = await getProducts(1, 1000); // fetch all products in one go
-    const allProducts = res.data.products;
-    setProducts(allProducts);
-    setAppProducts(allProducts);
-  } catch (err) {
-    console.error(err);
-    toast.error('Failed to fetch products');
-  } finally{
-     setLoadingSkeleton(false); 
-  }
-}, [setAppProducts]);
+    setLoadingSkeleton(true);
+    try {
+      const res = await getProducts(1, 1000);
+      const allProducts = res.data.products;
+      setProducts(allProducts);
+      setAppProducts(allProducts);
+      localStorage.setItem('cached_products', JSON.stringify(allProducts));
+    } catch (err) {
+      console.error(err);
+      const cached = localStorage.getItem('cached_products');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        setProducts(parsed);
+        setAppProducts(parsed);
+        toast('Using cached products (Offline)', { icon: '📴' });
+      } else {
+        toast.error('Failed to fetch products');
+      }
+    } finally {
+      setLoadingSkeleton(false);
+    }
+  }, [setAppProducts]);
 
 
   const fetchProductsByVendor = useCallback(async (vendorId) => {
     try {
       const res = await productService.getProductsByVendor(vendorId);
-      setProducts(res.data.products);
-      setAppProducts(res.data.products);
+      const vendorProducts = res.data.products;
+      setProducts(vendorProducts);
+      setAppProducts(vendorProducts);
     } catch (err) {
       console.error(err);
-      toast.error('Failed to fetch vendor products');
+      // Fallback: If we have all products cached, filter them locally
+      const cached = localStorage.getItem('cached_products');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        const filtered = parsed.filter(p => p.vendor_id === vendorId);
+        setProducts(filtered);
+        setAppProducts(filtered);
+        toast('Showing cached products for vendor', { icon: '📴' });
+      } else {
+        toast.error('Failed to fetch vendor products');
+      }
     }
   }, [setAppProducts]);
 
@@ -131,7 +170,13 @@ const POS = () => {
     fetchAllProducts();
     fetchActiveBillsCount();
 
-    const updateOnlineStatus = () => setIsOnline(navigator.onLine);
+    const updateOnlineStatus = () => {
+      const online = navigator.onLine;
+      setIsOnline(online);
+      if (online) {
+        syncPendingSales();
+      }
+    };
     window.addEventListener('online', updateOnlineStatus);
     window.addEventListener('offline', updateOnlineStatus);
 
@@ -144,7 +189,7 @@ const POS = () => {
       window.removeEventListener('online', updateOnlineStatus);
       window.removeEventListener('offline', updateOnlineStatus);
     };
-     // eslint-disable-next-line 
+    // eslint-disable-next-line 
   }, [fetchVendors, fetchAllProducts]);
 
   useEffect(() => {
@@ -200,31 +245,62 @@ const POS = () => {
   };
 
   const syncPendingSales = async () => {
+    if (isSyncing) return;
     const pending = JSON.parse(localStorage.getItem('pending_sales') || '[]');
     if (!pending.length) return;
 
-    for (const sale of pending) {
-      for (const item of sale.items) {
-        try {
-          await recordSale({
-            product_id: item.id,
-            qty: item.quantity,
-            selling_price: Number(item.selling_price),
-            payment_method: sale.payment.type,
-            payment_breakdown: sale.payment.breakdown,
-            order_method: sale.payment.customer_type === "walk-in" ? "walk-in" : "online",
-            vendor_id: item.vendor_id || sale.selectedVendor,
-            commission: Number(item.commission || 0),
-            shift_id: currentShiftId
-          });
-        } catch (err) {
-          console.error('Failed to sync sale', sale, err);
-          continue;
+    setIsSyncing(true);
+    const toastId = toast.loading(`Syncing ${pending.length} offline sales...`);
+    
+    let remaining = [...pending];
+    let successCount = 0;
+
+    try {
+      // Loop through sales copies to avoid mutation issues
+      for (const sale of [...pending]) {
+        let allItemsSynced = true;
+        
+        for (const item of sale.items) {
+          try {
+            await recordSale({
+              product_id: item.id,
+              qty: item.quantity,
+              selling_price: Number(item.selling_price),
+              payment_method: sale.payment.type,
+              payment_breakdown: sale.payment.breakdown,
+              order_method: sale.payment.customer_type === "walk-in" ? "walk-in" : "online",
+              vendor_id: item.vendor_id || sale.selectedVendor,
+              commission: Number(item.commission || 0),
+              shift_id: currentShiftId || localStorage.getItem('current_shift_id'),
+              transaction_id: sale.transaction_id
+            });
+          } catch (err) {
+            console.error('Failed to sync item', item.id, err);
+            allItemsSynced = false;
+            break; // Stop syncing this sale if an item fails
+          }
+        }
+        
+        if (allItemsSynced) {
+          remaining = remaining.filter(s => s.transaction_id !== sale.transaction_id);
+          successCount++;
+          // Periodically update localStorage during sync for safety
+          localStorage.setItem('pending_sales', JSON.stringify(remaining));
         }
       }
+
+      if (successCount > 0) {
+        toast.success(`${successCount} offline sales synced successfully!`, { id: toastId });
+      } else {
+        toast.dismiss(toastId);
+      }
+    } catch (err) {
+      console.error('Sync process error', err);
+      toast.error('Sync interrupted. Some sales may remain offline.', { id: toastId });
+    } finally {
+      setIsSyncing(false);
+      localStorage.setItem('pending_sales', JSON.stringify(remaining));
     }
-    localStorage.setItem('pending_sales', '[]');
-    toast.success('Offline sales synced successfully!');
   };
 
   const handleSaveBill = async () => {
@@ -581,6 +657,8 @@ autoTable(doc, {
           onClick={() => setActiveTab('order')}
         >
           New Order
+          {!isOnline && <span className="offline-badge">Offline</span>}
+          {isSyncing && <span className="sync-badge">Syncing...</span>}
         </button>
         <button 
           className={`pos-tab ${activeTab === 'bills' ? 'active' : ''}`}

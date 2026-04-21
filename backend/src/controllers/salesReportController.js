@@ -429,6 +429,62 @@ exports.getPaymentSummary = async (req, res) => {
   }
 };
 
+/**
+ * GET /api/reports/customer-type-summary
+ * Returns revenue totals grouped by order method (walk-in vs online).
+ * Query params: start, end, vendor_id, user_id
+ * Response: { ok: true, customer_type_summary: { "walk-in": 120000, "online": 45000 } }
+ */
+exports.getCustomerTypeSummary = async (req, res) => {
+  const tenantId = req.user.tenant_id;
+  try {
+    let { start, end, startDate, endDate, vendor_id, user_id } = req.query;
+    start = start || startDate;
+    end = end || endDate;
+
+    const { params, whereSql } = buildSalesFilters(tenantId, { start, end, vendor_id, user_id });
+
+    const sql = `
+      SELECT 
+        ps.order_method,
+        ps.qty, 
+        ps.selling_price, 
+        COALESCE(p.custom_commission, 0) as custom_commission
+      FROM pos_sales ps
+      LEFT JOIN products p ON p.id = ps.product_id
+      WHERE ps.tenant_id = $1
+      ${whereSql}
+    `;
+
+    const rows = await db.query(sql, params);
+
+    const summary = {};
+
+    rows.rows.forEach(r => {
+      const method = (r.order_method || 'walk-in').toLowerCase();
+      const label = method === 'online' ? 'Online' : 'Walk-in';
+      const totalItemRevenue = Number(r.qty) * (Number(r.selling_price) + Number(r.custom_commission));
+      summary[label] = (summary[label] || 0) + totalItemRevenue;
+    });
+
+    // Round and remove zeros
+    const finalSummary = {};
+    for (const [key, val] of Object.entries(summary)) {
+      const rounded = Math.round(val);
+      if (rounded > 0) {
+        finalSummary[key] = rounded;
+      }
+    }
+
+    res.json({ ok: true, customer_type_summary: finalSummary });
+
+  } catch (e) {
+    logger.error("getCustomerTypeSummary error", { error: e.message, tenantId });
+    res.status(500).json({ ok: false, message: e.message });
+  }
+};
+
+
 exports.getProfitSummary = async (req, res) => {
   const tenantId = req.user.tenant_id;
   try {

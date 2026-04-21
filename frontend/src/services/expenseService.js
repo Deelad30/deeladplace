@@ -24,6 +24,10 @@ async deleteExpense(id) {
   return api.delete(`/expenses/${id}`);
 }
 
+async settleExpense(id) {
+  return api.patch(`/expenses/${id}/settle`);
+}
+
 
 }
 

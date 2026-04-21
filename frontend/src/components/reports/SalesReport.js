@@ -10,6 +10,7 @@ import SalesTrendsChart from './components/SalesTrendsChart';
 import VendorProductChart from './components/VendorProductChart';
 import TopProductsChart from './components/TopProductsChart';
 import PaymentBreakdownChart from './components/PaymentBreakdownChart';
+import CustomerTypeSummaryChart from './components/CustomerTypeSummaryChart';
 import SalesTable from './components/SalesTable';
 import VendorPerformanceChart from './components/VendorPerformanceChart';
 import FiltersBar from './components/FiltersBar';
@@ -25,7 +26,21 @@ const SalesReport = () => {
   const [topProducts, setTopProducts] = useState([]);
   const [vendorPerformance, setVendorPerformance] = useState([]);
   const [paymentSummary, setPaymentSummary] = useState({});
-  const [filters, setFilters] = useState({ start: null, end: null, vendor_id: null, payment_type: null, user_id: null });
+  const [customerTypeSummary, setCustomerTypeSummary] = useState({});
+  
+  const now = new Date();
+  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+  const today = now.toISOString().split('T')[0];
+
+  const [filters, setFilters] = useState({ 
+    start: firstDay, 
+    end: today, 
+    vendor_id: null, 
+    payment_type: null, 
+    user_id: null,
+    startDate: firstDay, 
+    endDate: today 
+  });
   const [loading, setLoading] = useState(true);
   const [vendors, setVendors] = useState([]);
   const [users, setUsers] = useState([]);
@@ -70,12 +85,13 @@ const fetchAll = async (localFilters = {}) => {
     if (localFilters.payment_type) params.payment_type = localFilters.payment_type;
     if (localFilters.user_id) params.user_id = localFilters.user_id;
 
-    const [overviewRes, summaryRes, topRes, paymentRes, performanceRes] = await Promise.all([
+    const [overviewRes, summaryRes, topRes, paymentRes, performanceRes, customerTypeRes] = await Promise.all([
       salesService.getOverview(params),
       salesService.getSalesSummary(params),
       salesService.getTopProducts({ ...params, limit: 8 }),
       salesService.getPaymentSummary(params),
-      salesService.getVendorPerformance(params)
+      salesService.getVendorPerformance(params),
+      salesService.getCustomerTypeSummary(params)
     ]);
 
     setOverview(overviewRes.overview || overviewRes);
@@ -83,6 +99,7 @@ const fetchAll = async (localFilters = {}) => {
     setTopProducts(topRes.top_products || []);
     setPaymentSummary(paymentRes.payment_summary || {});
     setVendorPerformance(performanceRes.vendor_performance || []);
+    setCustomerTypeSummary(customerTypeRes.customer_type_summary || {});
     console.log(topProducts);
     
   } catch (err) {
@@ -113,7 +130,7 @@ const onApplyFilters = (newFilters) => {
 
   // Fetch data on mount
   useEffect(() => {
-    fetchAll();
+    fetchAll(filters);
     // eslint-disable-next-line
   }, []);
 
@@ -189,10 +206,14 @@ const onApplyFilters = (newFilters) => {
             </div>
 
             {/* Secondary Insights Row */}
-            <div className="insights-row" style={{ marginTop: 12, display: 'grid', gridTemplateColumns: '1fr', gap: 16 }}>
+            <div className="insights-row" style={{ marginTop: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               <div className="chart-card">
                 <div className="chart-title">Payment Breakdown Summary</div>
                 <PaymentBreakdownChart data={paymentSummary} />
+              </div>
+              <div className="chart-card">
+                <div className="chart-title">Customer Type Summary</div>
+                <CustomerTypeSummaryChart data={customerTypeSummary} />
               </div>
             </div>
 

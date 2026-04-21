@@ -133,7 +133,7 @@ exports.getNetProfit = async (req, res) => {
       expenses AS (
         SELECT COALESCE(SUM(amount), 0) AS total_expenses
         FROM expenses
-        WHERE ${expenseFilter.join(" AND ")}
+        WHERE ${expenseFilter.join(" AND ")} AND status = 'settled'
       )
       SELECT
         pp.total_sales,

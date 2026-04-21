@@ -12,7 +12,7 @@ const SaleOptionsModal = ({ visible, onClose, onFinish, totals }) => {
   const [notification, setNotification] = useState(null); // { message: '', type: 'error'|'success' }
 
 
-  const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
+  const round = (num, nearest = 1) => Math.round(num / nearest) * nearest;
   const showNotification = (message, type = "error") => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 3000);

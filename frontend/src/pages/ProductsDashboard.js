@@ -39,6 +39,7 @@ const ProductsDashboard = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editProduct, setEditProduct] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [lastAdded, setLastAdded] = useState(null); // Success feedback
 
   const [formData, setFormData] = useState({
     name: "",
@@ -130,12 +131,25 @@ const ProductsDashboard = () => {
       if (editProduct) {
         await updateProductById(editProduct.id, dataToSend);
         toast.success("Product updated");
+        setModalOpen(false);
       } else {
         await createProduct(dataToSend);
-        toast.success("Product created");
+        toast.success("Product created. Add another?");
+        setLastAdded(formData.name);
+        
+        // Reset form but keep vendor_id and category_id
+        setFormData({
+            name: "",
+            sku: "",
+            category_id: formData.category_id || 1,
+            description: "",
+            commission: "",
+            vendor_id: formData.vendor_id,
+            vendor_price: ""
+        });
+        // Keep modal open
       }
 
-      setModalOpen(false);
       loadProducts();
     } catch (err) {
       console.log(err);
@@ -254,6 +268,7 @@ const ProductsDashboard = () => {
              onClick={() => {
                setEditProduct(null);
                setFormData({ name: "", sku: "", category_id: 1, description: "", commission: "", vendor_id: "", vendor_price: "" });
+               setLastAdded(null);
                setModalOpen(true);
              }}
            >
@@ -377,10 +392,32 @@ const ProductsDashboard = () => {
         {/* --- Modal --- */}
         <Modal
             visible={modalOpen}
-            onClose={() => setModalOpen(false)}
+            onClose={() => { setModalOpen(false); setLastAdded(null); }}
             title={editProduct ? "Edit Product" : "New Product"}
         >
             <div className="vendor-form">
+                {/* Success Banner */}
+                {lastAdded && !editProduct && (
+                    <div style={{
+                        marginBottom: '16px',
+                        padding: '12px',
+                        borderRadius: '8px',
+                        backgroundColor: '#f0fdf4',
+                        border: '1px solid #bbf7d0',
+                        color: '#166534',
+                        fontSize: '14px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                    }}>
+                        <span style={{fontSize: '18px'}}>✓</span>
+                        <div>
+                            <strong>Success!</strong> Added <u>{lastAdded}</u>.
+                            <div style={{fontSize: '12px', marginTop: '2px', opacity: 0.9}}>Ready for next item...</div>
+                        </div>
+                    </div>
+                )}
+
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxHeight: '50vh', overflowY: 'auto', paddingRight: '4px' }}>
                     <div className="form-group">
                         <label className="premium-label-2">Product Name</label>

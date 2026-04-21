@@ -1,43 +1,60 @@
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
-export const exportToCSV = (data) => {
-  const headers = ["Product", "Sales", "Cost", "Profit", "Margin %"];
-  const rows = data.map(p => [
-    p.product_name,
-    p.total_sales,
-    p.total_cost,
-    p.gross_profit,
-    p.profit_margin,
-  ]);
+/**
+ * Generic CSV Exporter
+ * @param {string[]} headers 
+ * @param {any[][]} rows 
+ * @param {string} filename 
+ */
+export const exportToCSV = (headers, rows, filename = "report.csv") => {
+  if (!headers || !rows) return;
+  
+  const csvContent = [
+    headers.join(","),
+    ...rows.map(row => row.map(cell => `"${cell || 0}"`).join(","))
+  ].join("\n");
 
-  const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
-  const blob = new Blob([csv], { type: "text/csv" });
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
   const url = window.URL.createObjectURL(blob);
 
   const a = document.createElement("a");
   a.href = url;
-  a.download = "profit-report.csv";
+  a.download = filename;
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
 };
 
-export const exportToPDF = (products, netProfit) => {
+/**
+ * Generic PDF Exporter
+ * @param {string} title 
+ * @param {string[]} headers 
+ * @param {any[][]} rows 
+ * @param {string} filename 
+ * @param {string} summaryText - Optional summary text (e.g. Net Profit)
+ */
+export const exportToPDF = (title, headers, rows, filename = "report.pdf", summaryText = "") => {
   const doc = new jsPDF();
-  doc.text("Profit Report", 14, 15);
+  
+  // Title
+  doc.setFontSize(18);
+  doc.text(title, 14, 20);
 
-  doc.text(`Net Profit: ₦${Number(netProfit.net_profit).toLocaleString()}`, 14, 25);
+  // Summary Text
+  if (summaryText) {
+    doc.setFontSize(11);
+    doc.text(summaryText, 14, 30);
+  }
 
   doc.autoTable({
-    startY: 35,
-    head: [["Product", "Sales", "Cost", "Profit", "Margin %"]],
-    body: products.map(p => [
-      p.product_name,
-      p.total_sales,
-      p.total_cost,
-      p.gross_profit,
-      `${p.profit_margin}%`,
-    ]),
+    startY: summaryText ? 35 : 25,
+    head: [headers],
+    body: rows,
+    theme: 'striped',
+    headStyles: { fillColor: [77, 112, 255] },
   });
 
-  doc.save("profit-report.pdf");
+  doc.save(filename);
 };
+

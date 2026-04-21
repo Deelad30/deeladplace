@@ -5,7 +5,7 @@ export const formatCurrency = (amount) => {
   }).format(amount);
 };
 
-export const roundPrice = (num, nearest = 100) => {
+export const roundPrice = (num, nearest = 1) => {
   const n = Number(num || 0);
   return Math.round(n / nearest) * nearest;
 };

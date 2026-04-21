@@ -28,6 +28,7 @@ const VendorPerformanceChart = ({ data = [] }) => {
             dataKey="name" 
             width={120} 
             tick={{ fontSize: 12, fontWeight: 500 }}
+            tickFormatter={(value) => value && value.length > 18 ? value.substring(0, 18) + '...' : value}
             axisLine={false}
             tickLine={false}
           />

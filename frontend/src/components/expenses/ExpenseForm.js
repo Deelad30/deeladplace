@@ -13,6 +13,7 @@ const ExpenseForm = ({ onClose, onSuccess, editExpense  }) => {
   category: "",
   vendor_id: "",
   expense_date: "",
+  status: "unsettled",
 });
 
     useEffect(() => {
@@ -23,7 +24,8 @@ if (editExpense) {
     category: editExpense.category,
     supplier: editExpense.supplier || "",
     vendor_id: editExpense.vendor_id,
-    expense_date: editExpense.expense_date.slice(0, 10)
+    expense_date: editExpense.expense_date.slice(0, 10),
+    status: editExpense.status || "unsettled"
   });
  }    else {
       // Clear form if no editExpense
@@ -34,6 +36,7 @@ if (editExpense) {
         vendor_id: "",
         supplier: "",
         expense_date: "",
+        status: "unsettled",
       });
     }
   }, [editExpense]);
@@ -171,6 +174,19 @@ const handleSubmit = async (e) => {
               value={formData.expense_date}
               onChange={handleChange}
             />
+          </div>
+
+          <div className="form-group">
+            <label>Status</label>
+            <select
+              className="premium-input"
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+            >
+              <option value="unsettled">Unsettled</option>
+              <option value="settled">Settled</option>
+            </select>
           </div>
         </div>
 

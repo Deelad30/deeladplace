@@ -81,7 +81,12 @@ async function computeOpex(productId, tenantId, preOpexCOGS) {
   let totalOpex = 0;  
 
   for (const o of rows) {
-    totalOpex += Number(o.amount) || 0;
+    if (o.allocation_mode === 'percent_of_cogs') {
+      const calculatedAmount = (Number(o.percentage_value || 0) / 100) * preOpexCOGS;
+      totalOpex += calculatedAmount;
+    } else {
+      totalOpex += Number(o.amount) || 0;
+    }
   }
   return totalOpex; // sum of direct opex costs for this product/batch
 }

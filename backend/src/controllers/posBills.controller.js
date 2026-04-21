@@ -14,9 +14,6 @@ async function createOrUpdateBill(req, res) {
   try {
     await client.query('BEGIN');
 
-    let currentBillId = bill_id;
-    const trimmedBillNo = bill_no ? bill_no.trim() : "";
-
     if (!currentBillId) {
       // 0. Check for duplicate active bill_no (Table Name)
       const duplicateCheck = await client.query(
@@ -37,6 +34,31 @@ async function createOrUpdateBill(req, res) {
         [tenantId, trimmedBillNo, userId]
       );
       currentBillId = billRes.rows[0].id;
+    } else {
+      // Verify bill exists and is active
+      const billCheck = await client.query(
+        `SELECT id, bill_no FROM active_bills WHERE id = $1 AND tenant_id = $2 AND status = 'active' FOR UPDATE`,
+        [currentBillId, tenantId]
+      );
+
+      if (billCheck.rows.length === 0) {
+        throw new Error('Bill not found or is no longer active.');
+      }
+
+      // If bill_no changed, check for duplicates
+      if (trimmedBillNo && billCheck.rows[0].bill_no !== trimmedBillNo) {
+        const nameCheck = await client.query(
+          `SELECT id FROM active_bills 
+           WHERE tenant_id = $1 AND bill_no = $2 AND status = 'active' AND id != $3`,
+          [tenantId, trimmedBillNo, currentBillId]
+        );
+        if (nameCheck.rows.length > 0) {
+          throw new Error(`Table Name "${trimmedBillNo}" is already in use.`);
+        }
+      }
+
+      // Clear existing items to avoid duplication when re-saving full cart
+      await client.query(`DELETE FROM active_bill_items WHERE bill_id = $1`, [currentBillId]);
     }
 
     // Add items
@@ -51,12 +73,12 @@ async function createOrUpdateBill(req, res) {
       totalAdded += (Number(selling_price) + Number(commission)) * Number(qty);
     }
 
-    // Update bill total and updated_at
+    // Update bill total, name, and updated_at
     await client.query(
       `UPDATE active_bills 
-       SET total_amount = total_amount + $1, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $2`,
-      [totalAdded, currentBillId]
+       SET total_amount = $1, bill_no = $2, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $3`,
+      [totalAdded, trimmedBillNo, currentBillId]
     );
 
     await client.query('COMMIT');

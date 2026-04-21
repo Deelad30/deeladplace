@@ -34,6 +34,7 @@ exports.getRawMaterialVariance = async (req, res) => {
       SELECT
         m.id AS material_id,
         m.name AS material_name,
+        m.measurement_unit,
 
         -- EXPECTED usage (recipe × product sales)
         COALESCE((
@@ -100,6 +101,7 @@ exports.getRawMaterialVariance = async (req, res) => {
       return {
         material_id: row.material_id,
         material_name: row.material_name,
+        measurement_unit: row.measurement_unit,
 
         expected_usage: expected,
         actual_usage_sic: sicActual,
