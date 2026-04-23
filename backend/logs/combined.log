@@ -25193,3 +25193,5 @@
 {"env":"development","level":"info","message":"Server running on port 5000","service":"deelad-place-api","timestamp":"2026-04-23 16:42:25"}
 {"level":"info","message":"Email service initialized with SMTP (smtp.gmail.com)","service":"deelad-place-api","timestamp":"2026-04-23 16:42:35"}
 {"env":"development","level":"info","message":"Server running on port 5000","service":"deelad-place-api","timestamp":"2026-04-23 16:42:35"}
+{"level":"info","message":"Email service initialized with SMTP (smtp.gmail.com)","service":"deelad-place-api","timestamp":"2026-04-23 16:42:49"}
+{"env":"development","level":"info","message":"Server running on port 5000","service":"deelad-place-api","timestamp":"2026-04-23 16:42:49"}
