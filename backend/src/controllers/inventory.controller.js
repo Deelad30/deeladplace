@@ -40,6 +40,7 @@ async function createMovement(req, res) {
       destination,
       notes
     });
+
     const inboundTypes = ['in', 'vendor_delivery', 'purchase', 'inbound'];
     const delta = inboundTypes.includes(movement_type) ? Number(qty) : -Number(qty);
 
@@ -51,15 +52,57 @@ async function createMovement(req, res) {
       cost_per_unit !== null ? cost_per_unit : undefined
     );
 
+    // --- NEW: Handle Cost Comparison & Margin Recalculation ---
+    if (item_type === 'material' && inboundTypes.includes(movement_type) && cost_per_unit !== null) {
+        (async () => {
+            try {
+                const SQL = require('../utils/sql');
+                const db = require('../config/database');
+                const marginService = require('../services/margin.service');
+
+                // 1. Get latest cost from Material Cost Record (material_purchases)
+                const latestPurchaseRes = await db.query(SQL.GET_LATEST_PURCHASE, [item_id, tenantId]);
+                let lastCost = 0;
+                if (latestPurchaseRes.rows.length > 0) {
+                    const lp = latestPurchaseRes.rows[0];
+                    lastCost = Number(lp.purchase_price) / Number(lp.purchase_qty);
+                }
+
+                const newCost = Number(cost_per_unit);
+
+                // 2. If different, update Material Cost Record and recalculate margins
+                // We use a small epsilon for float comparison
+                if (Math.abs(newCost - lastCost) > 0.01) {
+                    logger.info(`Cost change detected for material ${item_id}: ${lastCost} -> ${newCost}`);
+                    
+                    // a. Create new Material Cost Record
+                    await db.query(SQL.CREATE_PURCHASE, [
+                        tenantId,
+                        item_id,
+                        newCost * Number(qty), // Total price
+                        Number(qty),           // Purchase qty
+                        vendor_id,
+                        new Date().toISOString().split('T')[0],
+                        'pcs' // Default or fetch from material
+                    ]);
+
+                    // b. Trigger recalculation
+                    await marginService.recalculateMarginsForMaterial(item_id, tenantId, newCost, userId);
+                }
+            } catch (err) {
+                logger.error('Error in margin recalculation background task', { error: err.message });
+            }
+        })();
+    }
+
     (async () => {
         try {
             if (item_type === 'material') {
+                const db = require('../config/database');
                 const itemRes = await db.query('SELECT name, min_stock_level, measurement_unit FROM raw_materials WHERE id = $1', [item_id]);
                 const item = itemRes.rows[0];
                 
                 if (item && Number(stock.qty) <= Number(item.min_stock_level)) {
-                     // Fetch user email (Assuming current user is admin/notifiable, or fetch tenant owner)
-                     // For now, let's send to the current user as a confirmation/alert
                      const userRes = await db.query('SELECT email, name FROM users WHERE id = $1', [userId]);
                      const user = userRes.rows[0];
                      

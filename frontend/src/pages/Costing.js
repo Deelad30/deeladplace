@@ -48,7 +48,7 @@ const CostingPage = () => {
               className={`tab-btn ${activeTab === 'material-purchase' ? 'active' : ''}`}
               onClick={() => setActiveTab('material-purchase')}   
             >
-              Material Purchase
+              Material Cost Record
             </button>
             <button
               className={`tab-btn ${activeTab === 'packaging' ? 'active' : ''}`}

@@ -135,6 +135,15 @@ class EmailService {
       html
     });
   }
+
+  async sendMarginAlert(user, data) {
+    const html = templates.marginAlertEmail(user, data);
+    return this.sendMail({
+      to: user.email,
+      subject: `Margin Alert: ${data.product_name}`,
+      html
+    });
+  }
 }
 
 module.exports = new EmailService();

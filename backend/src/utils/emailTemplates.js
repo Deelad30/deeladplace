@@ -161,3 +161,30 @@ exports.lowStockEmail = (user, item, currentStock, minStock) => layout(`
   ${button(`${process.env.CLIENT_URL}/inventory`, 'View Inventory')}
   <p style="margin: 0; font-size: 15px; line-height: 1.6;">Best regards,<br /><strong>Dee Softwork Inventory System</strong></p>
 `);
+
+exports.marginAlertEmail = (user, data) => layout(`
+  <h2 style="margin: 0 0 16px 0; font-size: 24px; font-weight: 600; color: ${brandColor};">Margin Alert: ${data.product_name}</h2>
+  <p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.6;">Hello ${user.name},</p>
+  <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6;">This is an automated alert to inform you that a change in material cost has affected the profit margin for <strong>${data.product_name}</strong>.</p>
+  
+  <div style="background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 24px;">
+    <p style="margin: 0 0 12px 0; font-size: 14px; color: #64748b;">Reason: Price change for <strong>${data.material_name}</strong></p>
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="padding-bottom: 8px; font-size: 14px; color: #64748b;">Previous Margin</td>
+        <td style="padding-bottom: 8px; font-size: 14px; color: #64748b;">New Margin</td>
+      </tr>
+      <tr>
+        <td style="font-size: 20px; font-weight: 700; color: #1e293b;">${data.old_margin}%</td>
+        <td style="font-size: 20px; font-weight: 700; color: ${Number(data.new_margin) < Number(data.old_margin) ? '#ef4444' : '#22c55e'};">
+          ${data.new_margin}%
+          ${Number(data.new_margin) < Number(data.old_margin) ? ' ↓' : ' ↑'}
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <p style="margin: 0 0 16px 0; font-size: 15px; line-height: 1.6;">The selling price has remained unchanged at your set value. You can review your pricing in the Profitability module.</p>
+  ${button(`${process.env.CLIENT_URL}/reports/profitability`, 'View Profitability')}
+  <p style="margin: 0; font-size: 15px; line-height: 1.6;">Best regards,<br /><strong>Dee Softwork Management System</strong></p>
+`);

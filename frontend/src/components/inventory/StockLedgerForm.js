@@ -13,6 +13,7 @@ const StockLedgerForm = ({ onSuccess }) => {
     item_id: '',
     movement_type: 'in', // in, out, waste
     qty: '',
+    cost_per_unit: '', // New field
     date: new Date().toISOString().split('T')[0],
     source: '',      // e.g. Vendor Name
     destination: '', // e.g. Kitchen
@@ -56,13 +57,14 @@ const StockLedgerForm = ({ onSuccess }) => {
             item_type: 'material',
             movement_type: form.movement_type,
             qty: Number(form.qty),
+            cost_per_unit: form.movement_type === 'in' ? Number(form.cost_per_unit) : null,
             source: form.source,
             destination: form.destination || (form.movement_type === 'in' ? 'Store' : 'Kitchen'),
             notes: form.notes,
         });
         
         toast.success("Movement recorded successfully");
-        setForm({ ...form, qty: '', notes: '', source: '', destination: '' });
+        setForm({ ...form, qty: '', cost_per_unit: '', notes: '', source: '', destination: '' });
         if (onSuccess) onSuccess();
     } catch (err) {
         toast.error(err.response?.data?.message || "Failed to record movement");
@@ -199,6 +201,19 @@ const StockLedgerForm = ({ onSuccess }) => {
                     onChange={e => setForm({...form, qty: e.target.value})}
                 />
             </div>
+
+            {form.movement_type === 'in' && (
+                <div className="form-group">
+                    <label style={{color:"yellow"}} className="premium-label">Unit Cost (₦)</label>
+                    <input 
+                        className="premium-input"
+                        type="number" step="0.01"
+                        placeholder="0.00"
+                        value={form.cost_per_unit}
+                        onChange={e => setForm({...form, cost_per_unit: e.target.value})}
+                    />
+                </div>
+            )}
 
             {/* Source & Dest */}
             <div className="form-group">

@@ -57,25 +57,7 @@ async function createPurchase(tenantId, data, userId = null) {
 
   const purchase = res.rows[0];
 
-  // 3️⃣ Compute unit cost
-  const unitCost = Number(purchase_price) / Number(purchase_qty);
-
-  // 4️⃣ Record stock movement with all metadata
-  const movement = await recordStockMovement({
-    tenantId,
-    itemId: material_id,
-    qty: purchase_qty,
-    costPerUnit: unitCost,
-    movementType: 'in',
-    vendorId: vendor_id,
-    reference: purchase.id,
-    createdBy: userId
-  });
-
-  // 5️⃣ Update stock balance
-  const stock = await upsertStockBalance(tenantId, 'material', material_id, purchase_qty, unitCost);
-
-  return { ...purchase, movement, stock };
+  return { ...purchase };
 }
 
 async function updatePurchase(tenantId, purchaseId, data, userId = null) {
@@ -127,44 +109,9 @@ async function updatePurchase(tenantId, purchaseId, data, userId = null) {
     throw err;
   }
 
-  if (oldPurchase.material_id !== material_id || oldPurchase.purchase_qty !== purchase_qty) {
-    // 3a️⃣ Reverse old stock
-    const oldUnitCost = oldPurchase.purchase_price / oldPurchase.purchase_qty;
-    await recordStockMovement({
-      tenantId,
-      itemId: oldPurchase.material_id,
-      qty: -oldPurchase.purchase_qty,
-      costPerUnit: oldUnitCost,
-      movementType: 'out',
-      reference: purchaseId,
-      createdBy: userId
-    });
-    await upsertStockBalance(
-      tenantId,
-      'material',
-      oldPurchase.material_id,
-      -oldPurchase.purchase_qty
-    );
+  // If material ID or qty changed, we just update the record. 
+  // No stock balance logic needed here anymore.
 
-  
-    const newUnitCost = purchase_price / purchase_qty;
-    await recordStockMovement({
-      tenantId,
-      itemId: material_id,
-      qty: purchase_qty,
-      costPerUnit: newUnitCost,
-      movementType: 'in',
-      reference: purchaseId,
-      createdBy: userId
-    });
-    await upsertStockBalance(
-      tenantId,
-      'material',
-      material_id,
-      purchase_qty,
-      newUnitCost
-    );
-  }
 
   const updateRes = await db.query(
     `UPDATE material_purchases
@@ -201,85 +148,8 @@ async function deletePurchase(tenantId, purchaseId, userId = null) {
     }
     const purchase = purchaseRes.rows[0];
 
-    // 2. Check if we have enough stock to remove this purchase
-    const stockRes = await client.query(
-      `SELECT qty FROM stock_balance 
-       WHERE tenant_id = $1 AND item_type = 'material' AND item_id = $2`,
-      [tenantId, purchase.material_id]
-    );
-    const currentStock = Number(stockRes.rows[0]?.qty || 0);
-    const purchaseQty = Number(purchase.purchase_qty);
+    // No stock reversal needed anymore.
 
-    if (currentStock < purchaseQty) {
-      const err = new Error(`Cannot delete: Insufficient stock. You have used some of these items (Current: ${currentStock}, Purchase: ${purchaseQty})`);
-      err.code = 'PURCHASE_USED';
-      throw err;
-    }
-
-    // 3. Record stock OUT movement (correction)
-    const unitCost = purchase.purchase_price / purchase.purchase_qty;
-    
-    // We can re-use recordStockMovement logic but we are in a transaction here.
-    // For safety/simplicity, let's just insert the movement and update balance manually
-    // or assume recordStockMovement handles its own connection? 
-    // stock.service usually uses `db.query` which grabs a pool client. 
-    // To be transaction-safe, we should pass the client, but `recordStockMovement` might not support it.
-    // Given the architecture, let's just use the service calls after commit? 
-    // No, we need atomicity. 
-    // Ideally we should refactor stock.service to accept a client.
-    // For now, let's do the update manually in this transaction to be safe.
-
-    // 3a. Record movement
-    await client.query(`
-      INSERT INTO stock_movements
-        (tenant_id, item_type, item_id, movement_type, qty, reference, created_by, cost_per_unit, total_cost, notes)
-      VALUES
-        ($1, 'material', $2, 'out', $3, $4, $5, $6, $7, $8)
-    `, [
-      tenantId, 
-      purchase.material_id, 
-      -purchaseQty, 
-      purchase.id, 
-      userId, 
-      unitCost, 
-      purchase.purchase_price, 
-      'Void Purchase' // Note
-    ]);
-
-    // 3b. Update balance
-    // In a weighted average system, removing a specific purchase is complex. 
-    // We are removing `purchaseQty` and `purchaseTotalValue` from the pool.
-    
-    // Get current state again (locked)
-    const balanceRes = await client.query(
-        `SELECT qty, average_cost FROM stock_balance 
-         WHERE tenant_id = $1 AND item_type = 'material' AND item_id = $2 FOR UPDATE`,
-        [tenantId, purchase.material_id]
-    );
-    
-    if (balanceRes.rows.length) {
-        const oldQty = Number(balanceRes.rows[0].qty);
-        const oldAvg = Number(balanceRes.rows[0].average_cost);
-        const oldTotalValue = oldQty * oldAvg;
-        
-        const removeValue = Number(purchase.purchase_price);
-        
-        const newQty = oldQty - purchaseQty;
-        // Avoid division by zero
-        // If newQty is 0 (or close), cost is 0. 
-        // If newQty > 0, (oldTotal - removeValue) / newQty
-        let newAvg = 0;
-        if (newQty > 0.001) {
-            newAvg = (oldTotalValue - removeValue) / newQty;
-            if (newAvg < 0) newAvg = 0; // Should not happen unless data messed up
-        }
-
-        await client.query(
-            `UPDATE stock_balance SET qty = $1, average_cost = $2, updated_at = NOW() 
-             WHERE tenant_id = $3 AND item_type = 'material' AND item_id = $4`,
-            [newQty, newAvg, tenantId, purchase.material_id]
-        );
-    }
 
     // 4. Delete the purchase record
     await client.query(

@@ -78,7 +78,7 @@ export default function MaterialPurchasesPage() {
     } catch (err) {
         console.error(err);
         const errorMsg = err.response?.data?.message || 'Error deleting purchase. Please try again.';
-        toast.error(errorMsg);
+        toast.error('Error deleting record. Please try again.');
     } finally {
         setLoadingAction(false);
     }
@@ -141,12 +141,12 @@ export default function MaterialPurchasesPage() {
 
     if (editingId) {
             await updatePurchase(editingId, materialData);
-            toast.success('Purchase updated');
+            toast.success('Cost record updated');
             setOpenModal(false);
             setEditingId(null);
         } else {
             await createPurchase(materialData);
-            toast.success('Purchase recorded. Add another?');
+            toast.success('Cost recorded. Add another?');
             // Keep modal open, but clear lastAdded if we auto-transition
             setLastAdded(materialData.material_name);
             setEditingId(null);
@@ -215,7 +215,7 @@ export default function MaterialPurchasesPage() {
               });
               setOpenModal(true);
           }}>
-              + Record Purchase
+              + Record Cost
           </button>
       </div>
 
@@ -229,7 +229,7 @@ export default function MaterialPurchasesPage() {
                     <th>Material</th>
                     <th>Qty</th>
                     <th>Unit Cost</th>
-                    <th>Price (NGN)</th>
+                    <th>Market Price (NGN)</th>
                     <th>Vendor</th>
                     <th>Date</th>
                     <th style={{textAlign: 'right'}}>Actions</th>
@@ -237,7 +237,7 @@ export default function MaterialPurchasesPage() {
             </thead>
             <tbody>
                 {paginated.length === 0 ? (
-                    <tr><td colSpan="7" className="empty-state">No purchase records found.</td></tr>
+                    <tr><td colSpan="7" className="empty-state">No cost records found.</td></tr>
                 ) : (
                     paginated.map(p => (
                         <tr key={p.id}>
@@ -292,7 +292,7 @@ export default function MaterialPurchasesPage() {
       <Modal
         visible={openModal}
         onClose={() => { setOpenModal(false); setLastAdded(null); }}
-        title={editingId ? "Edit Purchase Record" : "New Purchase Record"}
+        title={editingId ? "Edit Material Cost Record" : "New Material Cost Record"}
       >
         <div className="vendor-form"> {/* Reusing vendor form style for consistency */}
             
@@ -377,7 +377,7 @@ export default function MaterialPurchasesPage() {
                 </div>
 
                 <div className="form-group">
-                    <label className="premium-label-2">Price (₦)</label>
+                    <label className="premium-label-2">Market Price (₦)</label>
                     <input
                         className="premium-input"
                         type="number"
@@ -435,7 +435,7 @@ export default function MaterialPurchasesPage() {
             </div>
 
             <button className="submit-btn full-width" onClick={handleSave} disabled={loadingAction}>
-                {loadingAction ? "Saving..." : (editingId ? "Update Record" : "Record Purchase")}
+                {loadingAction ? "Saving..." : (editingId ? "Update Record" : "Record Cost")}
             </button>
         </div>
       </Modal>
