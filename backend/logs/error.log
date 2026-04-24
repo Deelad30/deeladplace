@@ -1156,3 +1156,5 @@
 {"error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":23,"timestamp":"2026-04-24 13:30:55"}
 {"error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":23,"timestamp":"2026-04-24 13:39:07"}
 {"error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":23,"timestamp":"2026-04-24 13:47:09"}
+{"error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":23,"timestamp":"2026-04-24 14:41:47"}
+{"error":"","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":23,"timestamp":"2026-04-24 14:43:09"}
