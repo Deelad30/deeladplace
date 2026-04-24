@@ -1,12 +1,12 @@
 import React from 'react';
-import { formatCurrency, roundPrice } from '../../utils/formatters';
+import { formatCurrency, calculatePOSPricing } from '../../utils/formatters';
 import CartSkeleton from './CartSkeleton';
 import { useAuth } from '../../context/AuthContext';
 import { ROLE_MAP } from '../../utils/roles';
 
 const ShoppingCart = ({ cart, onUpdateQuantity, onRemoveItem, totals, onContinue, processing, loading, disabled, billNo, onBillNoChange, onSaveBill, onPrintBill, onPrintKitchen }) => {
     const { user } = useAuth();
-    const round = roundPrice;    
+
   return (
     <div className="shopping-cart">
       <div className="cart-header" style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -33,7 +33,7 @@ const ShoppingCart = ({ cart, onUpdateQuantity, onRemoveItem, totals, onContinue
               <div key={item.id} className="cart-item">
                 <div style={{ flexGrow: 1 }}>
                   <div className="item-name">{item.name}</div>
-                  <div className="item-price">{formatCurrency(round(Number(item.commission || 0) + Number(item.selling_price || 0)))}</div>
+                  <div className="item-price">{formatCurrency(calculatePOSPricing(item.selling_price, item.commission).total)}</div>
                 </div>
                 <div className="item-controls" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <div className="quantity-controls">
@@ -56,7 +56,7 @@ const ShoppingCart = ({ cart, onUpdateQuantity, onRemoveItem, totals, onContinue
           <div className="cart-totals">
             <div className="total-line">
               <span>Subtotal</span>
-              <span>{formatCurrency(round(totals.totalSellingPrice))}</span>
+              <span>{formatCurrency(totals.totalSellingPrice)}</span>
             </div>
             <div className="total-line">
               <span>Commission</span>

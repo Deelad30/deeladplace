@@ -117,9 +117,9 @@ exports.getSalesReport = async (req, res) => {
         p.name AS product_name,
         ps.qty,
         ps.selling_price,
-        p.custom_commission,
-        (ps.qty * ps.selling_price) AS revenue,
-        (ps.qty * COALESCE(p.custom_commission, 0)) AS commission,
+        ps.commission AS unit_commission,
+        (ps.qty * (ps.selling_price + ps.commission)) AS revenue,
+        (ps.qty * ps.commission) AS commission,
         ps.payment_method,
         ps.order_method,
         ps.vendor_id,
@@ -127,7 +127,7 @@ exports.getSalesReport = async (req, res) => {
         u.name AS sold_by
 
       FROM pos_sales ps
-      JOIN products p ON p.id = ps.product_id
+      LEFT JOIN products p ON p.id = ps.product_id
       LEFT JOIN users u ON u.id = ps.user_id
 
       WHERE ps.tenant_id = $1
@@ -167,12 +167,11 @@ exports.getSalesOverview = async (req, res) => {
 
     const sql = `
       SELECT
-        COALESCE(SUM(ps.qty * ps.selling_price), 0) AS total_revenue,
-        COALESCE(SUM(ps.qty * COALESCE(p.custom_commission, 0)), 0) AS total_commission,
+        COALESCE(SUM(ps.qty * (ps.selling_price + ps.commission)), 0) AS total_revenue,
+        COALESCE(SUM(ps.qty * ps.commission), 0) AS total_commission,
         COALESCE(COUNT(DISTINCT ps.id), 0) AS total_transactions,
-        COALESCE(NULLIF(AVG(ps.qty * ps.selling_price), NULL), 0) AS average_order_value
+        COALESCE(AVG(ps.qty * (ps.selling_price + ps.commission)), 0) AS average_order_value
       FROM pos_sales ps
-      LEFT JOIN products p ON p.id = ps.product_id
       WHERE ps.tenant_id = $1
       ${whereSql}
     `;
@@ -184,10 +183,10 @@ const round = (num, nearest = 100) => Math.round(num / nearest) * nearest;
     return res.json({
       ok: true,
       overview: {
-        total_revenue: Number(row.total_revenue) + Number(row.total_commission || 0),
-        total_commission: Number(row.total_commission || 0),
-        total_transactions: Number(row.total_transactions || 0),
-        average_order_value: Number(row.average_order_value || 0),
+        total_revenue: Number(row.total_revenue),
+        total_commission: Number(row.total_commission),
+        total_transactions: Number(row.total_transactions),
+        average_order_value: Number(row.average_order_value),
       }
     });
   } catch (err) {
@@ -217,11 +216,10 @@ exports.getSalesSummary = async (req, res) => {
     const sql = `
       SELECT
         DATE_TRUNC('day', ps.created_at)::date AS date,
-        COALESCE(SUM(ps.qty * ps.selling_price), 0) AS total_revenue,
-        COALESCE(SUM(ps.qty * COALESCE(p.custom_commission, 0)), 0) AS total_commission,
+        COALESCE(SUM(ps.qty * (ps.selling_price + ps.commission)), 0) AS total_revenue,
+        COALESCE(SUM(ps.qty * ps.commission), 0) AS total_commission,
         COALESCE(SUM(ps.qty), 0) AS total_transactions
       FROM pos_sales ps
-      LEFT JOIN products p ON p.id = ps.product_id
       WHERE ps.tenant_id = $1
       ${whereSql}
       GROUP BY DATE_TRUNC('day', ps.created_at)::date
@@ -261,7 +259,7 @@ exports.getTopProducts = async (req, res) => {
       SELECT
         ps.product_id,
         COALESCE(p.name, '') AS product_name,
-        SUM(ps.qty * ps.selling_price) AS total_revenue,
+        SUM(ps.qty * (ps.selling_price + ps.commission)) AS total_revenue,
         SUM(ps.qty) AS total_qty
       FROM pos_sales ps
       LEFT JOIN products p ON p.id = ps.product_id
@@ -339,9 +337,8 @@ exports.getPaymentSummary = async (req, res) => {
         ps.payment_breakdown,
         ps.qty, 
         ps.selling_price, 
-        COALESCE(p.custom_commission, 0) as custom_commission
+        ps.commission
       FROM pos_sales ps
-      LEFT JOIN products p ON p.id = ps.product_id
       WHERE ps.tenant_id = $1
       ${whereSql}
     `;
@@ -364,7 +361,7 @@ exports.getPaymentSummary = async (req, res) => {
       if (method === 'pos') method = 'card';
 
       // Calculate total revenue for this line item (Product Price + Commission)
-      const totalItemRevenue = Number(r.qty) * (Number(r.selling_price) + Number(r.custom_commission));
+      const totalItemRevenue = Number(r.qty) * (Number(r.selling_price) + Number(r.commission || 0));
 
       if (method === 'multiple') {
         // Parse breakdown
@@ -449,9 +446,8 @@ exports.getCustomerTypeSummary = async (req, res) => {
         ps.order_method,
         ps.qty, 
         ps.selling_price, 
-        COALESCE(p.custom_commission, 0) as custom_commission
+        ps.commission
       FROM pos_sales ps
-      LEFT JOIN products p ON p.id = ps.product_id
       WHERE ps.tenant_id = $1
       ${whereSql}
     `;
@@ -463,7 +459,7 @@ exports.getCustomerTypeSummary = async (req, res) => {
     rows.rows.forEach(r => {
       const method = (r.order_method || 'walk-in').toLowerCase();
       const label = method === 'online' ? 'Online' : 'Walk-in';
-      const totalItemRevenue = Number(r.qty) * (Number(r.selling_price) + Number(r.custom_commission));
+      const totalItemRevenue = Number(r.qty) * (Number(r.selling_price) + Number(r.commission || 0));
       summary[label] = (summary[label] || 0) + totalItemRevenue;
     });
 
@@ -489,23 +485,13 @@ exports.getProfitSummary = async (req, res) => {
   const tenantId = req.user.tenant_id;
   try {
 
-    // Today
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const todayEnd = new Date();
-    todayEnd.setHours(23, 59, 59, 999);
+    let { start, end, startDate, endDate } = req.query;
+    start = start || startDate;
+    end = end || endDate;
 
-    // This Month
-    const monthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
-    const monthEnd = new Date(todayStart.getFullYear(), todayStart.getMonth() + 1, 0, 23, 59, 59, 999);
-
-    // Convert to UTC ISO strings
-    const todayStartISO = todayStart.toISOString();
-    const todayEndISO = todayEnd.toISOString();
-    const monthStartISO = monthStart.toISOString();
-    const monthEndISO = monthEnd.toISOString();
-
-    const computeProfit = async (startISO, endISO) => {
+    // Helper to compute profit for a specific range
+    const computeProfit = async (s, e) => {
+      // Use Africa/Lagos for date boundaries
       const sql = `
         SELECT
           COALESCE(SUM((ps.qty * ps.selling_price) - (ps.qty * COALESCE(sc_latest.tcop,0))), 0) AS total_profit
@@ -519,15 +505,25 @@ exports.getProfitSummary = async (req, res) => {
           LIMIT 1
         ) sc_latest ON true
         WHERE ps.tenant_id = $1
-          AND ps.created_at >= $2::timestamptz
-          AND ps.created_at <= $3::timestamptz
+          AND (ps.created_at AT TIME ZONE 'Africa/Lagos')::date >= $2::date
+          AND (ps.created_at AT TIME ZONE 'Africa/Lagos')::date <= $3::date
       `;
-      const { rows } = await db.query(sql, [tenantId, startISO, endISO]);
+      const { rows } = await db.query(sql, [tenantId, s, e]);
       return Number(rows[0].total_profit || 0);
     };
 
-    const todayProfit = await computeProfit(todayStartISO, todayEndISO);
-    const thisMonthProfit = await computeProfit(monthStartISO, monthEndISO);
+    if (start && end) {
+      const profit = await computeProfit(start, end);
+      return res.json({ ok: true, profit: { total: profit } });
+    }
+
+    // Default: Today and This Month (Nigeria Time)
+    const nowLagos = new Date(new Date().getTime() + 3600000); // Rough +1 offset for Lagos if server is UTC
+    const today = nowLagos.toISOString().split('T')[0];
+    const monthStart = today.substring(0, 8) + '01';
+
+    const todayProfit = await computeProfit(today, today);
+    const thisMonthProfit = await computeProfit(monthStart, today);
 
     res.json({
       ok: true,
@@ -547,29 +543,11 @@ exports.getExpenseSummary = async (req, res) => {
   const tenantId = req.user.tenant_id;
   try {
 
-    // Helper to format JS Date into 'YYYY-MM-DD HH:MM:SS'
-    const formatDate = (d) => {
-      const pad = (n) => String(n).padStart(2, "0");
-      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-    };
+    let { start, end, startDate, endDate } = req.query;
+    start = start || startDate;
+    end = end || endDate;
 
-    // Today
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const todayEnd = new Date();
-    todayEnd.setHours(23, 59, 59, 999);
-
-    // This Month
-    const monthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
-    const monthEnd = new Date(todayStart.getFullYear(), todayStart.getMonth() + 1, 0, 23, 59, 59, 999);
-
-    // Format as SQL-friendly strings
-    const todayStartStr = formatDate(todayStart);
-    const todayEndStr = formatDate(todayEnd);
-    const monthStartStr = formatDate(monthStart);
-    const monthEndStr = formatDate(monthEnd);
-
-    const computeExpense = async (startStr, endStr) => {
+    const computeExpense = async (s, e) => {
       const sql = `
         SELECT COALESCE(SUM(amount),0) AS total_expense
         FROM expenses
@@ -577,12 +555,22 @@ exports.getExpenseSummary = async (req, res) => {
           AND expense_date >= $2
           AND expense_date <= $3
       `;
-      const { rows } = await db.query(sql, [tenantId, startStr, endStr]);
+      const { rows } = await db.query(sql, [tenantId, s, e]);
       return Number(rows[0].total_expense || 0);
     };
 
-    const todayExpense = await computeExpense(todayStartStr, todayEndStr);
-    const thisMonthExpense = await computeExpense(monthStartStr, monthEndStr);
+    if (start && end) {
+      const expense = await computeExpense(start, end);
+      return res.json({ ok: true, expense: { total: expense } });
+    }
+
+    // Default: Today and This Month
+    const nowLagos = new Date(new Date().getTime() + 3600000);
+    const today = nowLagos.toISOString().split('T')[0];
+    const monthStart = today.substring(0, 8) + '01';
+
+    const todayExpense = await computeExpense(today, today);
+    const thisMonthExpense = await computeExpense(monthStart, today);
 
     // Logging result
     logger.info("Expense Summary", { todayExpense, thisMonthExpense, tenantId });

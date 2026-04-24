@@ -19,9 +19,10 @@ const calculatePricing = (vendorPrice, customCommission = null) => {
   const numericVendorPrice = Number(vendorPrice);
   const numericCommission = Number(commission);
 
-  const customerPrice = numericVendorPrice + numericCommission;
+  const rawCustomerPrice = numericVendorPrice + numericCommission;
   
-  
+  // Round to the nearest 50 for a premium POS experience
+  const customerPrice = Math.round(rawCustomerPrice / 50) * 50;
   
   return {
     commission,

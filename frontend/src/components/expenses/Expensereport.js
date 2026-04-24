@@ -14,6 +14,7 @@ const ExpenseReport = ({ refreshFlag }) => {
   const [vendorFilter, setVendorFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [supplierFilter, setSupplierFilter] = useState("");
   const [dateFilter, setDateFilter] = useState({ from: "", to: "" });
 
   // Fetch all expenses
@@ -68,11 +69,15 @@ const ExpenseReport = ({ refreshFlag }) => {
 
     const matchesCategory = !categoryFilter || exp.category === categoryFilter;
     const matchesVendor = !vendorFilter || exp.vendor_id == vendorFilter;
+    const matchesSupplier = !supplierFilter || exp.supplier === supplierFilter;
     const matchesFrom = !fromDate || expDate >= fromDate;
     const matchesTo = !toDate || expDate <= toDate;
 
-    return matchesCategory && matchesVendor && matchesFrom && matchesTo;
+    return matchesCategory && matchesVendor && matchesSupplier && matchesFrom && matchesTo;
   });
+
+  // Extract unique suppliers from expenses
+  const uniqueSuppliers = [...new Set(expenses.map(exp => exp.supplier).filter(Boolean))].sort();
 
   // Trigger toast when no records found after filtering
   useEffect(() => {
@@ -132,6 +137,16 @@ const ExpenseReport = ({ refreshFlag }) => {
           <option value="">All Vendors</option>
           {vendors.map(v => (
             <option key={v.id} value={v.id}>{v.name}</option>
+          ))}
+        </select>
+
+        <select
+          value={supplierFilter}
+          onChange={(e) => setSupplierFilter(e.target.value)}
+        >
+          <option value="">All Suppliers</option>
+          {uniqueSuppliers.map((s, idx) => (
+            <option key={idx} value={s}>{s}</option>
           ))}
         </select>
       </div>

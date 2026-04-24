@@ -1,9 +1,7 @@
 import React from 'react';
-import { formatCurrency, roundPrice } from '../../utils/formatters';
+import { formatCurrency, calculatePOSPricing } from '../../utils/formatters';
 
 const ProductGrid = ({ products, onAddToCart, vendors, disabled }) => {
-      const round = roundPrice;
-      
   const getVendorName = (vendorId) => {
     const vendor = vendors.find(v => v.id === vendorId);
     return vendor ? vendor.name : "Unknown Vendor";
@@ -14,9 +12,10 @@ const ProductGrid = ({ products, onAddToCart, vendors, disabled }) => {
       {products
         .filter(product => product.selling_price !== null) 
         .map(product => {
-          const sellingPrice = round(Number(product.selling_price || 0));
-          const commission = Number(product.commission || product.custom_commission || 0);
-          const totalPrice = sellingPrice + commission;
+          const { total: totalPrice, sellingPrice, commission } = calculatePOSPricing(
+            product.selling_price, 
+            product.commission || product.custom_commission || 0
+          );
 
           return (
             <div key={product.id} className="product-card premium">

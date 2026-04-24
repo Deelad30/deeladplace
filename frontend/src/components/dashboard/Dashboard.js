@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import StatCard from "../ui/StatCard";
-import { salesReport, profitSummary, expenseSummary } from "../../api/reports"
+import { profitSummary, expenseSummary } from "../../api/reports"
+import { salesService } from "../../services/salesService";
 import { faSackDollar,faHandHoldingDollar, faChartPie, faReceipt, faArrowTrendUp, faCoins, faFileInvoiceDollar 
 } from "@fortawesome/free-solid-svg-icons";
 import { formatCurrency } from "../../utils/formatters";
@@ -45,86 +46,71 @@ const fetchFinancialSummary = async () => {
 };
 
   useEffect(() => {
-    fetchFinancialSummary();
     fetchSalesSummary();
      // eslint-disable-next-line 
   }, []);
 
 const fetchSalesSummary = async () => {
   try {
-    const { data } = await salesReport(); // ← NEW ENDPOINt
-    const items = data.items; // all sales rows
-
-    // Group by date
-    const grouped = {};
-
-    items.forEach(sale => {
-      const dateKey = new Date(sale.created_at).toISOString().split("T")[0];
-
-      if (!grouped[dateKey]) {
-        grouped[dateKey] = {
-          date: dateKey,
-          revenue: 0,
-          commission: 0,
-          transactions: 0
-        };
-      }
-
-      grouped[dateKey].revenue += Number(sale.revenue);
-      grouped[dateKey].commission += Number(sale.commission);
-      grouped[dateKey].transactions += 1;
-    });
-
-    const dailyArray = Object.values(grouped).sort(
-      (a, b) => new Date(a.date) - new Date(b.date)
-    );
-
-    // 30 Days Chart Data
+    const now = new Date();
+    // Nigeria-centric dates
+    const todayStr = now.toISOString().split('T')[0];
+    const monthStartStr = todayStr.substring(0, 8) + '01';
+    
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const chartData = dailyArray.filter(d => new Date(d.date) >= thirtyDaysAgo);
+    const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
 
-    setDailyData(
-      chartData.map(d => ({
-        date: new Date(d.date).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric"
-        }),
-        revenue: d.revenue,
-        commission: d.commission,
-        transactions: d.transactions
-      }))
-    );
-
-    // Compute today + month summary
-    const now = new Date();
-    const todayKey = now.toISOString().split("T")[0];
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-
-    const today = grouped[todayKey] || {
-      revenue: 0,
-      commission: 0,
-      transactions: 0
-    };
-
-    const this_month = dailyArray.reduce(
-      (acc, d) => {
-        const itemDate = new Date(d.date);
-        if (itemDate.getMonth() === currentMonth && itemDate.getFullYear() === currentYear) {
-          acc.revenue += d.revenue;
-          acc.commission += d.commission;
-          acc.transactions += d.transactions;
-        }
-        return acc;
-      },
-      { revenue: 0, commission: 0, transactions: 0 }
-    );
+    // Fetch summaries and chart data in parallel
+    const [todayRes, monthRes, summaryRes, profitRes, expenseRes, todayProfitRes, todayExpenseRes] = await Promise.all([
+      salesService.getOverview({ start: todayStr, end: todayStr }),
+      salesService.getOverview({ start: monthStartStr, end: todayStr }),
+      salesService.getSalesSummary({ start: thirtyDaysAgoStr, end: todayStr }),
+      profitSummary({ start: monthStartStr, end: todayStr }),
+      expenseSummary({ start: monthStartStr, end: todayStr }),
+      profitSummary({ start: todayStr, end: todayStr }),
+      expenseSummary({ start: todayStr, end: todayStr })
+    ]);
 
     setSummary({
-      today,
-      this_month
+      today: todayRes.overview ? {
+        revenue: todayRes.overview.total_revenue,
+        commission: todayRes.overview.total_commission,
+        transactions: todayRes.overview.total_transactions
+      } : {},
+      this_month: monthRes.overview ? {
+        revenue: monthRes.overview.total_revenue,
+        commission: monthRes.overview.total_commission,
+        transactions: monthRes.overview.total_transactions
+      } : {}
     });
+
+    // Chart data from backend summary
+    if (summaryRes.summary) {
+      setDailyData(
+        summaryRes.summary.map(d => ({
+          date: new Date(d.date).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric"
+          }),
+          revenue: Number(d.total_revenue),
+          commission: Number(d.total_commission),
+          transactions: Number(d.total_transactions)
+        }))
+      );
+    }
+
+    setFinancialSummary({
+      profit: {
+        today: todayProfitRes.profit?.total || 0,
+        this_month: profitRes.profit?.total || 0
+      },
+      expense: {
+        today: todayExpenseRes.expense?.total || 0,
+        this_month: expenseRes.expense?.total || 0
+      }
+    });
+
   } catch (error) {
     console.error("Dashboard summary error:", error);
   } finally {
@@ -157,7 +143,7 @@ const SkeletonCard = () => (
       <div className="dashboard-grid">
       <StatCard
         title="Today's Revenue"
-        value={formatCurrency(summary.today.revenue)}
+        value={formatCurrency(summary.today.revenue, true)}
         subtitle={`${summary.today.transactions} transactions`}
         icon={faSackDollar}
         color="success"
@@ -167,7 +153,7 @@ const SkeletonCard = () => (
           <>
             <StatCard
               title="Today's Commission"
-              value={formatCurrency(summary.today.commission)}
+              value={formatCurrency(summary.today.commission, true)}
               subtitle="Hub earnings"
               icon={faHandHoldingDollar}
               color="primary"
@@ -177,7 +163,7 @@ const SkeletonCard = () => (
         <>
       <StatCard
         title="Today's Product Profit"
-        value={formatCurrency(round(financialSummary.profit.today))}
+        value={formatCurrency(round(financialSummary.profit.today), true)}
         subtitle="Net Earnings"
         icon={faChartPie}
         color="success"
@@ -187,7 +173,7 @@ const SkeletonCard = () => (
 
         <StatCard
           title="Today's Expenses"
-          value={formatCurrency(financialSummary.expense.today)}
+          value={formatCurrency(financialSummary.expense.today, true)}
           subtitle="Total Costs"
           icon={faReceipt}
           color="danger" // Red for expense
@@ -196,7 +182,7 @@ const SkeletonCard = () => (
 
         <StatCard
           title="This Month Revenue"
-          value={formatCurrency(summary.this_month.revenue)}
+          value={formatCurrency(summary.this_month.revenue, true)}
           subtitle={`${summary.this_month.transactions} transactions`}
           icon={faArrowTrendUp}
           color="warning"
@@ -206,7 +192,7 @@ const SkeletonCard = () => (
           <>
             <StatCard
               title="This Month Commission"
-              value={formatCurrency(summary.this_month.commission)}
+              value={formatCurrency(summary.this_month.commission, true)}
               subtitle="Hub earnings"
               icon={faHandHoldingDollar}
               color="danger"
@@ -216,7 +202,7 @@ const SkeletonCard = () => (
         <>
         <StatCard
           title="Month Product Profit"
-          value={formatCurrency(round(financialSummary.profit.this_month))}
+          value={formatCurrency(round(financialSummary.profit.this_month), true)}
           subtitle="Net Earnings"
           icon={faCoins}
           color="success"
@@ -227,7 +213,7 @@ const SkeletonCard = () => (
 
         <StatCard
           title="This Month Expenses"
-          value={formatCurrency(financialSummary.expense.this_month)}
+          value={formatCurrency(financialSummary.expense.this_month, true)}
           subtitle="Total Costs"
           icon={faFileInvoiceDollar}
           color="danger"
@@ -246,9 +232,9 @@ const SkeletonCard = () => (
             <CartesianGrid stroke="#f0f0f0" />
             <XAxis dataKey="date" />
             <YAxis tickFormatter={(value) => formatCurrency(value)} />
-            <Tooltip formatter={(value) => formatCurrency(value)} />
-            <Line type="monotone" dataKey="revenue" stroke="#22c55e" strokeWidth={3} dot={{ r: 5 }} animationDuration={1500} />
-            <Line type="monotone" dataKey="commission" stroke="#3b82f6" strokeWidth={3} dot={{ r: 5 }} animationDuration={1500} />
+            <Tooltip formatter={(value) => formatCurrency(value, true)} />
+            <Line type="monotone" dataKey="revenue" name="Total Revenue" stroke="#22c55e" strokeWidth={3} dot={{ r: 5 }} animationDuration={1500} />
+            <Line type="monotone" dataKey="commission" name="Commission" stroke="#3b82f6" strokeWidth={3} dot={{ r: 5 }} animationDuration={1500} />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -260,7 +246,7 @@ const SkeletonCard = () => (
           <PieChart>
             <Pie
               data={[
-                { name: "Revenue", value: round(summary.this_month.revenue) || 0 },
+                { name: "Net Sales", value: round(summary.this_month.revenue - summary.this_month.commission) || 0 },
                 { name: "Commission", value: round(summary.this_month.commission) || 0 }
               ]}
               dataKey="value"

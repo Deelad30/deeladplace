@@ -18,7 +18,7 @@ import { toast } from 'react-hot-toast';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { openPrintWindow } from '../../utils/printHelpers';
-import { roundPrice } from '../../utils/formatters';
+import { calculatePOSPricing, formatCurrency } from '../../utils/formatters';
 import '../../../src/styles/components/POS.css';
 
 const currency = (n) =>
@@ -54,8 +54,9 @@ const POS = () => {
   const [loadingCart, setLoadingCart] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
 
-  const round = roundPrice;
   
+ 
+ 
 
 
   useEffect(() => {
@@ -231,9 +232,13 @@ const POS = () => {
   };
 
   const calculateCartTotals = (items = cart) => {
-    const totalSellingPrice = items.reduce((sum, item) => sum + (Number(round(item.selling_price)) || 0) * item.quantity, 0);
-    const totalCommission = items.reduce((sum, item) => sum + (Number(item.commission) || 0) * item.quantity, 0);
-    return { totalSellingPrice, totalCommission, total: totalSellingPrice + totalCommission };
+    return items.reduce((acc, item) => {
+      const { total, sellingPrice, commission } = calculatePOSPricing(item.selling_price, item.commission);
+      acc.totalSellingPrice += sellingPrice * item.quantity;
+      acc.totalCommission += commission * item.quantity;
+      acc.total += total * item.quantity;
+      return acc;
+    }, { totalSellingPrice: 0, totalCommission: 0, total: 0 });
   };
 
   // --- Offline / Pending Sales ---
@@ -325,12 +330,15 @@ const POS = () => {
     const saveTask = saveBill({
       bill_id: activeBillId,
       bill_no: billNo,
-      items: cart.map(i => ({
-        product_id: i.id,
-        qty: i.quantity,
-        selling_price: round(i.selling_price),
-        commission: i.commission || 0
-      }))
+      items: cart.map(i => {
+        const { sellingPrice } = calculatePOSPricing(i.id ? i.selling_price : i.selling_price, i.commission);
+        return {
+          product_id: i.id,
+          qty: i.quantity,
+          selling_price: sellingPrice,
+          commission: i.commission || 0
+        };
+      })
     });
 
     toast.promise(saveTask, {
@@ -452,7 +460,10 @@ const finishSale = async (options) => {
 
   // Total amount of cart including commissions (USE ROUNDED PRICES & QTY MULTIPLICATION)
   const totalCartAmount = cart.reduce(
-    (sum, item) => sum + (Number(round(item.selling_price)) + Number(item.commission || 0)) * item.quantity,
+    (sum, item) => {
+      const { total } = calculatePOSPricing(item.selling_price, item.commission || 0);
+      return sum + (total * item.quantity);
+    },
     0
   );
   
@@ -484,22 +495,23 @@ const finishSale = async (options) => {
         });
       } else {
         for (const item of cart) {
-          const itemTotal = (Number(round(item.selling_price)) + Number(item.commission || 0)) * item.quantity;
+          const { total: itemTotal, sellingPrice: itemSellingPrice, commission: itemCommission } = calculatePOSPricing(item.selling_price, item.commission);
+          
           let itemPaymentBreakdown = [];
           if (options.payment_type === 'multiple' && Array.isArray(options.payment_breakdown)) {
             itemPaymentBreakdown = options.payment_breakdown.map(p => ({
               method: p.method,
-              amount: Math.round((Number(p.amount) / totalCartAmount) * itemTotal)
+              amount: Math.round((Number(p.amount) / totalCartAmount) * itemTotal * item.quantity)
             }));
           } else {
-            itemPaymentBreakdown = [{ method: options.payment_type || 'cash', amount: itemTotal }];
+            itemPaymentBreakdown = [{ method: options.payment_type || 'cash', amount: itemTotal * item.quantity }];
           }
 
           await recordSale({
             product_id: item.id,
             qty: item.quantity,
-            selling_price: Number(round(item.selling_price)),
-            commission: Number(item.commission || 0),
+            selling_price: itemSellingPrice,
+            commission: itemCommission,
             vendor_id: item.vendor_id || selectedVendor,
             shift_id: currentShiftId,
             order_method: options.customer_type === "walk-in" ? "walk-in" : "online",
@@ -686,7 +698,7 @@ autoTable(doc, {
                   <ul className="search-dropdown">
                     {searchResults.map(product => (
                       <li key={product.id} onMouseDown={() => { addToCart({ ...product, quantity: 1 }); setSearchTerm(''); setSearchResults([]); setShowDropdown(false); }} style={{ cursor: "pointer", padding: "10px" }}>
-                        <strong>{product.name}</strong> - {getVendorName(product.vendor_id)} - {currency(Number(round(product.selling_price || 0)) + Number(product.commission || product.custom_commission || 0))}
+                        <strong>{product.name}</strong> - {getVendorName(product.vendor_id)} - {formatCurrency(calculatePOSPricing(product.selling_price, product.commission || product.custom_commission || 0).total)}
                       </li>
                     ))}
                   </ul>

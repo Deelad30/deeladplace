@@ -17,6 +17,7 @@ const ExpenseList = ({ refreshFlag, onEditExpense, hideActions = false  }) => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [expenseToDelete, setExpenseToDelete] = useState(null);
   const [statusFilter, setStatusFilter] = useState("");
+  const [supplierFilter, setSupplierFilter] = useState("");
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -59,7 +60,7 @@ const ExpenseList = ({ refreshFlag, onEditExpense, hideActions = false  }) => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, categoryFilter, dateFilter, statusFilter, vendorFilter]);
+  }, [searchQuery, categoryFilter, dateFilter, statusFilter, vendorFilter, supplierFilter]);
 
   const filteredExpenses = expenses.filter((exp) => {
     const expDate = new Date(exp.expense_date);
@@ -69,6 +70,7 @@ const ExpenseList = ({ refreshFlag, onEditExpense, hideActions = false  }) => {
     const matchesCategory = !categoryFilter || exp.category === categoryFilter;
     const matchesVendor = !vendorFilter || exp.vendor_id == vendorFilter;
     const matchesStatus = !statusFilter || exp.status === statusFilter;
+    const matchesSupplier = !supplierFilter || exp.supplier === supplierFilter;
     const matchesSearch =
       !searchQuery ||
       exp.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -76,8 +78,11 @@ const ExpenseList = ({ refreshFlag, onEditExpense, hideActions = false  }) => {
     const matchesFrom = !fromDate || expDate >= fromDate;
     const matchesTo = !toDate || expDate <= toDate;
 
-    return matchesVendor && matchesCategory && matchesSearch && matchesFrom && matchesTo && matchesStatus;
+    return matchesVendor && matchesCategory && matchesSearch && matchesFrom && matchesTo && matchesStatus && matchesSupplier;
   });
+
+  // Extract unique suppliers from expenses
+  const uniqueSuppliers = [...new Set(expenses.map(exp => exp.supplier).filter(Boolean))].sort();
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -195,6 +200,12 @@ const ExpenseList = ({ refreshFlag, onEditExpense, hideActions = false  }) => {
     <option value="">All Status</option>
     <option value="unsettled">Unsettled</option>
     <option value="settled">Settled</option>
+  </select>
+  <select value={supplierFilter} onChange={(e) => setSupplierFilter(e.target.value)}>
+    <option value="">All Suppliers</option>
+    {uniqueSuppliers.map((s, idx) => (
+      <option key={idx} value={s}>{s}</option>
+    ))}
   </select>
 </div>
 
