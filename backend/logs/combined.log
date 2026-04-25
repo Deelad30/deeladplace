@@ -26376,3 +26376,5 @@
 {"level":"info","message":"\u001b[0mGET /api/products/all?page=1&limit=1000 \u001b[36m304\u001b[0m 800.673 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-24 17:48:11"}
 {"level":"info","message":"\u001b[0mGET /api/products/all?page=1&limit=1000 \u001b[36m304\u001b[0m 836.158 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-24 17:48:11"}
 {"level":"info","message":"\u001b[0mGET /api/products/all?page=1&limit=1000 \u001b[36m304\u001b[0m 840.497 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-24 17:48:12"}
+{"level":"info","message":"Email service initialized with SMTP (smtp.gmail.com)","service":"deelad-place-api","timestamp":"2026-04-24 18:48:59"}
+{"env":"development","level":"info","message":"Server running on port 5000","service":"deelad-place-api","timestamp":"2026-04-24 18:49:00"}
