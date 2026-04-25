@@ -1,24 +1,22 @@
-const db = require('./backend/src/config/database');
+require('dotenv').config({ path: './.env' });
+const db = require('./src/config/database');
 
-async function checkSales() {
+async function checkRecent() {
   try {
     const res = await db.query(`
       SELECT 
+        id, 
         created_at, 
         created_at AT TIME ZONE 'Africa/Lagos' as lagos_time,
-        (created_at AT TIME ZONE 'Africa/Lagos')::date as lagos_date,
         qty, 
         selling_price, 
         commission
       FROM pos_sales 
-      ORDER BY created_at DESC 
-      LIMIT 10
+      WHERE created_at > NOW() - INTERVAL '24 hours'
+      ORDER BY created_at DESC
     `);
+    console.log('Recent Sales (Last 24 Hours):');
     console.log(JSON.stringify(res.rows, null, 2));
-    
-    const now = new Date();
-    const todayStr = now.toISOString().split('T')[0];
-    console.log('Today UTC:', todayStr);
     
     process.exit(0);
   } catch (err) {
@@ -27,4 +25,4 @@ async function checkSales() {
   }
 }
 
-checkSales();
+checkRecent();

@@ -29,8 +29,12 @@ const SalesReport = () => {
   const [customerTypeSummary, setCustomerTypeSummary] = useState({});
   
   const now = new Date();
-  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-  const today = now.toISOString().split('T')[0];
+  const today = new Intl.DateTimeFormat('en-CA', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(now);
+  const firstDay = today.substring(0, 8) + '01';
 
   const [filters, setFilters] = useState({ 
     start: firstDay, 

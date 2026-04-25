@@ -53,8 +53,13 @@ const fetchFinancialSummary = async () => {
 const fetchSalesSummary = async () => {
   try {
     const now = new Date();
-    // Nigeria-centric dates
-    const todayStr = now.toISOString().split('T')[0];
+    // Use local date for "Today" to match user expectation, 
+    // but the backend will filter this date against Nigeria time.
+    const todayStr = new Intl.DateTimeFormat('en-CA', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(now);
     const monthStartStr = todayStr.substring(0, 8) + '01';
     
     const thirtyDaysAgo = new Date();
@@ -142,7 +147,7 @@ const SkeletonCard = () => (
       
       <div className="dashboard-grid">
       <StatCard
-        title="Today's Revenue"
+        title={`Today's Revenue (${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})`}
         value={formatCurrency(summary.today.revenue, true)}
         subtitle={`${summary.today.transactions} transactions`}
         icon={faSackDollar}

@@ -215,14 +215,14 @@ exports.getSalesSummary = async (req, res) => {
 
     const sql = `
       SELECT
-        DATE_TRUNC('day', ps.created_at)::date AS date,
+        DATE_TRUNC('day', ps.created_at AT TIME ZONE 'Africa/Lagos')::date AS date,
         COALESCE(SUM(ps.qty * (ps.selling_price + ps.commission)), 0) AS total_revenue,
         COALESCE(SUM(ps.qty * ps.commission), 0) AS total_commission,
         COALESCE(SUM(ps.qty), 0) AS total_transactions
       FROM pos_sales ps
       WHERE ps.tenant_id = $1
       ${whereSql}
-      GROUP BY DATE_TRUNC('day', ps.created_at)::date
+      GROUP BY DATE_TRUNC('day', ps.created_at AT TIME ZONE 'Africa/Lagos')::date
       ORDER BY date ASC
     `;
 
@@ -518,8 +518,9 @@ exports.getProfitSummary = async (req, res) => {
     }
 
     // Default: Today and This Month (Nigeria Time)
-    const nowLagos = new Date(new Date().getTime() + 3600000); // Rough +1 offset for Lagos if server is UTC
-    const today = nowLagos.toISOString().split('T')[0];
+    const lagosNow = new Date().toLocaleString("en-US", {timeZone: "Africa/Lagos"});
+    const d = new Date(lagosNow);
+    const today = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     const monthStart = today.substring(0, 8) + '01';
 
     const todayProfit = await computeProfit(today, today);
@@ -565,8 +566,9 @@ exports.getExpenseSummary = async (req, res) => {
     }
 
     // Default: Today and This Month
-    const nowLagos = new Date(new Date().getTime() + 3600000);
-    const today = nowLagos.toISOString().split('T')[0];
+    const lagosNow = new Date().toLocaleString("en-US", {timeZone: "Africa/Lagos"});
+    const d = new Date(lagosNow);
+    const today = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     const monthStart = today.substring(0, 8) + '01';
 
     const todayExpense = await computeExpense(today, today);
