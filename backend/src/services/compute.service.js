@@ -73,7 +73,7 @@ async function computeLabourCost(productId, tenantId) {
 }
 
 // ---------- OPEX (direct for product) ----------
-async function computeOpex(productId, tenantId, preOpexCOGS) {
+async function computeOpex(productId, tenantId, preOpexCOGS, batchSize) {
   const res = await db.query(SQL.GET_OPEX_FOR_PRODUCT, [productId, tenantId]);
   const rows = res.rows || [];
   if (!rows.length) return 0;
@@ -82,9 +82,11 @@ async function computeOpex(productId, tenantId, preOpexCOGS) {
 
   for (const o of rows) {
     if (o.allocation_mode === 'percent_of_cogs') {
+      // calculatedAmount is per unit, so multiply by batchSize for total batch cost
       const calculatedAmount = (Number(o.percentage_value || 0) / 100) * preOpexCOGS;
-      totalOpex += calculatedAmount;
+      totalOpex += calculatedAmount * batchSize;
     } else {
+      // o.amount is already per batch
       totalOpex += Number(o.amount) || 0;
     }
   }
@@ -111,7 +113,7 @@ async function computeProductCost(productId, tenantId, options = {}) {
   const preOpexCOGS = recipeCostPerUnit + packagingCostPerUnit + labourCostPerUnit;
 
   // 5) OPEX (direct for product/batch -> per unit)
-  const totalOpexCost = await computeOpex(productId, tenantId, preOpexCOGS);
+  const totalOpexCost = await computeOpex(productId, tenantId, preOpexCOGS, batchSize);
   const opexCostPerUnit = totalOpexCost / batchSize;
 
   // 6) TCOP per unit

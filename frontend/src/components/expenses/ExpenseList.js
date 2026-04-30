@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react"; 
+import { useAuth } from "../../context/AuthContext"; 
 import { expenseService } from "../../services/expenseService";
 import toast from "react-hot-toast";
 import { vendorService } from "../../services/vendorService";
@@ -7,6 +8,7 @@ import ConfirmationModal from "../common/ConfirmationModal";
 import { exportCSV, exportExcel, exportPDF } from "../../utils/exportExpenseHelpers";
 
 const ExpenseList = ({ refreshFlag, onEditExpense, hideActions = false  }) => {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [dateFilter, setDateFilter] = useState({ from: "", to: "" });
@@ -155,7 +157,7 @@ const ExpenseList = ({ refreshFlag, onEditExpense, hideActions = false  }) => {
   <div className="filter_btn" style={{ display: "flex", gap: 10, marginBottom: 12 }}>
     <button onClick={() => exportCSV(currentExpenses, "expenses.csv", vendors)}>CSV</button>
     <button onClick={() => exportExcel(currentExpenses, "expenses.xlsx", vendors)}>Excel</button>
-    <button onClick={() => exportPDF(currentExpenses, "expenses.pdf", vendors)}>PDF</button>
+    <button onClick={() => exportPDF(currentExpenses, "expenses.pdf", vendors, user?.tenant_logo)}>PDF</button>
   </div>
 )}
       </div>

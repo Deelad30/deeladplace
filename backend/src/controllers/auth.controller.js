@@ -20,15 +20,15 @@ const JWT_SECRET = process.env.JWT_SECRET;
  * ============================
  */
 async function signup(req, res) {
-  const { email, password, name, tenantName } = req.body;
+    const { email, password, name, tenantName, logo } = req.body;
 
   const client = await db.pool.connect();
   try {
     await client.query('BEGIN');
 
     const tenantRes = await client.query(
-      `INSERT INTO tenants (name) VALUES ($1) RETURNING id, name`,
-      [tenantName]
+      `INSERT INTO tenants (name, logo) VALUES ($1, $2) RETURNING id, name, logo`,
+      [tenantName, logo]
     );
     const tenant = tenantRes.rows[0];
 
@@ -79,10 +79,11 @@ async function login(req, res) {
 
   try {
     const result = await db.query(
-      `SELECT id, email, password_hash, name, tenant_id, role_id,
-              plan_type, subscription_code, status
-       FROM users
-       WHERE email = $1`,
+      `SELECT u.id, u.email, u.password_hash, u.name, u.tenant_id, u.role_id,
+              u.plan_type, u.subscription_code, u.status, t.logo as tenant_logo
+       FROM users u
+       JOIN tenants t ON u.tenant_id = t.id
+       WHERE u.email = $1`,
       [email]
     );
 
@@ -117,7 +118,8 @@ async function login(req, res) {
         role_id: user.role_id,
         plan: user.plan_type,
         subscription_code: user.subscription_code,
-        status:user.status
+        status: user.status,
+        tenant_logo: user.tenant_logo
       }
     });
 
@@ -126,6 +128,109 @@ async function login(req, res) {
     res.status(500).json({ error: 'Login failed' });
   }
 }
+
+/**
+ * ============================
+ *        GOOGLE AUTH
+ * ============================
+ */
+const { OAuth2Client } = require('google-auth-library');
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+async function googleAuth(req, res) {
+  const { credential } = req.body;
+
+  try {
+    // 1. Verify Google Token
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const { email, name, picture, sub: google_id } = payload;
+
+    const client = await db.pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      // 2. Check if user exists
+      let userResult = await client.query(
+        `SELECT u.id, u.email, u.name, u.tenant_id, u.role_id,
+                u.plan_type, u.subscription_code, u.status, t.logo as tenant_logo
+         FROM users u
+         JOIN tenants t ON u.tenant_id = t.id
+         WHERE u.email = $1`,
+        [email]
+      );
+
+      let user = userResult.rows[0];
+      let tenant;
+
+      if (!user) {
+        // 3. If new user, create tenant + admin user
+        const tenantRes = await client.query(
+          `INSERT INTO tenants (name, logo) VALUES ($1, $2) RETURNING id, name, logo`,
+          [`${name}'s Business`, picture]
+        );
+        tenant = tenantRes.rows[0];
+
+        const roleRes = await client.query(`SELECT id FROM roles WHERE name = 'admin' LIMIT 1`);
+        const roleId = roleRes.rows[0].id;
+
+        // Note: For Google users, we don't need a password hash, but we set a placeholder if the column is NOT NULL
+        const userRes = await client.query(
+          `INSERT INTO users (email, name, role_id, tenant_id, status)
+           VALUES ($1,$2,$3,$4,$5)
+           RETURNING id, email, name, tenant_id, role_id, status`,
+          [email, name, roleId, tenant.id, 'active']
+        );
+        user = userRes.rows[0];
+        user.tenant_logo = tenant.logo;
+      } else {
+        // User exists, check status
+        if (user.status !== 'active') {
+           await client.query('ROLLBACK');
+           return res.status(403).json({ error: "Your account has been deactivated" });
+        }
+      }
+
+      await client.query('COMMIT');
+
+      // 4. Generate JWT
+      const token = jwt.sign(
+        { userId: user.id, tenant_id: user.tenant_id, role_id: user.role_id },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      res.json({
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          tenant_id: user.tenant_id,
+          role_id: user.role_id,
+          plan: user.plan_type,
+          subscription_code: user.subscription_code,
+          status: user.status,
+          tenant_logo: user.tenant_logo
+        }
+      });
+
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+
+  } catch (err) {
+    logger.error('Google Auth failed', { error: err.message });
+    res.status(500).json({ error: 'Google Authentication failed', details: err.message });
+  }
+}
+
 
 
 /**
@@ -237,10 +342,11 @@ async function getMe(req, res) {
   try {
     const userId = req.user.id || req.user.userId;
     const result = await db.query(
-      `SELECT id, email, name, tenant_id, role_id,
-              plan_type, subscription_code, status
-       FROM users
-       WHERE id = $1`,
+      `SELECT u.id, u.email, u.name, u.tenant_id, u.role_id,
+              u.plan_type, u.subscription_code, u.status, t.logo as tenant_logo
+       FROM users u
+       JOIN tenants t ON u.tenant_id = t.id
+       WHERE u.id = $1`,
       [userId]
     );
 
@@ -255,7 +361,8 @@ async function getMe(req, res) {
       role_id: user.role_id,
       plan: user.plan_type,
       subscription_code: user.subscription_code,
-      status: user.status
+      status: user.status,
+      tenant_logo: user.tenant_logo
     });
   } catch (err) {
     logger.error('getMe failed', { error: err.message, userId: req.user?.id });
@@ -263,10 +370,60 @@ async function getMe(req, res) {
   }
 }
 
+/**
+ * ============================
+ *      UPDATE TENANT LOGO
+ * ============================
+ */
+async function updateLogo(req, res) {
+  const { logo } = req.body;
+  const tenantId = req.user.tenant_id;
+
+  try {
+    const result = await db.query(
+      `UPDATE tenants SET logo = $1 WHERE id = $2 RETURNING logo`,
+      [logo, tenantId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Tenant not found' });
+    }
+
+    res.json({ success: true, logo: result.rows[0].logo });
+  } catch (err) {
+    logger.error('Update logo failed', { error: err.message, tenantId });
+    res.status(500).json({ error: 'Failed to update logo' });
+  }
+}
+
+/**
+ * ============================
+ *      DELETE TENANT LOGO
+ * ============================
+ */
+async function deleteLogo(req, res) {
+  const tenantId = req.user.tenant_id;
+
+  try {
+    await db.query(
+      `UPDATE tenants SET logo = NULL WHERE id = $1`,
+      [tenantId]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    logger.error('Delete logo failed', { error: err.message, tenantId });
+    res.status(500).json({ error: 'Failed to delete logo' });
+  }
+}
+
 module.exports = {
   signup,
   login,
+  googleAuth,
   forgotPassword,
   resetPassword,
-  getMe
+  getMe,
+  updateLogo,
+  deleteLogo
 };

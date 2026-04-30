@@ -52,10 +52,12 @@ class Product {
   static async findAll(tenant_id, limit = 20, offset = 0) {
     const result = await database.query(
       `
-      SELECT *
-      FROM products
-      WHERE tenant_id = $1 AND is_active = true
-      ORDER BY created_at
+      SELECT p.*,
+        (SELECT margin_percent FROM standard_costs sc WHERE sc.product_id = p.id AND sc.tenant_id = p.tenant_id ORDER BY id DESC LIMIT 1) as current_margin,
+        (SELECT margin_percent FROM standard_costs sc WHERE sc.product_id = p.id AND sc.tenant_id = p.tenant_id ORDER BY id DESC OFFSET 1 LIMIT 1) as previous_margin
+      FROM products p
+      WHERE p.tenant_id = $1 AND p.is_active = true
+      ORDER BY p.created_at
       LIMIT $2 OFFSET $3
       `,
       [tenant_id, limit, offset]
@@ -94,10 +96,12 @@ class Product {
   static async findByVendor(tenant_id, vendor_id, limit = 20, offset = 0) {
     const result = await database.query(
       `
-      SELECT *
-      FROM products
-      WHERE tenant_id = $1 AND vendor_id = $2 AND is_active = true
-      ORDER BY name
+      SELECT p.*,
+        (SELECT margin_percent FROM standard_costs sc WHERE sc.product_id = p.id AND sc.tenant_id = p.tenant_id ORDER BY id DESC LIMIT 1) as current_margin,
+        (SELECT margin_percent FROM standard_costs sc WHERE sc.product_id = p.id AND sc.tenant_id = p.tenant_id ORDER BY id DESC OFFSET 1 LIMIT 1) as previous_margin
+      FROM products p
+      WHERE p.tenant_id = $1 AND p.vendor_id = $2 AND p.is_active = true
+      ORDER BY p.name
       LIMIT $3 OFFSET $4
       `,
       [tenant_id, vendor_id, limit, offset]
@@ -217,7 +221,9 @@ class Product {
         p.id AS product_id,
         p.name AS product_name,
         p.vendor_price,
-        p.custom_commission
+        p.custom_commission,
+        (SELECT margin_percent FROM standard_costs sc WHERE sc.product_id = p.id AND sc.tenant_id = p.tenant_id ORDER BY id DESC LIMIT 1) as current_margin,
+        (SELECT margin_percent FROM standard_costs sc WHERE sc.product_id = p.id AND sc.tenant_id = p.tenant_id ORDER BY id DESC OFFSET 1 LIMIT 1) as previous_margin
       FROM vendors v
       LEFT JOIN products p
         ON v.id = p.vendor_id
@@ -242,9 +248,11 @@ class Product {
   static async findById(id, tenant_id) {
     const result = await database.query(
       `
-      SELECT *
-      FROM products
-      WHERE id = $1 AND tenant_id = $2
+      SELECT p.*,
+        (SELECT margin_percent FROM standard_costs sc WHERE sc.product_id = p.id AND sc.tenant_id = p.tenant_id ORDER BY id DESC LIMIT 1) as current_margin,
+        (SELECT margin_percent FROM standard_costs sc WHERE sc.product_id = p.id AND sc.tenant_id = p.tenant_id ORDER BY id DESC OFFSET 1 LIMIT 1) as previous_margin
+      FROM products p
+      WHERE p.id = $1 AND p.tenant_id = $2
       `,
       [id, tenant_id]
     );

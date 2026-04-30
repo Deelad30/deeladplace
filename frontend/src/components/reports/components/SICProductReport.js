@@ -154,7 +154,7 @@ const SICProductReport = () => {
             const varianceValue = auditMode ? p.variance_value : round100(p.variance_value);
 
             return (
-              <div key={p.id} className={`product-card ${auditMode ? 'audit-border' : ''}`}>
+              <div key={p.id} className={`sic-report-card ${auditMode ? 'audit-border' : ''}`}>
                 <h4>{p.product_name || `ID: ${p.product_id}`}</h4>
                 <p>Opening: {p.opening_qty}</p>
                 <p>Produced: {p.issues_qty}</p>

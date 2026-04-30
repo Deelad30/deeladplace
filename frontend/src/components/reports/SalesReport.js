@@ -1,5 +1,6 @@
 // src/components/reports/SalesReport.js
 import React, { useEffect, useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import { salesService } from '../../services/salesService';
 import { vendorService } from '../../services/vendorService';
 import { getUsers } from '../../api/users';
@@ -21,6 +22,7 @@ import { exportCSV, exportExcel, exportPDF } from "../../utils/exportHelpers";
 import '../../components/reports/styles/sales-report.css';
 
 const SalesReport = () => {
+  const { user } = useAuth();
   const [overview, setOverview] = useState({});
   const [summary, setSummary] = useState([]);
   const [topProducts, setTopProducts] = useState([]);
@@ -253,7 +255,7 @@ const onApplyFilters = (newFilters) => {
       className="page-btn"
       onClick={async () => {
         const all = await salesService.getAllSalesNoPagination(filters);
-        exportPDF(all.items, "sales.pdf", vendors);
+        exportPDF(all.items, "sales.pdf", vendors, user?.tenant_logo);
       }}
     >
       PDF

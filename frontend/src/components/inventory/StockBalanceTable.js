@@ -88,17 +88,8 @@ const StockBalanceTable = ({ limit, refreshTrigger, highlightId }) => {
       }
     },
     { 
-      key: 'average_cost', 
-      label: 'Avg Cost',
-      render: (row) => (
-          <span style={{ color: '#64748b', fontSize: '14px', fontWeight: '500' }}>
-              ₦{Number(row.average_cost).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </span>
-      )
-    },
-    { 
         key: 'value', 
-        label: 'Total Value',
+        label: 'Total Cost',
         render: (row) => {
             const val = Number(row.current_stock) * Number(row.average_cost);
             return <span style={{ fontWeight: '700', color: '#1e293b' }}>₦{val.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>;
@@ -279,12 +270,8 @@ const StockBalanceTable = ({ limit, refreshTrigger, highlightId }) => {
                                      <div style={{ color: '#64748b', marginBottom: '2px' }}>Stock Level</div>
                                      <div style={{ fontWeight: '600' }}>{Number(row.current_stock).toFixed(2)} {row.measurement_unit}</div>
                                  </div>
-                                 <div>
-                                     <div style={{ color: '#64748b', marginBottom: '2px' }}>Avg Cost</div>
-                                     <div style={{ fontWeight: '600' }}>₦{Number(row.average_cost).toLocaleString()}</div>
-                                 </div>
                                  <div style={{ gridColumn: 'span 2' }}>
-                                     <div style={{ color: '#64748b', marginBottom: '2px' }}>Total Value</div>
+                                     <div style={{ color: '#64748b', marginBottom: '2px' }}>Total Cost</div>
                                      <div style={{ fontWeight: '700', color: '#0f172a' }}>
                                         ₦{(Number(row.current_stock) * Number(row.average_cost)).toLocaleString()}
                                      </div>

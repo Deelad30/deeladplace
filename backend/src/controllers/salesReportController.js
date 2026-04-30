@@ -444,35 +444,23 @@ exports.getCustomerTypeSummary = async (req, res) => {
     const sql = `
       SELECT 
         ps.order_method,
-        ps.qty, 
-        ps.selling_price, 
-        ps.commission
+        COUNT(DISTINCT ps.transaction_id) as customer_count
       FROM pos_sales ps
       WHERE ps.tenant_id = $1
       ${whereSql}
+      GROUP BY ps.order_method
     `;
 
-    const rows = await db.query(sql, params);
+    const result = await db.query(sql, params);
 
     const summary = {};
-
-    rows.rows.forEach(r => {
+    result.rows.forEach(r => {
       const method = (r.order_method || 'walk-in').toLowerCase();
       const label = method === 'online' ? 'Online' : 'Walk-in';
-      const totalItemRevenue = Number(r.qty) * (Number(r.selling_price) + Number(r.commission || 0));
-      summary[label] = (summary[label] || 0) + totalItemRevenue;
+      summary[label] = (summary[label] || 0) + Number(r.customer_count);
     });
 
-    // Round and remove zeros
-    const finalSummary = {};
-    for (const [key, val] of Object.entries(summary)) {
-      const rounded = Math.round(val);
-      if (rounded > 0) {
-        finalSummary[key] = rounded;
-      }
-    }
-
-    res.json({ ok: true, customer_type_summary: finalSummary });
+    res.json({ ok: true, customer_type_summary: summary });
 
   } catch (e) {
     logger.error("getCustomerTypeSummary error", { error: e.message, tenantId });
@@ -494,7 +482,7 @@ exports.getProfitSummary = async (req, res) => {
       // Use Africa/Lagos for date boundaries
       const sql = `
         SELECT
-          COALESCE(SUM((ps.qty * ps.selling_price) - (ps.qty * COALESCE(sc_latest.tcop,0))), 0) AS total_profit
+          COALESCE(SUM((ps.qty * (ps.selling_price + ps.commission)) - (ps.qty * COALESCE(sc_latest.tcop,0))), 0) AS total_profit
         FROM pos_sales ps
         LEFT JOIN products p ON p.id = ps.product_id
         LEFT JOIN LATERAL (
@@ -514,6 +502,7 @@ exports.getProfitSummary = async (req, res) => {
 
     if (start && end) {
       const profit = await computeProfit(start, end);
+      logger.info('Profit Summary (Range)', { tenantId, start, end, profit });
       return res.json({ ok: true, profit: { total: profit } });
     }
 
@@ -522,9 +511,10 @@ exports.getProfitSummary = async (req, res) => {
     const d = new Date(lagosNow);
     const today = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     const monthStart = today.substring(0, 8) + '01';
-
     const todayProfit = await computeProfit(today, today);
     const thisMonthProfit = await computeProfit(monthStart, today);
+
+    logger.info('Profit Summary (Default)', { tenantId, today, todayProfit, thisMonthProfit });
 
     res.json({
       ok: true,
@@ -553,8 +543,8 @@ exports.getExpenseSummary = async (req, res) => {
         SELECT COALESCE(SUM(amount),0) AS total_expense
         FROM expenses
         WHERE tenant_id = $1
-          AND expense_date >= $2
-          AND expense_date <= $3
+          AND expense_date::date >= $2::date
+          AND expense_date::date <= $3::date
       `;
       const { rows } = await db.query(sql, [tenantId, s, e]);
       return Number(rows[0].total_expense || 0);

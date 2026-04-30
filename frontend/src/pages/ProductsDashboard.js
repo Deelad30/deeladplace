@@ -287,7 +287,8 @@ const ProductsDashboard = () => {
                         <thead>
                             <tr>
                                 <th>Name</th>
-                                <th>SKU</th>
+                                <th style={{textAlign:'center'}}>Prev. Margin</th>
+                                <th style={{textAlign:'center'}}>Curr. Margin</th>
                                 <th>Customer Price</th>
                                 <th>Vendor</th>
                                 <th style={{textAlign:'right'}}>Actions</th>
@@ -306,7 +307,22 @@ const ProductsDashboard = () => {
                                     return (
                                         <tr key={p.id}>
                                             <td style={{fontWeight:'600', color:'#0f172a'}}>{p.name}</td>
-                                            <td><span style={{background:'#f1f5f9', padding:'4px 8px', borderRadius:'6px', fontSize:'13px', color:'#64748b'}}>{p.sku || '-'}</span></td>
+                                            <td style={{textAlign:'center'}}>
+                                                <span style={{
+                                                    color: p.previous_margin > 0 ? '#16a34a' : p.previous_margin < 0 ? '#dc2626' : '#64748b',
+                                                    fontWeight: '600'
+                                                }}>
+                                                    {p.previous_margin !== null && p.previous_margin !== undefined ? `${(p.previous_margin * 100).toFixed(1)}%` : '-'}
+                                                </span>
+                                            </td>
+                                            <td style={{textAlign:'center'}}>
+                                                <span style={{
+                                                    color: p.current_margin > 0 ? '#16a34a' : p.current_margin < 0 ? '#dc2626' : '#64748b',
+                                                    fontWeight: '600'
+                                                }}>
+                                                    {p.current_margin !== null && p.current_margin !== undefined ? `${(p.current_margin * 100).toFixed(1)}%` : '-'}
+                                                </span>
+                                            </td>
                                             <td>₦{finalPrice ? round(finalPrice).toLocaleString() : '-'}</td>
                                             <td>{vendorName}</td>
                                             <td style={{textAlign:'right'}}>
@@ -346,7 +362,10 @@ const ProductsDashboard = () => {
                                     <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start'}}>
                                         <div>
                                             <h4 style={{margin:0, fontSize:'16px', fontWeight:'700', color:'#1e293b'}}>{p.name}</h4>
-                                            <span style={{background:'#f1f5f9', padding:'2px 6px', borderRadius:'4px', fontSize:'12px', color:'#64748b', marginTop:'4px', display:'inline-block'}}>{p.sku || 'No SKU'}</span>
+                                            <div style={{display:'flex', gap:'10px', marginTop:'4px'}}>
+                                                <span style={{fontSize:'12px', color:'#64748b'}}>Prev: <span style={{color: p.previous_margin > 0 ? '#16a34a' : p.previous_margin < 0 ? '#dc2626' : '#64748b', fontWeight:'600'}}>{p.previous_margin !== null && p.previous_margin !== undefined ? `${(p.previous_margin * 100).toFixed(1)}%` : '-'}</span></span>
+                                                <span style={{fontSize:'12px', color:'#64748b'}}>Curr: <span style={{color: p.current_margin > 0 ? '#16a34a' : p.current_margin < 0 ? '#dc2626' : '#64748b', fontWeight:'600'}}>{p.current_margin !== null && p.current_margin !== undefined ? `${(p.current_margin * 100).toFixed(1)}%` : '-'}</span></span>
+                                            </div>
                                         </div>
                                         <div style={{textAlign:'right'}}>
                                             <div style={{fontWeight:'700', color:'#1e293b'}}>₦{finalPrice ? round(finalPrice).toLocaleString() : '-'}</div>

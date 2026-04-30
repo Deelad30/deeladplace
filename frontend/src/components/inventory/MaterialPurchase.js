@@ -229,7 +229,7 @@ export default function MaterialPurchasesPage() {
                     <th>Material</th>
                     <th>Qty</th>
                     <th>Unit Cost</th>
-                    <th>Market Price (NGN)</th>
+                    <th>Total Cost (NGN)</th>
                     <th>Vendor</th>
                     <th>Date</th>
                     <th style={{textAlign: 'right'}}>Actions</th>
@@ -377,7 +377,7 @@ export default function MaterialPurchasesPage() {
                 </div>
 
                 <div className="form-group">
-                    <label className="premium-label-2">Market Price (₦)</label>
+                    <label className="premium-label-2">Total Cost (₦)</label>
                     <input
                         className="premium-input"
                         type="number"

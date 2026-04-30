@@ -33,13 +33,17 @@ import CostingPage from "./pages/Costing";
 import Unauthorized from "./pages/Unauthorized";
 
 import { Toaster } from "react-hot-toast";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import "./App.css";
 
 
 function App() {
+  const googleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+
   return (
-    <AuthProvider>
-      <LayoutProvider>
+    <GoogleOAuthProvider clientId={googleClientId}>
+      <AuthProvider>
+        <LayoutProvider>
         <Router>
           <Toaster 
             position="top-right" 
@@ -231,6 +235,7 @@ function App() {
       </Router>
       </LayoutProvider>
     </AuthProvider>
+    </GoogleOAuthProvider>
   );
 }
 

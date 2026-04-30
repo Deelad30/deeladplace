@@ -37,8 +37,8 @@ const fetchFinancialSummary = async () => {
     ]);
 
     setFinancialSummary({
-      profit: profitRes.data.profit,
-      expense: expenseRes.data.expense
+      profit: profitRes.profit,
+      expense: expenseRes.expense
     });
   } catch (err) {
     console.error('Financial summary error:', err);

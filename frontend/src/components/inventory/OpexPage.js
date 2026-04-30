@@ -79,6 +79,7 @@ export default function OpexPage() {
       ...form,
       amount: form.allocation_mode === "fixed" ? Number(form.amount || 0) : null,
       percentage_value: form.allocation_mode === "percent_of_cogs" ? Number(form.percentage_value || 0) : null,
+      estimated_monthly_sales: form.estimated_monthly_sales || null,
       effective_from: form.effective_from || null,
       effective_to: form.effective_to || null,
     };
@@ -119,7 +120,8 @@ export default function OpexPage() {
       loadOpex();
     } catch (err) {
       console.error(err);
-      toast.error("Failed to save OPEX item");
+      const msg = err.response?.data?.message || "Failed to save OPEX item";
+      toast.error(msg);
     } finally {
       setLoadingAction(false);
     }

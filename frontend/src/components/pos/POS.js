@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getUser } from '../../api/users';
+import { useAuth } from '../../context/AuthContext';
 import ProductGrid from './ProductGrid';
 import ShoppingCart from './ShoppingCart';
 import { vendorService } from '../../services/vendorService';
@@ -25,6 +26,7 @@ const currency = (n) =>
   typeof n === 'number' ? `₦${n.toLocaleString(undefined)}` : `₦${Number(n || 0).toLocaleString()}`;
 
 const POS = () => {
+  const { user } = useAuth();
   const { setVendors: setAppVendors, setProducts: setAppProducts } = useApp();
 
     const getVendorName = (vendorId) => {
@@ -370,7 +372,7 @@ const POS = () => {
       date: new Date().toISOString(),
       payment: { customer_type: "walk-in" } // Default for bill estimation
     };
-    openPrintWindow(saleData, vendors, { isBill: true });
+    openPrintWindow(saleData, vendors, { isBill: true, tenantLogo: user?.tenant_logo });
   };
 
   const handlePrintKitchen = () => {
@@ -380,7 +382,7 @@ const POS = () => {
       items: cart,
       date: new Date().toISOString()
     };
-    openPrintWindow(saleData, vendors, { isKitchenCopy: true });
+    openPrintWindow(saleData, vendors, { isKitchenCopy: true, tenantLogo: user?.tenant_logo });
   };
 
   const handlePrintActiveBill = async (id) => {
@@ -393,7 +395,7 @@ const POS = () => {
         date: bill.created_at,
         payment: { customer_type: "walk-in" }
       };
-      openPrintWindow(saleData, vendors, { isBill: true });
+      openPrintWindow(saleData, vendors, { isBill: true, tenantLogo: user?.tenant_logo });
     } catch (err) {
       console.error(err);
       toast.error('Failed to print bill');
@@ -409,7 +411,7 @@ const POS = () => {
         items: items.map(i => ({ ...i, name: i.product_name, selling_price: Number(i.selling_price), commission: Number(i.commission) })),
         date: bill.created_at
       };
-      openPrintWindow(saleData, vendors, { isKitchenCopy: true });
+      openPrintWindow(saleData, vendors, { isKitchenCopy: true, tenantLogo: user?.tenant_logo });
     } catch (err) {
       console.error(err);
       toast.error('Failed to print kitchen copy');
@@ -766,7 +768,7 @@ autoTable(doc, {
       <SuccessModal
         visible={saleComplete}
         onClose={() => setSaleComplete(false)}
-        onPrint={() => { setSaleComplete(false); openPrintWindow(lastSale, vendors); }}
+        onPrint={() => { setSaleComplete(false); openPrintWindow(lastSale, vendors, { tenantLogo: user?.tenant_logo }); }}
       />
       <SaleOptionsModal visible={showSaleOptions} onClose={() => setShowSaleOptions(false)} onFinish={finishSale} totals={calculateCartTotals()} />
     </div>

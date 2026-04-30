@@ -9,7 +9,7 @@
   padding: 6px 12px;
 }
 
-.product-card small {
+.profit-report-card small {
   display: block;
   margin-top: 6px;
   color: #555;
@@ -172,31 +172,33 @@
   margin-top: 1rem;
 }
 
-.product-card {
+.profit-report-card {
   background: #fff;
   border-radius: 12px;
   padding: 1rem 1.25rem;
   box-shadow: 0 2px 14px rgba(0, 0, 0, 0.05);
   transition: transform 0.2s, box-shadow 0.2s;
+  height: auto;
+  word-break: break-word;
 }
 
-.product-card:hover {
+.profit-report-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
 }
 
-.product-card h4 {
+.profit-report-card h4 {
   font-size: 1.05rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
 }
 
-.product-card p {
+.profit-report-card p {
   font-size: 0.95rem;
   margin: 0.25rem 0;
 }
 
-.product-card small {
+.profit-report-card small {
   font-size: 0.85rem;
   color: #555;
 }

@@ -3,7 +3,8 @@ import axios from "axios";
 import { 
   login as apiLogin, 
   register as apiSignup, 
-  me as getCurrentUser 
+  me as getCurrentUser,
+  googleLogin as apiGoogleLogin
 } from "../api/auth";
 
 export const AuthContext = createContext();
@@ -110,15 +111,46 @@ export function AuthProvider({ children }) {
   };
 
   /** -------------------------------
+   * GOOGLE LOGIN
+   --------------------------------*/
+  const googleLogin = async (credential) => {
+    try {
+      const response = await apiGoogleLogin({ credential });
+      const data = response.data;
+
+      if (!data.token) {
+        return { success: false, message: "No token returned from server" };
+      }
+
+      // Save token
+      localStorage.setItem("token", data.token);
+      setToken(data.token);
+      applyToken(data.token);
+
+      // Save user
+      localStorage.setItem("user", JSON.stringify(data.user));
+      setUser(data.user);
+
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.error || "Google login failed",
+      };
+    }
+  };
+
+  /** -------------------------------
    * SIGNUP
    --------------------------------*/
-  const signup = async (name, businessName, email, password) => {
+  const signup = async (name, businessName, email, password, logo) => {
     try {
       await apiSignup({
         name,
         tenantName: businessName, 
         email,
         password,
+        logo
       });
 
       return { success: true };
@@ -150,9 +182,20 @@ export function AuthProvider({ children }) {
     window.location.href = "/login";
   };
 
+  /** -------------------------------
+   * UPDATE TENANT LOGO
+   --------------------------------*/
+  const updateTenantLogo = (newLogo) => {
+    if (user) {
+      const updatedUser = { ...user, tenant_logo: newLogo };
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+    }
+  };
+
   return (
     <AuthContext.Provider
-      value={{ user, token, login, signup, logout, loading }}
+      value={{ user, token, login, googleLogin, signup, logout, updateTenantLogo, loading }}
     >
       {children}
     </AuthContext.Provider>

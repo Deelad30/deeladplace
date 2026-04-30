@@ -3,9 +3,11 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { salesService } from '../../../services/salesService';
 import { toast } from 'react-hot-toast';
 import { openPrintWindow } from '../../../utils/printHelpers';
+import { useAuth } from '../../../context/AuthContext';
 import './SalesTable.css';
 
 const SalesTable = ({ filters, vendors, auditMode = false }) => {
+  const { user } = useAuth();
   const [page, setPage] = useState(1);
   const [limit] = useState(20);
   const [data, setData] = useState([]);
@@ -108,7 +110,7 @@ useEffect(() => {
           }
         };
 
-        openPrintWindow(saleToPrint, vendors);
+        openPrintWindow(saleToPrint, vendors, { tenantLogo: user?.tenant_logo });
         toast.success('Print window opened', { id: t });
       } else {
         toast.error('Could not find transaction items', { id: t });

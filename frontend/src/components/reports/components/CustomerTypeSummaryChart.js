@@ -12,12 +12,10 @@ const COLORS = {
 const FALLBACK_COLORS = ['#ff9800', '#2196f3', '#4caf50', '#9c27b0', '#00bcd4'];
 
 const CustomerTypeSummaryChart = ({ data = {}, auditMode = false }) => {
-  const round100 = (num) => Math.round(num / 100) * 100;
-
-  // data is object: { "Walk-in": 120000, "Online": 45000 }
+  // data is object: { "Walk-in": 50, "Online": 20 }
   const entries = Object.entries(data || {}).map(([k, v]) => ({ 
     name: k || 'Unknown', 
-    value: Number(auditMode ? v : round100(Number(v))) 
+    value: Number(v) 
   }));
   const filtered = entries.filter(e => e.value > 0);
 
@@ -38,10 +36,14 @@ const CustomerTypeSummaryChart = ({ data = {}, auditMode = false }) => {
               <Cell 
                 key={`cell-${index}`} 
                 fill={COLORS[entry.name] || FALLBACK_COLORS[index % FALLBACK_COLORS.length]} 
+                stroke="none"
               />
             ))}
           </Pie>
-          <Tooltip formatter={(value) => new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: auditMode ? 2 : 0 }).format(value)} />
+          <Tooltip 
+            formatter={(value) => [`${value.toLocaleString()} Customers`, 'Count']}
+            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+          />
           <Legend verticalAlign="bottom" />
         </PieChart>
       </ResponsiveContainer>

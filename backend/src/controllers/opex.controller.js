@@ -6,15 +6,17 @@ exports.createOpex = async (req, res) => {
   const tenantId = req.user.tenant_id;
   const { name, allocation_mode, amount, percentage_value, estimated_monthly_sales, effective_from, effective_to } = req.body;
 
-  if (!name || !allocation_mode || !estimated_monthly_sales) {
-    return res.status(400).json({ success: false, message: "name and allocation_mode and estimated_monthly_sales required" });
+  if (!name || !allocation_mode) {
+    return res.status(400).json({ success: false, message: "name and allocation_mode required" });
   }
 
-  if (allocation_mode === "fixed" && !amount) {
+  const sales = estimated_monthly_sales || null;
+
+  if (allocation_mode === "fixed" && (amount === null || amount === undefined)) {
     return res.status(400).json({ success: false, message: "amount required for fixed OPEX" });
   }
 
-  if (allocation_mode === "percent_of_cogs" && !percentage_value) {
+  if (allocation_mode === "percent_of_cogs" && (percentage_value === null || percentage_value === undefined)) {
     return res.status(400).json({ success: false, message: "percentage_value required for percent_of_cogs" });
   }
 
@@ -24,7 +26,7 @@ exports.createOpex = async (req, res) => {
        (tenant_id, name, amount, allocation_mode, percentage_value, estimated_monthly_sales, effective_from, effective_to)
        VALUES ($1,$2,$3,$4,$5,$6,$7, $8)
        RETURNING *`,
-      [tenantId, name, amount, allocation_mode, percentage_value, estimated_monthly_sales, effective_from, effective_to]
+      [tenantId, name, amount, allocation_mode, percentage_value, sales, effective_from, effective_to]
     );
 
     res.json({ success: true, opex: result.rows[0] });
@@ -61,11 +63,13 @@ exports.updateOpex = async (req, res) => {
     return res.status(400).json({ success: false, message: "name and allocation_mode required" });
   }
 
-  if (allocation_mode === "fixed" && !amount) {
+  const sales = estimated_monthly_sales || null;
+
+  if (allocation_mode === "fixed" && (amount === null || amount === undefined)) {
     return res.status(400).json({ success: false, message: "amount required for fixed OPEX" });
   }
 
-  if (allocation_mode === "percent_of_cogs" && !percentage_value) {
+  if (allocation_mode === "percent_of_cogs" && (percentage_value === null || percentage_value === undefined)) {
     return res.status(400).json({ success: false, message: "percentage_value required for percent_of_cogs" });
   }
 
@@ -75,7 +79,7 @@ exports.updateOpex = async (req, res) => {
        SET name=$1, allocation_mode=$2, amount=$3, percentage_value=$4, estimated_monthly_sales=$5, effective_from=$6, effective_to=$7
        WHERE id=$8 AND tenant_id=$9
        RETURNING *`,
-      [name, allocation_mode, amount, percentage_value, estimated_monthly_sales, effective_from, effective_to, opexId, tenantId]
+      [name, allocation_mode, amount, percentage_value, sales, effective_from, effective_to, opexId, tenantId]
     );
 
     if (!result.rows.length) {

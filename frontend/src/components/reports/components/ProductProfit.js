@@ -208,7 +208,7 @@ const ProfitReport = () => {
           const profit = auditMode ? p.gross_profit : p.rounded_profit;
 
           return (
-            <div key={p.product_id} className={`product-card ${auditMode ? 'audit-border' : ''}`}>
+            <div key={p.product_id} className={`profit-report-card ${auditMode ? 'audit-border' : ''}`}>
               <h4>{p.product_name}</h4>
               <p>Sales: ₦{Number(sales).toLocaleString(undefined, { maximumFractionDigits: auditMode ? 2 : 0 })}</p>
               <p>Cost: ₦{Number(cost).toLocaleString(undefined, { maximumFractionDigits: auditMode ? 2 : 0 })}</p>

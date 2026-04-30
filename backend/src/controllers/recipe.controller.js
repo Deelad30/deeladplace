@@ -40,7 +40,7 @@ async function getRecipe(req, res) {
                 SELECT purchase_price / purchase_qty 
                 FROM material_purchases 
                 WHERE material_id = r.material_id AND tenant_id = r.tenant_id 
-                ORDER BY created_at DESC LIMIT 1
+                ORDER BY purchase_date DESC, id DESC LIMIT 1
               ), 0) AS unit_cost
        FROM recipes r
        JOIN raw_materials m

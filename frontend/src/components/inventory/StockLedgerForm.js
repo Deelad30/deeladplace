@@ -13,7 +13,7 @@ const StockLedgerForm = ({ onSuccess }) => {
     item_id: '',
     movement_type: 'in', // in, out, waste
     qty: '',
-    cost_per_unit: '', // New field
+    cost_per_unit: '', // This will store Total Cost in the UI but be converted to Unit Cost on submit
     date: new Date().toISOString().split('T')[0],
     source: '',      // e.g. Vendor Name
     destination: '', // e.g. Kitchen
@@ -57,7 +57,7 @@ const StockLedgerForm = ({ onSuccess }) => {
             item_type: 'material',
             movement_type: form.movement_type,
             qty: Number(form.qty),
-            cost_per_unit: form.movement_type === 'in' ? Number(form.cost_per_unit) : null,
+            cost_per_unit: (form.movement_type === 'in' && form.qty > 0) ? Number(form.cost_per_unit) / Number(form.qty) : null,
             source: form.source,
             destination: form.destination || (form.movement_type === 'in' ? 'Store' : 'Kitchen'),
             notes: form.notes,
@@ -204,7 +204,7 @@ const StockLedgerForm = ({ onSuccess }) => {
 
             {form.movement_type === 'in' && (
                 <div className="form-group">
-                    <label style={{color:"yellow"}} className="premium-label">Unit Cost (₦)</label>
+                    <label style={{color:"yellow"}} className="premium-label">Total Cost (₦)</label>
                     <input 
                         className="premium-input"
                         type="number" step="0.01"

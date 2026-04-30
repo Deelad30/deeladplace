@@ -9,11 +9,13 @@ import { faBars, faChevronDown, faUserCircle, faBell, faEye, faEyeSlash } from "
 import { getStockBalance } from "../../api/inventoryLedger";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import BrandingModal from "../modals/BrandingModal";
 
 const Header = ({ onToggleSidebar, isDesktopOpen, toggleDesktop }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [brandingModalOpen, setBrandingModalOpen] = useState(false);
   
   const [notificationOpen, setNotificationOpen] = useState(false);
   const notificationRef = useRef(null);
@@ -57,6 +59,7 @@ const Header = ({ onToggleSidebar, isDesktopOpen, toggleDesktop }) => {
   };
 
   return (
+    <>
     <header className="app-header">
       <div className="header-inner">
 
@@ -68,7 +71,12 @@ const Header = ({ onToggleSidebar, isDesktopOpen, toggleDesktop }) => {
 
           {/* Brand */}
           <div className="header-brand">
-            <img src="/logo.png" alt="logo-deesoftwork" className="logo" />
+            <img 
+                src="/logo.png" 
+                alt="business-logo" 
+                className="logo" 
+                style={{ maxHeight: '40px', objectFit: 'contain' }}
+            />
           </div>
         </div>
 
@@ -150,6 +158,7 @@ const Header = ({ onToggleSidebar, isDesktopOpen, toggleDesktop }) => {
             {open && (
                 <div className="dropdown-menu">
                 <span className="username">{user?.name}</span>
+                <button onClick={() => { setOpen(false); setBrandingModalOpen(true); }}>Branding Settings</button>
                 <button onClick={logout}>Logout</button>
                 </div>
             )}
@@ -158,6 +167,8 @@ const Header = ({ onToggleSidebar, isDesktopOpen, toggleDesktop }) => {
 
       </div>
     </header>
+    <BrandingModal visible={brandingModalOpen} onClose={() => setBrandingModalOpen(false)} />
+    </>
   );
 };
 

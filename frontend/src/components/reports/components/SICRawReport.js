@@ -162,7 +162,7 @@ const SICRawReport = () => {
             const varianceValue = auditMode ? r.variance_value : round100(r.variance_value);
 
             return (
-              <div key={r.id} className={`product-card ${auditMode ? 'audit-border' : ''}`}>
+              <div key={r.id} className={`sic-report-card ${auditMode ? 'audit-border' : ''}`}>
                 <h4>{r.material_name || `ID: ${r.material_id}`}</h4>
                 <p>Submitted by: {r.submitted_by}</p>
                 <p>Opening: {r.opening_qty} {r.measurement_unit}</p>

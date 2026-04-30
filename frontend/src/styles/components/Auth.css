@@ -201,6 +201,31 @@
     color: #64748b;
 }
 
+.auth-separator {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 24px 0;
+    color: #94a3b8;
+}
+
+.auth-separator::before,
+.auth-separator::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.auth-separator span {
+    margin: 0 10px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.google-auth-container {
+    margin-top: 10px;
+}
+
 /* Error/Success Messages */
 .error-message {
     background: #fef2f2;

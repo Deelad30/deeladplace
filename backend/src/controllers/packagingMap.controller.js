@@ -30,8 +30,10 @@ exports.getProductPackaging = async (req, res) => {
 
   try {
     const result = await db.query(
-      `SELECT * FROM product_packaging
-       WHERE tenant_id = $1 AND product_id = $2`,
+      `SELECT pp.*, p.name AS packaging_name, p.cost_per_unit
+       FROM product_packaging pp
+       JOIN packaging p ON pp.packaging_id = p.id
+       WHERE pp.tenant_id = $1 AND pp.product_id = $2`,
       [tenantId, productId]
     );
 

@@ -160,14 +160,17 @@ const RecipePage = () => {
     try {
       const res = await getProductPackaging(productId);
       const mapped = (res.data.packaging || []).map(p => {
-        // Use loose equality to handle string/number mismatch
+        // Preference: 1. Name from API join, 2. Name from local lookup, 3. "Unknown Packaging"
         const pack = packagingList.find(pkg => pkg.id == p.packaging_id);
+        const name = p.packaging_name || (pack ? pack.name : "Unknown Packaging");
+        const cost = p.cost_per_unit !== undefined ? Number(p.cost_per_unit) : (pack ? Number(pack.cost_per_unit) : 0);
+        
         return {
           ...p,
-          packaging_name: (pack ? pack.name : p.packaging_name) || "Unknown Packaging",
-          cost_per_unit: pack ? Number(pack.cost_per_unit) : 0,
+          packaging_name: name,
+          cost_per_unit: cost,
           qty: Number(p.qty),
-          total_cost: pack ? (Number(pack.cost_per_unit) * Number(p.qty)).toFixed(2) : "0.00"
+          total_cost: (cost * Number(p.qty)).toFixed(2)
         };
       });
       setProductPackaging(mapped);
@@ -225,8 +228,7 @@ const RecipePage = () => {
       await loadLabourList();
       await loadOpexList();
       await loadProductSettings();
-      await loadRecipe();
-      await loadProductPackaging();
+      // Note: Recipe and Packaging will be loaded by the specific useEffects below once materials/packaging lists arrive
       await loadProductLabour();
       await loadProductOpex();
     }
@@ -412,7 +414,7 @@ const RecipePage = () => {
     if (!batchSize || batchSize <= 0) return toast.error("Enter a valid batch size before computing");
     setComputingCost(true);
     try {
-      const res = await computeCost(productId, { batchQty: batchSize, marginPercent, sellingPrice });
+      const res = await computeCost(productId, { batchSize, marginPercent, sellingPrice });
       setCostResult(res.data.cost);
       setTcop(res.data.cost.TCOP);
       toast.success("Cost computed successfully!");

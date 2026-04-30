@@ -51,12 +51,17 @@ const schemas = {
     name: Joi.string().min(2).max(100).required(),
     email: Joi.string().email().required(),
     password: Joi.string().min(8).required(),
-    tenantName: Joi.string().min(2).max(100).required()
+    tenantName: Joi.string().min(2).max(100).required(),
+    logo: Joi.string().required()
   }),
 
   login: Joi.object({
     email: Joi.string().email().required(),
     password: Joi.string().required()
+  }),
+
+  googleAuth: Joi.object({
+    credential: Joi.string().required()
   }),
 
   productCreate: Joi.object({

@@ -9,7 +9,7 @@
   padding: 6px 12px;
 }
 
-.product-card small {
+.sic-report-card small {
   display: block;
   margin-top: 6px;
   color: #555;
@@ -165,35 +165,37 @@
   margin-top: 1rem;
 }
 
-.product-card {
+.sic-report-card {
   background: #fff;
   border-radius: 12px;
   padding: 1.25rem;
   box-shadow: 0 2px 14px rgba(0, 0, 0, 0.05);
   transition: transform 0.2s, box-shadow 0.2s;
-  min-height: 340px; /* Increased to fit all SIC fields */
+  min-height: 340px; /* Base height */
+  height: auto; /* Ensure it grows with content */
   display: flex;
   flex-direction: column;
   gap: 4px; /* Consistent spacing between elements */
+  word-break: break-word; /* Prevent text overflow */
 }
 
-.product-card:hover {
+.sic-report-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
 }
 
-.product-card h4 {
+.sic-report-card h4 {
   font-size: 1.05rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
 }
 
-.product-card p {
+.sic-report-card p {
   font-size: 0.95rem;
   margin: 0.25rem 0;
 }
 
-.product-card small {
+.sic-report-card small {
   font-size: 0.85rem;
   color: #555;
 }
@@ -372,13 +374,13 @@ input:checked + .slider:before {
   border: 1px solid #dbedff;
 }
 
-.product-card hr {
+.sic-report-card hr {
   border: none;
   border-top: 1px solid #eee;
   margin: 8px 0;
 }
 
-.product-card strong {
+.sic-report-card strong {
   font-size: 0.95rem;
 }
 

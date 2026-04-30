@@ -354,7 +354,7 @@ h2.store {
       <body>
         <div class="receipt">
           <div class="center">
-            <div><img src="${logoBase64}" alt="deesoftwork-logo" class="logo-placeholder" /></div>
+            <div><img src="${options.tenantLogo || logoBase64}" alt="business-logo" class="logo-placeholder" /></div>
             <div class="receipt-title">${titleText}</div>
             <div class="meta" style="color:#000; font-weight:600;">${formattedDate}</div>
             ${billInfo}
@@ -385,6 +385,7 @@ h2.store {
 
           <div class="thankyou">
             ${isKitchenCopy ? '' : '<div style="font-weight:600">Thank you for shopping!</div>'}
+            <div style="font-weight:600; margin-top: 5px;">Thank you for choosing Deesoftwork</div>
             <div class="small">Powered by Deesoftwork</div>
           </div>
           

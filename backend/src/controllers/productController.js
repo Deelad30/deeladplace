@@ -177,7 +177,9 @@ const getProductsByVendorGrouped = async (req, res) => {
           id: row.product_id,
           name: row.product_name,
           vendor_price: row.vendor_price,
-          custom_commission: row.custom_commission
+          custom_commission: row.custom_commission,
+          current_margin: row.current_margin,
+          previous_margin: row.previous_margin
         });
       }
       return acc;

@@ -46,7 +46,8 @@ app.use(require('morgan')(morganFormat, {
     write: (message) => logger.info(message.trim())
   }
 }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 app.use('/api/paystack', paystackRoutes); // Keeping for legacy reference or mixed use
 app.use('/api/paystack/webhook', webhookRoutes);
