@@ -29530,3 +29530,30 @@
 {"level":"info","message":"\u001b[0mGET /api/inventory/balance \u001b[36m304\u001b[0m 4103.321 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-30 19:27:03"}
 {"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-04-30 19:27:29"}
 {"level":"info","message":"\u001b[0mGET /api/inventory/balance \u001b[36m304\u001b[0m 3914.603 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-30 19:27:30"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-04-30 19:28:01"}
+{"level":"info","message":"\u001b[0mGET /api/inventory/balance \u001b[36m304\u001b[0m 3605.708 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-30 19:28:02"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-04-30 19:28:30"}
+{"level":"info","message":"\u001b[0mGET /api/inventory/balance \u001b[36m304\u001b[0m 3925.767 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-30 19:28:31"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-04-30 19:29:01"}
+{"level":"info","message":"\u001b[0mGET /api/inventory/balance \u001b[36m304\u001b[0m 3612.055 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-30 19:29:02"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-04-30 19:29:32"}
+{"level":"info","message":"\u001b[0mGET /api/inventory/balance \u001b[36m304\u001b[0m 5086.543 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-30 19:29:33"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-04-30 19:30:08"}
+{"level":"info","message":"\u001b[0mGET /api/inventory/balance \u001b[36m304\u001b[0m 10564.543 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-30 19:30:09"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-04-30 19:30:32"}
+{"level":"info","message":"\u001b[0mGET /api/inventory/balance \u001b[36m304\u001b[0m 4461.772 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-30 19:30:33"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-04-30 19:31:01"}
+{"level":"info","message":"\u001b[0mGET /api/inventory/balance \u001b[36m304\u001b[0m 3834.955 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-30 19:31:02"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-04-30 19:31:23"}
+{"level":"info","message":"\u001b[0mGET /api/inventory/balance \u001b[36m304\u001b[0m 3143.407 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-30 19:31:24"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-04-30 19:31:53"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-04-30 19:31:53"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-04-30 19:31:53"}
+{"level":"info","message":"\u001b[0mGET /api/reports/expense-summary?start=2026-04-01&end=2026-04-30 \u001b[36m304\u001b[0m 3612.487 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-30 19:31:54"}
+{"level":"info","message":"\u001b[0mGET /api/reports/expense-summary?start=2026-04-30&end=2026-04-30 \u001b[36m304\u001b[0m 3611.275 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-30 19:31:54"}
+{"level":"info","message":"Connected to PostgreSQL database","service":"deelad-place-api","timestamp":"2026-04-30 19:31:54"}
+{"end":"2026-04-30","level":"info","message":"Profit Summary (Range)","profit":4381290.0872,"service":"deelad-place-api","start":"2026-04-01","tenantId":23,"timestamp":"2026-04-30 19:31:54"}
+{"level":"info","message":"\u001b[0mGET /api/reports/profit-summary?start=2026-04-01&end=2026-04-30 \u001b[32m200\u001b[0m 4039.896 ms - 43\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-30 19:31:54"}
+{"end":"2026-04-30","level":"info","message":"Profit Summary (Range)","profit":56701.8305,"service":"deelad-place-api","start":"2026-04-30","tenantId":23,"timestamp":"2026-04-30 19:31:54"}
+{"level":"info","message":"\u001b[0mGET /api/reports/profit-summary?start=2026-04-30&end=2026-04-30 \u001b[32m200\u001b[0m 3908.981 ms - 41\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-30 19:31:54"}
+{"level":"info","message":"\u001b[0mGET /api/inventory/balance \u001b[36m304\u001b[0m 741.999 ms - -\u001b[0m","service":"deelad-place-api","timestamp":"2026-04-30 19:32:00"}
