@@ -543,12 +543,14 @@ exports.getExpenseSummary = async (req, res) => {
         SELECT COALESCE(SUM(amount),0) AS total_expense
         FROM expenses
         WHERE tenant_id = $1
+          AND status = 'settled'
           AND expense_date::date >= $2::date
           AND expense_date::date <= $3::date
       `;
       const { rows } = await db.query(sql, [tenantId, s, e]);
       return Number(rows[0].total_expense || 0);
     };
+
 
     if (start && end) {
       const expense = await computeExpense(start, end);

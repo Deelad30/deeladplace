@@ -66,7 +66,7 @@ const round0 = (value) => {
         vendor_id: selectedVendor
       });
 
-      setItems(res.data.items || []);
+      setItems(res.items || []);
       toast.success("Product variance loaded");
     } catch (err) {
       console.error(err);

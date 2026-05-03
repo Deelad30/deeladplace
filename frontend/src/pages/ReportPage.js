@@ -60,15 +60,15 @@ const ReportsPage = () => {
             </button>
 
               <button
-              className={`tab-btn ${activeTab === 'product-sic' ? 'active' : ''}`}
-              onClick={() => setActiveTab('product-sic')}
+              className={`tab-btn ${activeTab === 'raw-sic' ? 'active' : ''}`}
+              onClick={() => setActiveTab('raw-sic')}
             >
               SIC Raw Report
             </button>
 
              <button
-              className={`tab-btn ${activeTab === 'raw-sic' ? 'active' : ''}`}
-              onClick={() => setActiveTab('raw-sic')}
+              className={`tab-btn ${activeTab === 'product-sic' ? 'active' : ''}`}
+              onClick={() => setActiveTab('product-sic')}
             >
               SIC Product Report
             </button>
@@ -107,10 +107,10 @@ const ReportsPage = () => {
                  <ProductProfit />
             )}
             {activeTab === 'raw-sic' && (
-               <SICProductReport />
+               <SICRawReport />
             )}
             {activeTab === 'product-sic' && (
-            <SICRawReport />
+            <SICProductReport />
             )}
             {activeTab === 'stock-balance' && (
                 <div style={{ padding: '20px' }}>

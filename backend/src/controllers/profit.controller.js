@@ -1,41 +1,35 @@
 const db = require("../config/database");
 const logger = require('../utils/logger');
+const { buildSalesFilters } = require('../utils/filterBuilder');
 
 /**
  * PRODUCT PROFITABILITY
- * (Selling Price - Cost Price) × Quantity Sold
+ * (Selling Price + Commission - Cost Price) × Quantity Sold
  */
 exports.getProductProfitability = async (req, res) => {
   try {
     const tenantId = req.user.tenant_id;
     const { startDate, endDate, productId, categoryId, vendorId } = req.query;
 
-    let filters = [`ps.tenant_id = $1`];
-    let values = [tenantId];
-    let idx = 2;
+    const { params, whereSql } = buildSalesFilters(tenantId, { 
+      start: startDate, 
+      end: endDate, 
+      vendor_id: vendorId,
+      user_id: req.query.userId // Support userId filter if passed
+    });
 
-    if (startDate) {
-      filters.push(`DATE(ps.created_at) >= $${idx++}`);
-      values.push(startDate);
-    }
-    if (endDate) {
-      filters.push(`DATE(ps.created_at) <= $${idx++}`);
-      values.push(endDate);
-    }
-
-    if (productId) {
-      filters.push(`ps.product_id = $${idx++}`);
-      values.push(productId);
-    }
-
+    // Handle categoryId separately as it's on the products table
+    let categoryFilter = "";
     if (categoryId) {
-      filters.push(`p.category_id = $${idx++}`);
-      values.push(categoryId);
+      params.push(categoryId);
+      categoryFilter = ` AND p.category_id = $${params.length}`;
     }
 
-    if (vendorId) {
-      filters.push(`p.vendor_id = $${idx++}`);
-      values.push(vendorId);
+    // Handle productId specifically
+    let productFilter = "";
+    if (productId) {
+      params.push(productId);
+      productFilter = ` AND ps.product_id = $${params.length}`;
     }
 
     const sql = `
@@ -43,12 +37,12 @@ exports.getProductProfitability = async (req, res) => {
         ps.product_id,
         p.name AS product_name,
         SUM(ps.qty) AS total_qty,
-        SUM(ps.qty * ps.selling_price) AS total_sales,
+        SUM(ps.qty * (ps.selling_price + ps.commission)) AS total_sales,
         COALESCE(sc_latest.tcop, 0) AS cost_per_unit,
         SUM(ps.qty * COALESCE(sc_latest.tcop, 0)) AS total_cost,
-        SUM(ps.qty * ps.selling_price) - SUM(ps.qty * COALESCE(sc_latest.tcop, 0)) AS gross_profit
+        SUM(ps.qty * (ps.selling_price + ps.commission)) - SUM(ps.qty * COALESCE(sc_latest.tcop, 0)) AS gross_profit
       FROM pos_sales ps
-      JOIN products p ON p.id = ps.product_id
+      LEFT JOIN products p ON p.id = ps.product_id
       LEFT JOIN LATERAL (
         SELECT sc.tcop
         FROM standard_costs sc
@@ -57,13 +51,17 @@ exports.getProductProfitability = async (req, res) => {
         ORDER BY sc.created_at DESC
         LIMIT 1
       ) sc_latest ON true
-      WHERE ${filters.join(" AND ")}
+      WHERE ps.tenant_id = $1
+      ${whereSql}
+      ${categoryFilter}
+      ${productFilter}
       GROUP BY ps.product_id, p.name, sc_latest.tcop
       ORDER BY gross_profit DESC;
     `;
 
-    const { rows } = await db.query(sql, values);
+    const { rows } = await db.query(sql, params);
     res.json({ ok: true, items: rows });
+
 
   } catch (err) {
     logger.error("getProductProfitability error", { error: err.message, tenantId });
@@ -73,53 +71,44 @@ exports.getProductProfitability = async (req, res) => {
 
 /**
  * NET PROFIT
- * Total Sales - Total Expenses
+ * Gross Profit - Total Expenses
  */
 exports.getNetProfit = async (req, res) => {
   try {
     const tenantId = req.user.tenant_id;
     const { startDate, endDate, productId, categoryId, vendorId } = req.query;
 
-    let salesFilter = [`ps.tenant_id = $1`]; // Use alias ps for consistency
-    let expenseFilter = [`tenant_id = $1`];
-    let values = [tenantId];
-    let idx = 2;
+    const { params, whereSql } = buildSalesFilters(tenantId, { 
+      start: startDate, 
+      end: endDate, 
+      vendor_id: vendorId,
+      user_id: req.query.userId
+    });
 
-    // Filters for SALES (Product Profit)
+    // Expenses use the same date range but need their own filter building logic 
+    // because they don't have all the sales table columns
+    const expenseFilters = [`tenant_id = $1`];
+    const expenseParams = [tenantId];
+    let eIdx = 2;
+
     if (startDate) {
-      salesFilter.push(`DATE(ps.created_at) >= $${idx}`);
-      expenseFilter.push(`DATE(expense_date) >= $${idx}`);
-      values.push(startDate);
-      idx++;
+      expenseFilters.push(`expense_date::date >= $${eIdx}::date`);
+      expenseParams.push(startDate);
+      eIdx++;
     }
     if (endDate) {
-      salesFilter.push(`DATE(ps.created_at) <= $${idx}`);
-      expenseFilter.push(`DATE(expense_date) <= $${idx}`);
-      values.push(endDate);
-      idx++;
-    }
-
-    // Additional Sales Filters (Vendor, Category, Product)
-    if (productId) {
-      salesFilter.push(`ps.product_id = $${idx++}`);
-      values.push(productId);
-    }
-    if (categoryId) {
-      salesFilter.push(`p.category_id = $${idx++}`);
-      values.push(categoryId);
-    }
-    if (vendorId) {
-      salesFilter.push(`p.vendor_id = $${idx++}`);
-      values.push(vendorId);
+      expenseFilters.push(`expense_date::date <= $${eIdx}::date`);
+      expenseParams.push(endDate);
+      eIdx++;
     }
 
     const sql = `
       WITH product_profit AS (
         SELECT 
-          COALESCE(SUM(ps.qty * ps.selling_price) - SUM(ps.qty * COALESCE(sc_latest.tcop, 0)), 0) AS total_product_profit,
-          COALESCE(SUM(ps.qty * ps.selling_price), 0) AS total_sales
+          COALESCE(SUM(ps.qty * (ps.selling_price + ps.commission)) - SUM(ps.qty * COALESCE(sc_latest.tcop, 0)), 0) AS total_product_profit,
+          COALESCE(SUM(ps.qty * (ps.selling_price + ps.commission)), 0) AS total_sales
         FROM pos_sales ps
-        JOIN products p ON p.id = ps.product_id
+        LEFT JOIN products p ON p.id = ps.product_id
         LEFT JOIN LATERAL (
           SELECT sc.tcop
           FROM standard_costs sc
@@ -128,27 +117,24 @@ exports.getNetProfit = async (req, res) => {
           ORDER BY sc.created_at DESC
           LIMIT 1
         ) sc_latest ON true
-        WHERE ${salesFilter.join(" AND ")}
+        WHERE ps.tenant_id = $1
+        ${whereSql}
       ),
       expenses AS (
         SELECT COALESCE(SUM(amount), 0) AS total_expenses
         FROM expenses
-        WHERE ${expenseFilter.join(" AND ")} AND status = 'settled'
+        WHERE ${expenseFilters.join(" AND ")} AND status = 'settled'
       )
       SELECT
         pp.total_sales,
         pp.total_product_profit,
         e.total_expenses,
-        (pp.total_sales - e.total_expenses) AS net_profit
+        (pp.total_product_profit - e.total_expenses) AS net_profit
       FROM product_profit pp, expenses e;
     `;
 
     // Note: Net Profit is now Gross Profit - Expenses
-    // This assumes "Expenses" are OPEX/Labour and don't include COGS already.
-    // If expenses include COGS, this would double count. 
-    // Usually, "Cumulative Net Profit" = Gross Profit - OPEX.
-
-    const { rows } = await db.query(sql, values);
+    const { rows } = await db.query(sql, params);
     res.json({ ok: true, summary: rows[0] });
 
   } catch (err) {
@@ -156,3 +142,4 @@ exports.getNetProfit = async (req, res) => {
     res.status(500).json({ ok: false, error: err.message });
   }
 };
+

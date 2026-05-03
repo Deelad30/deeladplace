@@ -27,7 +27,7 @@ const VarianceReport = () => {
 
     try {
       const response = await rawVariance({ start_date: startDate, end_date: endDate });
-      const items = response?.data?.items || [];
+      const items = response?.items || [];
       setVarianceData(items);
       setFilteredData(items);
       toast.dismiss();

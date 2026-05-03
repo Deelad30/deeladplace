@@ -79,12 +79,28 @@ async function recalculateMarginsForMaterial(materialId, tenantId, newUnitCost, 
             const user = userRes.rows[0];
 
             if (user && user.email) {
+                // a. Send Email
                 await emailServiceActual.sendMarginAlert(user, {
                     product_name: product.name,
                     old_margin: oldMarginPercent.toFixed(1),
                     new_margin: newMarginPercent.toFixed(1),
                     material_name: await getMaterialName(materialId, tenantId),
                     new_cost: newUnitCost
+                });
+
+                // b. Create In-App Notification
+                const notificationService = require('./notification.service');
+                await notificationService.createNotification({
+                    tenant_id: tenantId,
+                    type: 'margin_alert',
+                    title: `Margin Alert: ${product.name}`,
+                    message: `Price change for ${await getMaterialName(materialId, tenantId)} affected your profit margin (${oldMarginPercent.toFixed(1)}% → ${newMarginPercent.toFixed(1)}%).`,
+                    data: {
+                        product_id: productId,
+                        material_id: materialId,
+                        old_margin: oldMarginPercent.toFixed(1),
+                        new_margin: newMarginPercent.toFixed(1)
+                    }
                 });
             }
         }

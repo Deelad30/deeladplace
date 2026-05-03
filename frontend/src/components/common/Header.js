@@ -7,6 +7,7 @@ import "../../../src/styles/components/Header.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars, faChevronDown, faUserCircle, faBell, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import { getStockBalance } from "../../api/inventoryLedger";
+import { getNotifications, markAsRead } from "../../api/notifications";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import BrandingModal from "../modals/BrandingModal";
@@ -22,6 +23,8 @@ const Header = ({ onToggleSidebar, isDesktopOpen, toggleDesktop }) => {
 
   const [lowStockCount, setLowStockCount] = useState(0);
   const [lowStockItems, setLowStockItems] = useState([]);
+  const [dbNotifications, setDbNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     checkNotifications();
@@ -43,19 +46,44 @@ const Header = ({ onToggleSidebar, isDesktopOpen, toggleDesktop }) => {
 
   const checkNotifications = async () => {
     try {
-      const res = await getStockBalance();
-      const lowItems = (res.data.stock || []).filter(i => i.is_low_stock);
+      // 1. Fetch Real-time Low Stock
+      const stockRes = await getStockBalance();
+      const lowItems = (stockRes.data.stock || []).filter(i => i.is_low_stock);
       setLowStockCount(lowItems.length);
       setLowStockItems(lowItems);
+
+      // 2. Fetch Stored Notifications (Margin Alerts, etc.)
+      const notifyRes = await getNotifications({ unreadOnly: true, limit: 10 });
+      if (notifyRes.data.success) {
+        setDbNotifications(notifyRes.data.notifications);
+        setUnreadCount(notifyRes.data.notifications.length);
+      }
     } catch (err) {
-      console.error("Failed to fetch notifications");
+      console.error("Failed to fetch notifications", err);
     }
   };
 
-  const handleNotificationClick = (item) => {
+  const handleNotificationClick = async (item, isDbNotify = false) => {
       setNotificationOpen(false);
-      // Navigate to inventory with highlight state
-      navigate('/inventory', { state: { highlightId: item.item_id || item.id } }); // Ensure we have the correct ID
+      
+      if (isDbNotify) {
+        // Mark as read in background
+        try {
+          await markAsRead(item.id);
+          setDbNotifications(prev => prev.filter(n => n.id !== item.id));
+          setUnreadCount(prev => Math.max(0, prev - 1));
+        } catch (e) {
+          console.error("Failed to mark notification as read", e);
+        }
+
+        // Navigate based on type
+        if (item.type === 'margin_alert') {
+          navigate('/reports'); // Could navigate to specific report if we had tabs working with routes
+        }
+      } else {
+        // Low Stock Alert
+        navigate('/inventory', { state: { highlightId: item.item_id || item.id } });
+      }
   };
 
   return (
@@ -88,9 +116,9 @@ const Header = ({ onToggleSidebar, isDesktopOpen, toggleDesktop }) => {
                 <div className="user-info notification-trigger" onClick={() => setNotificationOpen(!notificationOpen)}>
                     <div className="icon-wrapper">
                         <FontAwesomeIcon icon={faBell} className="user-avatar" />
-                        {lowStockCount > 0 && (
+                        {lowStockCount + unreadCount > 0 && (
                             <span className="notification-badge">
-                                {lowStockCount}
+                                {lowStockCount + unreadCount}
                             </span>
                         )}
                     </div>
@@ -100,21 +128,43 @@ const Header = ({ onToggleSidebar, isDesktopOpen, toggleDesktop }) => {
                 {notificationOpen && (
                     <div className="notification-dropdown">
                         <h4 className="dropdown-header">
-                            Notifications ({lowStockCount})
+                            Notifications ({lowStockCount + unreadCount})
                         </h4>
                         
-                        {lowStockCount === 0 ? (
+                        {lowStockCount + unreadCount === 0 ? (
                             <p className="no-notifications">No new notifications.</p>
                         ) : (
                             <div className="notification-list">
+                                {/* Stored Notifications (Margin Alerts) */}
+                                {dbNotifications.map(notify => (
+                                    <div 
+                                        key={`db-${notify.id}`} 
+                                        onClick={() => handleNotificationClick(notify, true)}
+                                        className="notification-item"
+                                        style={{ borderLeft: '3px solid #f59e0b' }} // Yellow/Amber for margin alerts
+                                    >
+                                        <div className="notification-dot" style={{ background: '#f59e0b' }}></div>
+                                        <div>
+                                            <strong className="notification-title">{notify.title}</strong>
+                                            <div style={{ color: '#475569', marginTop: '4px', lineHeight: '1.4', fontSize: '13px' }}>
+                                                {notify.message}
+                                            </div>
+                                            <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '4px' }}>
+                                                {new Date(notify.created_at).toLocaleString()}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
 
+                                {/* Real-time Low Stock Alerts */}
                                 {lowStockItems.map(item => (
                                     <div 
-                                        key={item.id} 
-                                        onClick={() => handleNotificationClick(item)}
+                                        key={`stock-${item.id}`} 
+                                        onClick={() => handleNotificationClick(item, false)}
                                         className="notification-item"
+                                        style={{ borderLeft: '3px solid #ef4444' }} // Red for stock alerts
                                     >
-                                        <div className="notification-dot"></div>
+                                        <div className="notification-dot" style={{ background: '#ef4444' }}></div>
                                         <div>
                                             <strong className="notification-title">Low Stock Alert</strong>
 

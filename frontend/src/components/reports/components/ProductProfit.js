@@ -77,8 +77,8 @@ const ProfitReport = () => {
   const totalRoundedSales = enrichedProducts.reduce((sum, p) => sum + round100(p.total_sales), 0);
   const roundedExpenses = round100(netProfit?.total_expenses);
   
-  // User requested Net Profit = Total Sales - Total Expenses (ignoring COGS)
-  const consistentNetProfit = totalRoundedSales - roundedExpenses;
+  // User requested Net Profit = Gross Profit - Total Expenses
+  const consistentNetProfit = totalRoundedProductProfit - roundedExpenses;
 
   // Values to display based on Audit Mode
   const displayProductProfit = auditMode ? exactTotalProductProfit : totalRoundedProductProfit;

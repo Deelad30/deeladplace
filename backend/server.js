@@ -119,6 +119,7 @@ app.use('/api/standard', standardRoutes);
 app.use('/api/stocks', stocksRoutes);
 app.use('/api/product-labour', productLabourRoutes);
 app.use('/api/product-opex', productOpexRoutes);
+app.use('/api/notifications', require('./src/routes/notification.routes'));
 
 
 // 404 handler
