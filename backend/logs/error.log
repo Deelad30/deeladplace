@@ -1550,3 +1550,10 @@
 {"error":"","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":23,"timestamp":"2026-06-03 14:50:37"}
 {"error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":23,"timestamp":"2026-06-03 15:31:25"}
 {"error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":23,"timestamp":"2026-06-03 15:33:27"}
+{"email":"demo@deesoftwork.com.ng","error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Login failed","service":"deelad-place-api","timestamp":"2026-06-18 12:59:01"}
+{"error":"read ECONNRESET","level":"error","message":"Failed to send email","service":"deelad-place-api","subject":"Security Alert: New Login detected","timestamp":"2026-06-18 13:00:18","to":"demo@deesoftwork.com.ng"}
+{"error":"read ECONNRESET","level":"error","message":"Failed to send login notification","service":"deelad-place-api","timestamp":"2026-06-18 13:00:18","userId":36}
+{"error":"Connection terminated unexpectedly","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":27,"timestamp":"2026-06-18 13:00:28"}
+{"error":"Authentication timed out","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":27,"timestamp":"2026-06-18 13:02:06"}
+{"error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":27,"timestamp":"2026-06-18 13:02:07"}
+{"error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":27,"timestamp":"2026-06-18 13:02:07"}
