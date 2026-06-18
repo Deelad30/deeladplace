@@ -10,13 +10,25 @@ exports.getProductVariance = async (req, res) => {
     let filters = [`p.tenant_id = $1`];
     let posFilters = [`ps.tenant_id = $1`];
     let sicFilters = [`sp.tenant_id = $1` + (start_date && end_date ? ` AND sp.date BETWEEN '${start_date}' AND '${end_date}'` : "")];
-    
+
     let values = [tenantId];
     let idx = 2;
 
     if (vendor_id) {
-        filters.push(`p.vendor_id = $${idx++}`);
-        values.push(vendor_id);
+      filters.push(`p.vendor_id = $${idx++}`);
+      values.push(vendor_id);
+    }
+    if (start_date) {
+      posFilters.push(`(ps.created_at AT TIME ZONE 'Africa/Lagos')::date >= $${idx}::date`);
+      sicFilters.push(`sp.date >= $${idx}::date`);
+      values.push(start_date);
+      idx++;
+    }
+    if (end_date) {
+      posFilters.push(`(ps.created_at AT TIME ZONE 'Africa/Lagos')::date <= $${idx}::date`);
+      sicFilters.push(`sp.date <= $${idx}::date`);
+      values.push(end_date);
+      idx++;
     }
 
     const sql = `
@@ -42,10 +54,9 @@ exports.getProductVariance = async (req, res) => {
         ), 0) AS tcop
       FROM products p
       LEFT JOIN sic_products sp
-        ON sp.product_id = p.id AND ${sicFilters[0]}
+        ON sp.product_id = p.id AND ${sicFilters.join(" AND ")}
       LEFT JOIN pos_sales ps
-        ON ps.product_id = p.id AND ps.tenant_id = $1
-        ${start_date && end_date ? `AND DATE(ps.created_at) BETWEEN '${start_date}' AND '${end_date}'` : ""}
+        ON ps.product_id = p.id AND ${posFilters.join(" AND ")}
       WHERE ${filters.join(" AND ")}
       GROUP BY p.id, p.name;
     `;
@@ -55,7 +66,7 @@ exports.getProductVariance = async (req, res) => {
     const items = result.rows.map(r => {
       const expectedQty = Number(r.expected_sales_qty);
       const actualQty = Number(r.actual_sales_qty);
-      
+
       const sellingPrice = Number(r.selling_price);
       const tcop = Number(r.tcop);
 
@@ -75,8 +86,8 @@ exports.getProductVariance = async (req, res) => {
       const profitVariance = revenueVariance - cogsVariance;
 
       let remark = "Good";
-      if (revenueVariance < 0) remark = "Missing sales";     
-      else if (revenueVariance > 0) remark = "Overring";    
+      if (revenueVariance < 0) remark = "Missing sales";
+      else if (revenueVariance > 0) remark = "Overring";
 
 
       return {

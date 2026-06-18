@@ -1,5 +1,24 @@
 const Expense = require('../models/Expense');
 const logger = require('../utils/logger');
+const database = require('../config/database');
+
+const normalizeSupplier = async (supplier, tenantId) => {
+  if (!supplier) return supplier;
+  try {
+    const result = await database.query(
+      `SELECT supplier FROM expenses 
+       WHERE tenant_id = $1 AND LOWER(supplier) = LOWER($2) 
+       LIMIT 1`,
+      [tenantId, supplier.trim()]
+    );
+    if (result.rows.length > 0) {
+      return result.rows[0].supplier;
+    }
+    return supplier.trim();
+  } catch (error) {
+    return supplier;
+  }
+};
 
 exports.createExpense = async (req, res) => {
   try {
@@ -19,12 +38,14 @@ exports.createExpense = async (req, res) => {
       status
     } = req.body;
 
+    const normalizedSupplier = await normalizeSupplier(supplier, tenantId);
+
     const expense = await Expense.create({
       tenant_id: tenantId,
       description,
       amount,
       category,
-      supplier,
+      supplier: normalizedSupplier,
       vendor_id,
       expense_date: expense_date || new Date(),
       status: status || 'unsettled'
@@ -40,6 +61,42 @@ exports.createExpense = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error creating expense"
+    });
+  }
+};
+
+exports.bulkCreateExpenses = async (req, res) => {
+  try {
+    const tenantId = req.user.tenant_id;
+    const { expenses } = req.body;
+
+    if (!expenses || !Array.isArray(expenses)) {
+      return res.status(400).json({ success: false, message: "Invalid expenses data" });
+    }
+
+    const createdExpenses = [];
+    for (const expData of expenses) {
+      const normalizedSupplier = await normalizeSupplier(expData.supplier, tenantId);
+      const expense = await Expense.create({
+        tenant_id: tenantId,
+        ...expData,
+        supplier: normalizedSupplier,
+        expense_date: expData.expense_date || new Date(),
+        status: expData.status || 'unsettled'
+      });
+      createdExpenses.push(expense);
+    }
+
+    res.status(201).json({
+      success: true,
+      expenses: createdExpenses
+    });
+
+  } catch (error) {
+    logger.error('Bulk create expense error', { error: error.message, tenantId });
+    res.status(500).json({
+      success: false,
+      message: "Error creating expenses"
     });
   }
 };

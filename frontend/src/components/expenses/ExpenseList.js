@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react"; 
-import { useAuth } from "../../context/AuthContext"; 
+import React, { useEffect, useState } from "react";
+import { useAuth } from "../../context/AuthContext";
 import { expenseService } from "../../services/expenseService";
 import toast from "react-hot-toast";
 import { vendorService } from "../../services/vendorService";
@@ -7,7 +7,7 @@ import "../../styles/components/expenses/ExpenseList.css";
 import ConfirmationModal from "../common/ConfirmationModal";
 import { exportCSV, exportExcel, exportPDF } from "../../utils/exportExpenseHelpers";
 
-const ExpenseList = ({ refreshFlag, onEditExpense, hideActions = false  }) => {
+const ExpenseList = ({ refreshFlag, onEditExpense, hideActions = false, todayOnly = false }) => {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -40,20 +40,20 @@ const ExpenseList = ({ refreshFlag, onEditExpense, hideActions = false  }) => {
   };
 
   useEffect(() => {
-  const loadVendors = async () => {
-    try {
-      const res = await vendorService.getAllVendors();
-      if (res.data.success) {
-        setVendors(res.data.vendors);
+    const loadVendors = async () => {
+      try {
+        const res = await vendorService.getAllVendors();
+        if (res.data.success) {
+          setVendors(res.data.vendors);
+        }
+      } catch (error) {
+        toast.error("Failed to load vendors");
+        console.error("Vendor fetch error:", error);
       }
-    } catch (error) {
-      toast.error("Failed to load vendors");
-      console.error("Vendor fetch error:", error);
-    }
-  };
+    };
 
-  loadVendors();
-}, []);
+    loadVendors();
+  }, []);
 
 
   useEffect(() => {
@@ -68,6 +68,12 @@ const ExpenseList = ({ refreshFlag, onEditExpense, hideActions = false  }) => {
     const expDate = new Date(exp.expense_date);
     const fromDate = dateFilter.from ? new Date(dateFilter.from) : null;
     const toDate = dateFilter.to ? new Date(dateFilter.to) : null;
+
+    // Filter by today if todayOnly is true
+    if (todayOnly) {
+      const today = new Date().toDateString();
+      if (expDate.toDateString() !== today) return false;
+    }
 
     const matchesCategory = !categoryFilter || exp.category === categoryFilter;
     const matchesVendor = !vendorFilter || exp.vendor_id == vendorFilter;
@@ -151,17 +157,17 @@ const ExpenseList = ({ refreshFlag, onEditExpense, hideActions = false  }) => {
 
   return (
     <div className="expense-list-container">
-      <div style={{ display:"flex", width:"100%", justifyContent:"space-between" }}>
+      <div style={{ display: "flex", width: "100%", justifyContent: "space-between" }}>
         <h2 className="list-title">All Expenses</h2>
         {hideActions && (
-  <div className="filter_btn" style={{ display: "flex", gap: 10, marginBottom: 12 }}>
-    <button onClick={() => exportCSV(currentExpenses, "expenses.csv", vendors)}>CSV</button>
-    <button onClick={() => exportExcel(currentExpenses, "expenses.xlsx", vendors)}>Excel</button>
-    <button onClick={() => exportPDF(currentExpenses, "expenses.pdf", vendors, user?.tenant_logo)}>PDF</button>
-  </div>
-)}
+          <div className="filter_btn" style={{ display: "flex", gap: 10, marginBottom: 12 }}>
+            <button onClick={() => exportCSV(currentExpenses, "expenses.csv", vendors)}>CSV</button>
+            <button onClick={() => exportExcel(currentExpenses, "expenses.xlsx", vendors)}>Excel</button>
+            <button onClick={() => exportPDF(currentExpenses, "expenses.pdf", vendors, user?.tenant_logo)}>PDF</button>
+          </div>
+        )}
       </div>
-      
+
 
       <div className="expense-filters">
         <input
@@ -189,27 +195,27 @@ const ExpenseList = ({ refreshFlag, onEditExpense, hideActions = false  }) => {
           value={dateFilter.to}
           onChange={(e) => setDateFilter((prev) => ({ ...prev, to: e.target.value }))}
         />
-  <select
-    value={vendorFilter}
-    onChange={(e) => setVendorFilter(e.target.value)}
-  >
-    <option value="">All Vendors</option>
-    {vendors.map(v => (
-      <option key={v.id} value={v.id}>{v.name}</option>
-    ))}
-  </select>
-  <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-    <option value="">All Status</option>
-    <option value="unsettled">Unsettled</option>
-    <option value="settled">Settled</option>
-  </select>
-  <select value={supplierFilter} onChange={(e) => setSupplierFilter(e.target.value)}>
-    <option value="">All Suppliers</option>
-    {uniqueSuppliers.map((s, idx) => (
-      <option key={idx} value={s}>{s}</option>
-    ))}
-  </select>
-</div>
+        <select
+          value={vendorFilter}
+          onChange={(e) => setVendorFilter(e.target.value)}
+        >
+          <option value="">All Vendors</option>
+          {vendors.map(v => (
+            <option key={v.id} value={v.id}>{v.name}</option>
+          ))}
+        </select>
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <option value="">All Status</option>
+          <option value="unsettled">Unsettled</option>
+          <option value="settled">Settled</option>
+        </select>
+        <select value={supplierFilter} onChange={(e) => setSupplierFilter(e.target.value)}>
+          <option value="">All Suppliers</option>
+          {uniqueSuppliers.map((s, idx) => (
+            <option key={idx} value={s}>{s}</option>
+          ))}
+        </select>
+      </div>
 
       <div className="premium-table-wrapper">
         <table className="premium-table">
@@ -240,7 +246,7 @@ const ExpenseList = ({ refreshFlag, onEditExpense, hideActions = false  }) => {
                   </span>
                 </td>
                 <td>
-                    {!hideActions && (
+                  {!hideActions && (
                     <div className="action-buttons">
                       {exp.status === 'unsettled' && (
                         <button className="item-action-btn view settle-btn" onClick={() => handleSettle(exp.id)}>
@@ -269,17 +275,17 @@ const ExpenseList = ({ refreshFlag, onEditExpense, hideActions = false  }) => {
               <span className="card-title">{exp.description}</span>
               <span className="card-amount">₦{Number(exp.amount).toLocaleString()}</span>
             </div>
-            
+
             <div className="card-row">
               <span className="card-label">Category</span>
               <span className="premium-badge">{exp.category}</span>
             </div>
-            
+
             <div className="card-row">
               <span className="card-label">Supplier</span>
               <span>{exp.supplier || "-"}</span>
             </div>
-            
+
             <div className="card-row">
               <span className="card-label">Date</span>
               <span>{new Date(exp.expense_date).toLocaleDateString()}</span>
@@ -291,14 +297,14 @@ const ExpenseList = ({ refreshFlag, onEditExpense, hideActions = false  }) => {
                 {exp.status || 'unsettled'}
               </span>
             </div>
-            
+
             {!hideActions && (
               <div className="card-actions">
-                 {exp.status === 'unsettled' && (
-                   <button className="primary-btn settle-btn" onClick={() => handleSettle(exp.id)}>Settle</button>
-                 )}
-                 <button className="secondary-btn" onClick={() => handleEdit(exp)}>Edit</button>
-                 <button className="danger-btn" onClick={() => confirmDelete(exp)}>Delete</button>
+                {exp.status === 'unsettled' && (
+                  <button className="primary-btn settle-btn" onClick={() => handleSettle(exp.id)}>Settle</button>
+                )}
+                <button className="secondary-btn" onClick={() => handleEdit(exp)}>Edit</button>
+                <button className="danger-btn" onClick={() => confirmDelete(exp)}>Delete</button>
               </div>
             )}
           </div>

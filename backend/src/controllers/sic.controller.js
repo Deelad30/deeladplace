@@ -39,7 +39,7 @@ async function submitRawSIC(req, res) {
        JOIN pos_sales ps ON ps.product_id = r.product_id
        WHERE r.material_id = $1
          AND ps.tenant_id = $2
-         AND DATE(ps.created_at) = $3`,
+         AND (ps.created_at AT TIME ZONE 'Africa/Lagos')::date = $3::date`,
       [material_id, tenantId, date]
     );
     const expected_usage = Number(expectedRes.rows[0].expected_usage || 0);
@@ -141,7 +141,7 @@ async function submitProductSIC(req, res) {
        FROM pos_sales
        WHERE tenant_id = $1
          AND product_id = $2
-         AND DATE(created_at) = $3`,
+         AND (created_at AT TIME ZONE 'Africa/Lagos')::date = $3::date`,
       [tenantId, product_id, date]
     );
     const expected_sales = Number(sysRes.rows[0].system_sales || 0);
@@ -215,7 +215,7 @@ async function listRawSIC(req, res) {
       `SELECT * FROM sic_raw_materials WHERE tenant_id=$1 ORDER BY date DESC`,
       [tenantId]
     );
-    
+
     res.json({ success: true, sic: result.rows });
   } catch (err) {
     logger.error('Failed to fetch raw SIC', { error: err.message, tenantId });
@@ -370,13 +370,13 @@ async function getProductSICReport(req, res) {
 }
 
 
-module.exports = { 
-  submitRawSIC, 
-  submitProductSIC, 
-  listRawSIC, 
+module.exports = {
+  submitRawSIC,
+  submitProductSIC,
+  listRawSIC,
   listProductSIC,
   getLatestRawSIC,
   getLatestProductSIC,
   getRawSICReport,
-  getProductSICReport 
+  getProductSICReport
 };

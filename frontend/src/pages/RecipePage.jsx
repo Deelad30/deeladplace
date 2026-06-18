@@ -25,11 +25,11 @@ import {
 import { getProductSettings, saveProductSettings } from "../api/products";
 import { getLabour } from "../api/labour";
 import { getOpex } from "../api/opex";
-import { 
-  getProductLabour, addLabourToProduct, updateProductLabour, deleteProductLabour 
+import {
+  getProductLabour, addLabourToProduct, updateProductLabour, deleteProductLabour
 } from "../api/productLabour.services";
-import { 
-  getProductOpex, addOpexToProduct, updateProductOpex, deleteProductOpex 
+import {
+  getProductOpex, addOpexToProduct, updateProductOpex, deleteProductOpex
 } from "../api/productOpex.services";
 
 import "../styles/shared/PremiumShared.css"; // Shared Premium Styles
@@ -86,7 +86,7 @@ const RecipePage = () => {
   const [editingOpex, setEditingOpex] = useState(null);
   const [opexForm, setOpexForm] = useState({ opex_id: "", amount: "" });
   const [opexLoading, setOpexLoading] = useState(true);
-  
+
   // Track action loading state for modals
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -138,7 +138,7 @@ const RecipePage = () => {
       const mapped = items.map(item => {
         // Use loose equality (==) to handle String vs Number mismatch
         const material = materials.find(m => m.id == item.material_id);
-        
+
         return {
           ...item,
           // Priority: 1. Name from API (already joined) 2. Name from lookup 3. Fallback ID
@@ -164,7 +164,7 @@ const RecipePage = () => {
         const pack = packagingList.find(pkg => pkg.id == p.packaging_id);
         const name = p.packaging_name || (pack ? pack.name : "Unknown Packaging");
         const cost = p.cost_per_unit !== undefined ? Number(p.cost_per_unit) : (pack ? Number(pack.cost_per_unit) : 0);
-        
+
         return {
           ...p,
           packaging_name: name,
@@ -213,7 +213,7 @@ const RecipePage = () => {
         setSellingPrice(res.data.settings.selling_price || "");
         setTcop(res.data.settings.tcop || 0);
       }
-    } catch(err) {
+    } catch (err) {
       console.error(err);
       toast.error("Failed to load product settings");
     }
@@ -238,16 +238,16 @@ const RecipePage = () => {
 
   // Load recipe & packaging after supporting arrays exist
   useEffect(() => { if (materials.length) loadRecipe(); },
-   // eslint-disable-next-line
-  [materials]);
+    // eslint-disable-next-line
+    [materials]);
   useEffect(() => { if (packagingList.length) loadProductPackaging(); },
-  // eslint-disable-next-line
-  [packagingList]);
+    // eslint-disable-next-line
+    [packagingList]);
 
   // ----------------- Handle Save Ingredient -----------------
   const handleSave = async () => {
     if (!formData.material_id || !formData.recipe_qty) return toast.error("Select material & enter qty");
-    setActionLoading(true); 
+    setActionLoading(true);
     try {
       const body = { material_id: formData.material_id, recipe_qty: Number(formData.recipe_qty) };
       if (editLine) {
@@ -263,7 +263,7 @@ const RecipePage = () => {
     } catch {
       toast.error("Failed to save ingredient");
     } finally {
-        setActionLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -298,7 +298,7 @@ const RecipePage = () => {
     } catch {
       toast.error("Failed to save packaging");
     } finally {
-        setActionLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -334,7 +334,7 @@ const RecipePage = () => {
     } catch {
       toast.error("Failed to save labour mapping");
     } finally {
-        setActionLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -369,7 +369,7 @@ const RecipePage = () => {
     } catch {
       toast.error("Failed to save opex mapping");
     } finally {
-        setActionLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -430,7 +430,7 @@ const RecipePage = () => {
     try {
       await standardize(productId, { marginPercent });
       toast.success("Standard cost saved successfully!");
-      navigate("/products");
+      navigate(-1);
     } catch (err) {
       console.error(err);
       toast.error("Failed to save standard cost");
@@ -446,7 +446,7 @@ const RecipePage = () => {
     try {
       await saveProductSettings(productId, { batch_qty: batchSize, margin_percent: marginPercent, selling_price: sellingPrice || 0 });
       toast.success("Configuration saved successfully");
-    } catch(err) {
+    } catch (err) {
       console.error(err);
       toast.error("Failed to save configuration");
     }
@@ -488,486 +488,486 @@ const RecipePage = () => {
 
         {/* Page Header */}
         <div className="page-header">
-           <div style={{display:'flex', alignItems:'center', gap:'12px'}}>
-              <div 
-                 onClick={() => navigate("/products")}
-                 style={{cursor:'pointer', padding:'8px', background:'#f1f5f9', borderRadius:'50%', width:'32px', height:'32px', display:'flex', alignItems:'center', justifyContent:'center'}}
-              >
-                 <FontAwesomeIcon icon={faArrowLeft} color="#64748b" />
-              </div>
-              <h2 style={{marginBottom:"0px"}} className="page-title">Recipe Setup</h2>
-           </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div
+              onClick={() => navigate(-1)}
+              style={{ cursor: 'pointer', padding: '8px', background: '#f1f5f9', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <FontAwesomeIcon icon={faArrowLeft} color="#64748b" />
+            </div>
+            <h2 style={{ marginBottom: "0px" }} className="page-title">Recipe Setup</h2>
+          </div>
         </div>
 
         {/* Batch Size Configuration Card */}
-        <div className="premium-card" style={{marginBottom:'24px'}}>
-             <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                 <h3 style={{fontSize:'18px', fontWeight:'700', color:'yellow'}}>Batch Configuration</h3>
-                 <button 
-                    className="premium-btn primary"
-                    onClick={handleSaveBatchMargin} 
-                    disabled={savingSettings}
-                 >
-                    {savingSettings ? "Saving..." : "Save Batch"}
-                 </button>
-             </div>
-             <div className="form-grid" style={{marginTop:'20px'}}>
-                 <div className="form-group">
-                    <label style={{color:'white!important'}} className="premium-label-3">Batch Size</label>
-                    <input 
-                        className="premium-input"
-                        type="number" 
-                        value={batchSize} 
-                        onChange={e => setBatchSize(Number(e.target.value))} 
-                        min="1"
-                        disabled={savingSettings}
-                    />
-                    <small style={{color:'#94a3b8', display:'block', marginTop:'8px'}}>
-                        Number of units produced in a single batch. All recipe quantities entered below should be for this batch size.
-                    </small>
-                 </div>
-             </div>
+        <div className="premium-card" style={{ marginBottom: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'yellow' }}>Batch Configuration</h3>
+            <button
+              className="premium-btn primary"
+              onClick={handleSaveBatchMargin}
+              disabled={savingSettings}
+            >
+              {savingSettings ? "Saving..." : "Save Batch"}
+            </button>
+          </div>
+          <div className="form-grid" style={{ marginTop: '20px' }}>
+            <div className="form-group">
+              <label style={{ color: 'white!important' }} className="premium-label-3">Batch Size</label>
+              <input
+                className="premium-input"
+                type="number"
+                value={batchSize}
+                onChange={e => setBatchSize(Number(e.target.value))}
+                min="1"
+                disabled={savingSettings}
+              />
+              <small style={{ color: '#94a3b8', display: 'block', marginTop: '8px' }}>
+                Number of units produced in a single batch. All recipe quantities entered below should be for this batch size.
+              </small>
+            </div>
+          </div>
         </div>
 
         {/* Ingredients Table */}
-        <div className="premium-card" style={{marginBottom:'24px'}}>
-            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px'}}>
-                <h3 style={{fontSize:'18px', fontWeight:'700', color:'yellow'}}>Ingredients</h3>
-                <button 
-                    className="premium-btn primary"
-                    onClick={() => { setEditLine(null); setFormData({ material_id: "", recipe_qty: "" }); setModalOpen(true); }}
-                >+ Add Ingredient</button>
+        <div className="premium-card" style={{ marginBottom: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'yellow' }}>Ingredients</h3>
+            <button
+              className="premium-btn primary"
+              onClick={() => { setEditLine(null); setFormData({ material_id: "", recipe_qty: "" }); setModalOpen(true); }}
+            >+ Add Ingredient</button>
+          </div>
+
+          <div className="table-container" style={{ marginTop: '0', border: 'none', boxShadow: 'none' }}>
+            <div className="premium-table-wrapper">
+              <table className="premium-table">
+                <thead>
+                  <tr>
+                    <th>Material</th>
+                    <th>Qty/Batch</th>
+                    <th>Unit</th>
+                    <th>Cost/Qty</th>
+                    <th style={{ textAlign: 'right' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recipeItems.length === 0 ? (
+                    <tr><td colSpan="4" className="empty-state">No ingredients added yet.</td></tr>
+                  ) : (
+                    recipeItems.map(item => (
+                      <tr key={item.id}>
+                        <td style={{ fontWeight: '600' }}>{item.material_name}</td>
+                        <td>{item.recipe_qty}</td>
+                        <td style={{ color: '#64748b', fontSize: '13px' }}>{item.measurement_unit}</td>
+                        <td style={{ color: '#10b981', fontWeight: '700' }}>
+                          ₦{(item.unit_cost * item.recipe_qty).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          <div className="actions-cell">
+                            <button className="item-action-btn edit" onClick={() => { setEditLine(item); setFormData({ material_id: item.material_id, recipe_qty: item.recipe_qty }); setModalOpen(true); }}>Edit</button>
+                            <button className="item-action-btn delete" onClick={() => handleDelete(item)}>Delete</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
-            
-            <div className="table-container" style={{marginTop:'0', border:'none', boxShadow:'none'}}>
-               <div className="premium-table-wrapper">
-                  <table className="premium-table">
-                     <thead>
-                        <tr>
-                            <th>Material</th>
-                            <th>Qty/Batch</th>
-                            <th>Unit</th>
-                            <th>Cost/Qty</th>
-                            <th style={{textAlign:'right'}}>Actions</th>
-                        </tr>
-                     </thead>
-                     <tbody>
-                        {recipeItems.length === 0 ? (
-                            <tr><td colSpan="4" className="empty-state">No ingredients added yet.</td></tr>
-                        ) : (
-                            recipeItems.map(item => (
-                                <tr key={item.id}>
-                                    <td style={{fontWeight:'600'}}>{item.material_name}</td>
-                                    <td>{item.recipe_qty}</td>
-                                    <td style={{color:'#64748b', fontSize:'13px'}}>{item.measurement_unit}</td>
-                                    <td style={{color: '#10b981', fontWeight: '700'}}>
-                                        ₦{(item.unit_cost * item.recipe_qty).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-                                    </td>
-                                    <td style={{textAlign:'right'}}>
-                                        <div className="actions-cell">
-                                            <button className="item-action-btn edit" onClick={() => { setEditLine(item); setFormData({ material_id: item.material_id, recipe_qty: item.recipe_qty }); setModalOpen(true); }}>Edit</button>
-                                            <button className="item-action-btn delete" onClick={() => handleDelete(item)}>Delete</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))
-                        )}
-                     </tbody>
-                  </table>
-               </div>
-            </div>
+          </div>
         </div>
 
         {/* Packaging Table */}
-        <div className="premium-card" style={{marginBottom:'24px'}}>
-            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px'}}>
-                <h3 style={{fontSize:'18px', fontWeight:'700', color:'yellow'}}>Packaging</h3>
-                <button 
-                    className="premium-btn primary"
-                    onClick={() => { setEditingPackaging(null); setPackForm({ packaging_id: "", qty: "" }); setPackagingModal(true); }}
-                >+ Add Packaging</button>
+        <div className="premium-card" style={{ marginBottom: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'yellow' }}>Packaging</h3>
+            <button
+              className="premium-btn primary"
+              onClick={() => { setEditingPackaging(null); setPackForm({ packaging_id: "", qty: "" }); setPackagingModal(true); }}
+            >+ Add Packaging</button>
+          </div>
+
+          <div className="table-container" style={{ marginTop: '0', border: 'none', boxShadow: 'none' }}>
+            <div className="premium-table-wrapper">
+              <table className="premium-table">
+                <thead>
+                  <tr>
+                    <th>Packaging</th>
+                    <th>Qty</th>
+                    <th>Cost/Unit</th>
+                    <th>Total</th>
+                    <th style={{ textAlign: 'right' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {productPackaging.length === 0 ? (
+                    <tr><td colSpan="5" className="empty-state">No packaging added yet.</td></tr>
+                  ) : (
+                    productPackaging.map(p => (
+                      <tr key={p.id}>
+                        <td style={{ fontWeight: '600' }}>{p.packaging_name}</td>
+                        <td>{p.qty}</td>
+                        <td>₦{p.cost_per_unit}</td>
+                        <td>₦{p.total_cost}</td>
+                        <td style={{ textAlign: 'right' }}>
+                          <div className="actions-cell">
+                            <button className="item-action-btn edit" onClick={() => { setEditingPackaging(p); setPackForm({ packaging_id: p.packaging_id, qty: p.qty }); setPackagingModal(true); }}>Edit</button>
+                            <button className="item-action-btn delete" onClick={() => handleDeletePackaging(p)}>Delete</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
-            
-            <div className="table-container" style={{marginTop:'0', border:'none', boxShadow:'none'}}>
-               <div className="premium-table-wrapper">
-                  <table className="premium-table">
-                     <thead>
-                        <tr>
-                            <th>Packaging</th>
-                            <th>Qty</th>
-                            <th>Cost/Unit</th>
-                            <th>Total</th>
-                            <th style={{textAlign:'right'}}>Actions</th>
-                        </tr>
-                     </thead>
-                     <tbody>
-                        {productPackaging.length === 0 ? (
-                            <tr><td colSpan="5" className="empty-state">No packaging added yet.</td></tr>
-                        ) : (
-                            productPackaging.map(p => (
-                                <tr key={p.id}>
-                                    <td style={{fontWeight:'600'}}>{p.packaging_name}</td>
-                                    <td>{p.qty}</td>
-                                    <td>₦{p.cost_per_unit}</td>
-                                    <td>₦{p.total_cost}</td>
-                                    <td style={{textAlign:'right'}}>
-                                        <div className="actions-cell">
-                                            <button className="item-action-btn edit" onClick={() => { setEditingPackaging(p); setPackForm({ packaging_id: p.packaging_id, qty: p.qty }); setPackagingModal(true); }}>Edit</button>
-                                            <button className="item-action-btn delete" onClick={() => handleDeletePackaging(p)}>Delete</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))
-                        )}
-                     </tbody>
-                  </table>
-               </div>
-            </div>
+          </div>
         </div>
 
         {/* Labour & Opex Tables (Grid) */}
-        <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(500px, 1fr))', gap:'24px', marginBottom:'24px'}}>
-             {/* Labour */}
-             <div className="premium-card">
-                 <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px'}}>
-                    <h3 style={{fontSize:'18px', fontWeight:'700', color:'yellow'}}>Direct Labour</h3>
-                    <button 
-                        className="premium-btn primary"
-                        onClick={() => { setEditingLabour(null); setLabourForm({ labour_id: "", amount: "" }); setLabourModal(true); }}
-                    >+ Add</button>
-                 </div>
-                 <div className="table-container" style={{marginTop:'0', border:'none', boxShadow:'none'}}>
-                 <div className="premium-table-wrapper">
-                    <table className="premium-table">
-                        <thead>
-                            <tr>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {productLabour.length === 0 ? (
-                                <tr><td colSpan="3" className="empty-state">No labour costs.</td></tr>
-                            ) : (
-                                productLabour.map(l => (
-                                    <tr key={l.id}>
-                                        <td style={{fontWeight:'600'}}>{l.labour_name}</td>
-                                        <td>₦{Number(l.amount).toLocaleString()}</td>
-                                        <td style={{textAlign:'right'}}>
-                                            <div className="actions-cell">
-                                                <button className="item-action-btn edit" onClick={() => { setEditingLabour(l); setLabourForm({ labour_id: l.labour_id, amount: l.amount }); setLabourModal(true); }}>Edit</button>
-                                                <button className="item-action-btn delete" onClick={() => handleDeleteLabour(l)}>Delete</button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                 </div>
-                 </div>
-             </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '24px', marginBottom: '24px' }}>
+          {/* Labour */}
+          <div className="premium-card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'yellow' }}>Direct Labour</h3>
+              <button
+                className="premium-btn primary"
+                onClick={() => { setEditingLabour(null); setLabourForm({ labour_id: "", amount: "" }); setLabourModal(true); }}
+              >+ Add</button>
+            </div>
+            <div className="table-container" style={{ marginTop: '0', border: 'none', boxShadow: 'none' }}>
+              <div className="premium-table-wrapper">
+                <table className="premium-table">
+                  <thead>
+                    <tr>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {productLabour.length === 0 ? (
+                      <tr><td colSpan="3" className="empty-state">No labour costs.</td></tr>
+                    ) : (
+                      productLabour.map(l => (
+                        <tr key={l.id}>
+                          <td style={{ fontWeight: '600' }}>{l.labour_name}</td>
+                          <td>₦{Number(l.amount).toLocaleString()}</td>
+                          <td style={{ textAlign: 'right' }}>
+                            <div className="actions-cell">
+                              <button className="item-action-btn edit" onClick={() => { setEditingLabour(l); setLabourForm({ labour_id: l.labour_id, amount: l.amount }); setLabourModal(true); }}>Edit</button>
+                              <button className="item-action-btn delete" onClick={() => handleDeleteLabour(l)}>Delete</button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
 
-             {/* Opex */}
-             <div className="premium-card">
-                 <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px'}}>
-                    <h3 style={{fontSize:'18px', fontWeight:'700', color:'yellow'}}>Direct Opex</h3>
-                    <button 
-                        className="premium-btn primary"
-                        onClick={() => { setEditingOpex(null); setOpexForm({ opex_id: "", amount: "" }); setOpexModal(true); }}
-                    >+ Add</button>
-                 </div>
-                 <div className="table-container" style={{marginTop:'0', border:'none', boxShadow:'none'}}>
-                 <div className="premium-table-wrapper">
-                    <table className="premium-table">
-                        <thead>
-                            <tr>
-                                <th>Opex Item</th>
-                                <th>Amount/Batch</th>
-                                <th style={{textAlign:'right'}}>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {productOpex.length === 0 ? (
-                                <tr><td colSpan="3" className="empty-state">No Opex costs.</td></tr>
-                            ) : (
-                                productOpex.map(o => (
-                                    <tr key={o.id}>
-                                        <td style={{fontWeight:'600'}}>{o.opex_name}</td>
-                                        <td>₦{Number(o.amount).toLocaleString()}</td>
-                                        <td style={{textAlign:'right'}}>
-                                            <div className="actions-cell">
-                                                <button className="item-action-btn edit" onClick={() => { setEditingOpex(o); setOpexForm({ opex_id: o.opex_id, amount: o.amount }); setOpexModal(true); }}>Edit</button>
-                                                <button className="item-action-btn delete" onClick={() => handleDeleteOpex(o)}>Delete</button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                 </div>
-                 </div>
-             </div>
+          {/* Opex */}
+          <div className="premium-card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'yellow' }}>Direct Opex</h3>
+              <button
+                className="premium-btn primary"
+                onClick={() => { setEditingOpex(null); setOpexForm({ opex_id: "", amount: "" }); setOpexModal(true); }}
+              >+ Add</button>
+            </div>
+            <div className="table-container" style={{ marginTop: '0', border: 'none', boxShadow: 'none' }}>
+              <div className="premium-table-wrapper">
+                <table className="premium-table">
+                  <thead>
+                    <tr>
+                      <th>Opex Item</th>
+                      <th>Amount/Batch</th>
+                      <th style={{ textAlign: 'right' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {productOpex.length === 0 ? (
+                      <tr><td colSpan="3" className="empty-state">No Opex costs.</td></tr>
+                    ) : (
+                      productOpex.map(o => (
+                        <tr key={o.id}>
+                          <td style={{ fontWeight: '600' }}>{o.opex_name}</td>
+                          <td>₦{Number(o.amount).toLocaleString()}</td>
+                          <td style={{ textAlign: 'right' }}>
+                            <div className="actions-cell">
+                              <button className="item-action-btn edit" onClick={() => { setEditingOpex(o); setOpexForm({ opex_id: o.opex_id, amount: o.amount }); setOpexModal(true); }}>Edit</button>
+                              <button className="item-action-btn delete" onClick={() => handleDeleteOpex(o)}>Delete</button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Margin & Selling Price Configuration Card */}
-        <div className="premium-card" style={{marginBottom:'24px'}}>
-             <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px'}}>
-                 <h3 style={{fontSize:'18px', fontWeight:'700', color:'yellow'}}>Margin & Selling Price Configuration</h3>
-                 {!tcop ? (
-                     <span style={{color: '#ef4444', fontSize: '13px', fontWeight: '500'}}>Compute cost first to enable auto-calculation</span>
-                 ) : (
-                     <span style={{color: '#10b981', fontSize: '13px', fontWeight: '500'}}>Auto-calculation enabled (TCOP: ₦{Number(tcop).toLocaleString()})</span>
-                 )}
-             </div>
-             <div className="form-grid">
-                 <div className="form-group">
-                    <label className="premium-label-3">Margin % (0.x)</label>
-                    <input 
-                        className="premium-input"
-                        type="number" 
-                        value={marginPercent} 
-                        onChange={e => handleMarginChange(e.target.value)} 
-                        step="0.01" 
-                        min="0" 
-                        max="1" 
-                        placeholder="e.g. 0.2"
-                        disabled={savingSettings}
-                    />
-                 </div>
-                 <div className="form-group">
-                    <label className="premium-label-3">Selling Price (₦)</label>
-                    <input 
-                        className="premium-input"
-                        type="number" 
-                        value={sellingPrice} 
-                        onChange={e => handleSellingPriceChange(e.target.value)} 
-                        min="0" 
-                        placeholder="e.g. 5000"
-                        disabled={savingSettings}
-                    />
-                 </div>
-             </div>
-             <button 
-                className="premium-btn primary"
-                style={{marginTop:'20px', display:"flex" ,justifyContent:"center"}}
-                onClick={handleSaveBatchMargin} 
+        <div className="premium-card" style={{ marginBottom: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'yellow' }}>Margin & Selling Price Configuration</h3>
+            {!tcop ? (
+              <span style={{ color: '#ef4444', fontSize: '13px', fontWeight: '500' }}>Compute cost first to enable auto-calculation</span>
+            ) : (
+              <span style={{ color: '#10b981', fontSize: '13px', fontWeight: '500' }}>Auto-calculation enabled (TCOP: ₦{Number(tcop).toLocaleString()})</span>
+            )}
+          </div>
+          <div className="form-grid">
+            <div className="form-group">
+              <label className="premium-label-3">Margin % (0.x)</label>
+              <input
+                className="premium-input"
+                type="number"
+                value={marginPercent}
+                onChange={e => handleMarginChange(e.target.value)}
+                step="0.01"
+                min="0"
+                max="1"
+                placeholder="e.g. 0.2"
                 disabled={savingSettings}
-             >
-                {savingSettings ? "Saving Settings..." : "Save Margin & Price"}
-             </button>
+              />
+            </div>
+            <div className="form-group">
+              <label className="premium-label-3">Selling Price (₦)</label>
+              <input
+                className="premium-input"
+                type="number"
+                value={sellingPrice}
+                onChange={e => handleSellingPriceChange(e.target.value)}
+                min="0"
+                placeholder="e.g. 5000"
+                disabled={savingSettings}
+              />
+            </div>
+          </div>
+          <button
+            className="premium-btn primary"
+            style={{ marginTop: '20px', display: "flex", justifyContent: "center" }}
+            onClick={handleSaveBatchMargin}
+            disabled={savingSettings}
+          >
+            {savingSettings ? "Saving Settings..." : "Save Margin & Price"}
+          </button>
         </div>
 
         {/* Cost Analysis Panel */}
-        <div className="premium-card" style={{borderLeft:'4px solid #d91f22'}}>
-             <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'24px'}}>
-                 <h3 style={{fontSize:'20px', fontWeight:'800', color:'yellow'}}>Cost Analysis</h3>
-                 <button 
-                    className="premium-btn primary"
-                    onClick={handleComputeCost}
-                    disabled={computingCost}
-                 >
-                    {computingCost ? "Computing..." : "Compute Cost"}
-                 </button>
-             </div>
+        <div className="premium-card" style={{ borderLeft: '4px solid #d91f22' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <h3 style={{ fontSize: '20px', fontWeight: '800', color: 'yellow' }}>Cost Analysis</h3>
+            <button
+              className="premium-btn primary"
+              onClick={handleComputeCost}
+              disabled={computingCost}
+            >
+              {computingCost ? "Computing..." : "Compute Cost"}
+            </button>
+          </div>
 
-             {costResult && !computingCost && (
-                <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(300px, 1fr))', gap:'32px'}}>
-                    <div style={{ background:"white", padding:"25px", borderRadius:"10px", boxShadow:"0 2px 8px rgba(0,0,0,0.1)"}}>
-                        <h4 style={{marginBottom:'16px', color:'#64748b'}}>Breakdown Per Unit (Pie)</h4>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <PieChart>
-                                <Pie 
-                                    data={perUnitCostData} 
-                                    dataKey="value" 
-                                    nameKey="name" 
-                                    cx="50%" 
-                                    cy="50%" 
-                                    outerRadius={80} 
-                                    fill="#8884d8" 
-                                    labelLine={false}
-                                    label={renderCustomizedLabel}
-                                >
-                                    {perUnitCostData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
-                                </Pie>
-                                <ReTooltip formatter={(value) => `₦${Number(value).toLocaleString()}`} />
-                                <ReLegend />
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </div>
+          {costResult && !computingCost && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px' }}>
+              <div style={{ background: "white", padding: "25px", borderRadius: "10px", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
+                <h4 style={{ marginBottom: '16px', color: '#64748b' }}>Breakdown Per Unit (Pie)</h4>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={perUnitCostData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      fill="#8884d8"
+                      labelLine={false}
+                      label={renderCustomizedLabel}
+                    >
+                      {perUnitCostData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                    </Pie>
+                    <ReTooltip formatter={(value) => `₦${Number(value).toLocaleString()}`} />
+                    <ReLegend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
 
-                    <div style={{ background:"white", padding:"25px", borderRadius:"10px", boxShadow:"0 2px 8px rgba(0,0,0,0.1)"}}>
-                        <h4 style={{marginBottom:'16px', color:'#64748b'}}>Breakdown Per Batch (Bar)</h4>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={perBatchCostData}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="name" />
-                                <YAxis />
-                                <ReTooltip formatter={(value) => `₦${round(value).toLocaleString()}`} />
-                                <Bar dataKey="value" fill="#82ca9d" />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
+              <div style={{ background: "white", padding: "25px", borderRadius: "10px", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
+                <h4 style={{ marginBottom: '16px', color: '#64748b' }}>Breakdown Per Batch (Bar)</h4>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={perBatchCostData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <ReTooltip formatter={(value) => `₦${round(value).toLocaleString()}`} />
+                    <Bar dataKey="value" fill="#82ca9d" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
 
-                    <div style={{gridColumn:'1 / -1'}}>
-                         <div className="table-container" style={{border:'none', boxShadow:'none', background:'#f8fafc', padding:'20px', borderRadius:'12px'}}>
-                            <table className="premium-table" style={{background:'transparent'}}>
-                                <thead>
-                                    <tr>
-                                        <th>Cost Component</th>
-                                        <th>Per Unit (₦)</th>
-                                        <th>Per Batch (₦)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>Recipe Cost</td>
-                                        <td>{round(costResult.recipe_cost).toLocaleString()}</td>
-                                        <td>{round(costResult.recipe_cost * batchSize).toLocaleString()}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Packaging Cost</td>
-                                        <td>{round(costResult.packaging_cost).toLocaleString()}</td>
-                                        <td>{round(costResult.packaging_cost * batchSize).toLocaleString()}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Labour Cost</td>
-                                        <td>{round(costResult.labour_cost).toLocaleString()}</td>
-                                        <td>{round(costResult.labour_cost * batchSize).toLocaleString()}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>OPEX Cost</td>
-                                        <td>{round(costResult.opex_cost).toLocaleString()}</td>
-                                        <td>{round(costResult.opex_cost * batchSize).toLocaleString()}</td>
-                                    </tr>
-                                    <tr style={{background:'#e2e8f0', fontWeight:'700'}}>
-                                        <td>COGS (Total)</td>
-                                        <td>{round(costResult.COGS).toLocaleString()}</td>
-                                        <td>{round(costResult.COGS * batchSize).toLocaleString()}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Margin ({ (costResult.margin_percent * 100).toFixed(0) }%)</td>
-                                        <td colSpan="2" style={{color:'#166534', fontWeight:'600'}}>
-                                            Selling Price: ₦{round(costResult.selling_price || 0).toLocaleString()}
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                         </div>
-
-                         <button 
-                             className="submit-btn" 
-                             style={{marginTop:'24px', width:'100%', display:'flex', justifyContent:'center', alignItems:'center'}}
-                             onClick={handleSaveStandardCost}
-                             disabled={standardizingCost}
-                         >
-                             {standardizingCost ? "Saving..." : "Save Standard Cost"}
-                         </button>
-                    </div>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <div className="table-container" style={{ border: 'none', boxShadow: 'none', background: '#f8fafc', padding: '20px', borderRadius: '12px' }}>
+                  <table className="premium-table" style={{ background: 'transparent' }}>
+                    <thead>
+                      <tr>
+                        <th>Cost Component</th>
+                        <th>Per Unit (₦)</th>
+                        <th>Per Batch (₦)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>Recipe Cost</td>
+                        <td>{round(costResult.recipe_cost).toLocaleString()}</td>
+                        <td>{round(costResult.recipe_cost * batchSize).toLocaleString()}</td>
+                      </tr>
+                      <tr>
+                        <td>Packaging Cost</td>
+                        <td>{round(costResult.packaging_cost).toLocaleString()}</td>
+                        <td>{round(costResult.packaging_cost * batchSize).toLocaleString()}</td>
+                      </tr>
+                      <tr>
+                        <td>Labour Cost</td>
+                        <td>{round(costResult.labour_cost).toLocaleString()}</td>
+                        <td>{round(costResult.labour_cost * batchSize).toLocaleString()}</td>
+                      </tr>
+                      <tr>
+                        <td>OPEX Cost</td>
+                        <td>{round(costResult.opex_cost).toLocaleString()}</td>
+                        <td>{round(costResult.opex_cost * batchSize).toLocaleString()}</td>
+                      </tr>
+                      <tr style={{ background: '#e2e8f0', fontWeight: '700' }}>
+                        <td>COGS (Total)</td>
+                        <td>{round(costResult.COGS).toLocaleString()}</td>
+                        <td>{round(costResult.COGS * batchSize).toLocaleString()}</td>
+                      </tr>
+                      <tr>
+                        <td>Margin ({(costResult.margin_percent * 100).toFixed(0)}%)</td>
+                        <td colSpan="2" style={{ color: '#166534', fontWeight: '600' }}>
+                          Selling Price: ₦{round(costResult.selling_price || 0).toLocaleString()}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
-             )}
+
+                <button
+                  className="submit-btn"
+                  style={{ marginTop: '24px', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                  onClick={handleSaveStandardCost}
+                  disabled={standardizingCost}
+                >
+                  {standardizingCost ? "Saving..." : "Save Standard Cost"}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* --- Modals --- */}
         {/* Ingredient Modal */}
         <Modal visible={modalOpen} title={editLine ? "Edit Ingredient" : "Add Ingredient"} onClose={() => setModalOpen(false)}>
-            <div className="vendor-form">
-                <div className="form-group">
-                    <label className="premium-label-2">Material</label>
-                    <select className="premium-input" value={formData.material_id} onChange={e => setFormData({ ...formData, material_id: e.target.value })}>
-                        <option value="">Select Material</option>
-                        {materials.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-                    </select>
-                </div>
-                <div className="form-group">
-                    <label className="premium-label-2">Quantity Per Batch</label>
-                    <div style={{display:'flex', gap:'8px', alignItems:'center'}}>
-                        <input className="premium-input" type="number" value={formData.recipe_qty} onChange={e => setFormData({ ...formData, recipe_qty: e.target.value })} style={{flex:1}} />
-                        <span style={{color:'#94a3b8', fontSize:'14px', fontWeight:'600', minWidth:'40px'}}>
-                            {materials.find(m => m.id == formData.material_id)?.measurement_unit || ""}
-                        </span>
-                    </div>
-                </div>
-                <button className="submit-btn" onClick={handleSave} disabled={actionLoading}>{actionLoading ? "Saving..." : (editLine ? "Update" : "Save")}</button>
+          <div className="vendor-form">
+            <div className="form-group">
+              <label className="premium-label-2">Material</label>
+              <select className="premium-input" value={formData.material_id} onChange={e => setFormData({ ...formData, material_id: e.target.value })}>
+                <option value="">Select Material</option>
+                {materials.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+              </select>
             </div>
+            <div className="form-group">
+              <label className="premium-label-2">Quantity Per Batch</label>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <input className="premium-input" type="number" value={formData.recipe_qty} onChange={e => setFormData({ ...formData, recipe_qty: e.target.value })} style={{ flex: 1 }} />
+                <span style={{ color: '#94a3b8', fontSize: '14px', fontWeight: '600', minWidth: '40px' }}>
+                  {materials.find(m => m.id == formData.material_id)?.measurement_unit || ""}
+                </span>
+              </div>
+            </div>
+            <button className="submit-btn" onClick={handleSave} disabled={actionLoading}>{actionLoading ? "Saving..." : (editLine ? "Update" : "Save")}</button>
+          </div>
         </Modal>
 
         {/* Packaging Modal */}
         <Modal visible={packagingModal} title={editingPackaging ? "Edit Packaging" : "Add Packaging"} onClose={() => setPackagingModal(false)}>
-            <div className="vendor-form">
-                <div className="form-group">
-                    <label className="premium-label-2">Packaging</label>
-                    <select className="premium-input" value={packForm.packaging_id} onChange={e => setPackForm({ ...packForm, packaging_id: e.target.value })}>
-                        <option value="">Select Packaging</option>
-                        {packagingList.map(p => <option key={p.id} value={p.id}>{p.name} (₦{p.cost_per_unit})</option>)}
-                    </select>
-                </div>
-                <div className="form-group">
-                    <label className="premium-label-2">Quantity</label>
-                    <input className="premium-input" type="number" value={packForm.qty} onChange={e => setPackForm({ ...packForm, qty: e.target.value })} />
-                </div>
-                <button className="submit-btn" onClick={handleSavePackaging} disabled={actionLoading}>{actionLoading ? "Saving..." : (editingPackaging ? "Update" : "Save")}</button>
+          <div className="vendor-form">
+            <div className="form-group">
+              <label className="premium-label-2">Packaging</label>
+              <select className="premium-input" value={packForm.packaging_id} onChange={e => setPackForm({ ...packForm, packaging_id: e.target.value })}>
+                <option value="">Select Packaging</option>
+                {packagingList.map(p => <option key={p.id} value={p.id}>{p.name} (₦{p.cost_per_unit})</option>)}
+              </select>
             </div>
+            <div className="form-group">
+              <label className="premium-label-2">Quantity</label>
+              <input className="premium-input" type="number" value={packForm.qty} onChange={e => setPackForm({ ...packForm, qty: e.target.value })} />
+            </div>
+            <button className="submit-btn" onClick={handleSavePackaging} disabled={actionLoading}>{actionLoading ? "Saving..." : (editingPackaging ? "Update" : "Save")}</button>
+          </div>
         </Modal>
 
         {/* Labour Modal */}
         <Modal visible={labourModal} title={editingLabour ? "Edit Labour" : "Add Labour"} onClose={() => setLabourModal(false)}>
-            <div className="vendor-form">
-                <div className="form-group">
-                    <label className="premium-label-2">Labour Item</label>
-                    <select className="premium-input" value={labourForm.labour_id} onChange={e => {
-                        const lid = e.target.value;
-                        const item = labourList.find(l => l.id == lid);
-                        let autoAmount = "";
-                        if (item) {
-                             // Calculate per-unit cost if estimated sales > 0
-                             // Amount / Estimated Sales
-                             if (Number(item.estimated_monthly_sales) > 0) {
-                                 autoAmount = (Number(item.amount) / Number(item.estimated_monthly_sales)).toFixed(2);
-                             }
-                        }
-                        setLabourForm({ ...labourForm, labour_id: lid, amount: autoAmount });
-                    }}>
-                        <option value="">Select Labour</option>
-                        {labourList.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-                    </select>
-                    {labourForm.amount && (
-                        <div style={{marginTop:'8px', fontSize:'14px', color:'#94a3b8'}}>
-                            Cost per unit: <span style={{color:'#4ade80', fontWeight:'700', fontSize:'16px'}}>₦{Number(labourForm.amount).toLocaleString(undefined, {minimumFractionDigits:2})}</span>
-                        </div>
-                    )}
+          <div className="vendor-form">
+            <div className="form-group">
+              <label className="premium-label-2">Labour Item</label>
+              <select className="premium-input" value={labourForm.labour_id} onChange={e => {
+                const lid = e.target.value;
+                const item = labourList.find(l => l.id == lid);
+                let autoAmount = "";
+                if (item) {
+                  // Calculate per-unit cost if estimated sales > 0
+                  // Amount / Estimated Sales
+                  if (Number(item.estimated_monthly_sales) > 0) {
+                    autoAmount = (Number(item.amount) / Number(item.estimated_monthly_sales)).toFixed(2);
+                  }
+                }
+                setLabourForm({ ...labourForm, labour_id: lid, amount: autoAmount });
+              }}>
+                <option value="">Select Labour</option>
+                {labourList.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+              </select>
+              {labourForm.amount && (
+                <div style={{ marginTop: '8px', fontSize: '14px', color: '#94a3b8' }}>
+                  Cost per unit: <span style={{ color: '#4ade80', fontWeight: '700', fontSize: '16px' }}>₦{Number(labourForm.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                 </div>
-                <button className="submit-btn" onClick={handleSaveLabour} disabled={actionLoading}>{actionLoading ? "Saving..." : (editingLabour ? "Update" : "Save")}</button>
+              )}
             </div>
+            <button className="submit-btn" onClick={handleSaveLabour} disabled={actionLoading}>{actionLoading ? "Saving..." : (editingLabour ? "Update" : "Save")}</button>
+          </div>
         </Modal>
 
         {/* Opex Modal */}
         <Modal visible={opexModal} title={editingOpex ? "Edit Opex" : "Add Opex"} onClose={() => setOpexModal(false)}>
-            <div className="vendor-form">
-                <div className="form-group">
-                    <label className="premium-label-2">Opex Item</label>
-                    <select className="premium-input" value={opexForm.opex_id} onChange={e => {
-                         const oid = e.target.value;
-                         const item = opexList.find(o => o.id == oid);
-                         let autoAmount = "";
-                         if (item) {
-                             // Calculate per-unit cost i.e. (Amount / Estimated Sales) for fixed allocation
-                             if (item.allocation_mode === 'fixed' && Number(item.estimated_monthly_sales) > 0) {
-                                 autoAmount = (Number(item.amount) / Number(item.estimated_monthly_sales)).toFixed(2);
-                             }
-                         }
-                         setOpexForm({ ...opexForm, opex_id: oid, amount: autoAmount });
-                    }}>
-                        <option value="">Select Opex</option>
-                        {opexList.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
-                    </select>
-                    {opexForm.amount && (
-                        <div style={{marginTop:'8px', fontSize:'14px', color:'#94a3b8'}}>
-                            Cost per unit: <span style={{color:'#4ade80', fontWeight:'700', fontSize:'16px'}}>₦{Number(opexForm.amount).toLocaleString(undefined, {minimumFractionDigits:2})}</span>
-                        </div>
-                    )}
+          <div className="vendor-form">
+            <div className="form-group">
+              <label className="premium-label-2">Opex Item</label>
+              <select className="premium-input" value={opexForm.opex_id} onChange={e => {
+                const oid = e.target.value;
+                const item = opexList.find(o => o.id == oid);
+                let autoAmount = "";
+                if (item) {
+                  // Calculate per-unit cost i.e. (Amount / Estimated Sales) for fixed allocation
+                  if (item.allocation_mode === 'fixed' && Number(item.estimated_monthly_sales) > 0) {
+                    autoAmount = (Number(item.amount) / Number(item.estimated_monthly_sales)).toFixed(2);
+                  }
+                }
+                setOpexForm({ ...opexForm, opex_id: oid, amount: autoAmount });
+              }}>
+                <option value="">Select Opex</option>
+                {opexList.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+              </select>
+              {opexForm.amount && (
+                <div style={{ marginTop: '8px', fontSize: '14px', color: '#94a3b8' }}>
+                  Cost per unit: <span style={{ color: '#4ade80', fontWeight: '700', fontSize: '16px' }}>₦{Number(opexForm.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                 </div>
-                <button className="submit-btn" onClick={handleSaveOpex} disabled={actionLoading}>{actionLoading ? "Saving..." : (editingOpex ? "Update" : "Save")}</button>
+              )}
             </div>
+            <button className="submit-btn" onClick={handleSaveOpex} disabled={actionLoading}>{actionLoading ? "Saving..." : (editingOpex ? "Update" : "Save")}</button>
+          </div>
         </Modal>
 
       </div>

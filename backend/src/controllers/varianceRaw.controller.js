@@ -11,21 +11,21 @@ exports.getRawMaterialVariance = async (req, res) => {
     let posFilters = [`ps.tenant_id = $1`];
     let sicFilters = [`sr.tenant_id = $1`];
     let stockFilters = [`sm.tenant_id = $1`, `sm.item_type = 'material'`, `sm.movement_type = 'issue'`];
-    
+
     let values = [tenantId];
     let idx = 2;
 
     if (start_date) {
-      posFilters.push(`DATE(ps.created_at) >= $${idx}`);
-      sicFilters.push(`DATE(sr.date) >= $${idx}`);
-      stockFilters.push(`DATE(sm.created_at) >= $${idx}`);
+      posFilters.push(`(ps.created_at AT TIME ZONE 'Africa/Lagos')::date >= $${idx}::date`);
+      sicFilters.push(`sr.date >= $${idx}::date`);
+      stockFilters.push(`(sm.created_at AT TIME ZONE 'Africa/Lagos')::date >= $${idx}::date`);
       values.push(start_date);
       idx++;
     }
     if (end_date) {
-      posFilters.push(`DATE(ps.created_at) <= $${idx}`);
-      sicFilters.push(`DATE(sr.date) <= $${idx}`);
-      stockFilters.push(`DATE(sm.created_at) <= $${idx}`);
+      posFilters.push(`(ps.created_at AT TIME ZONE 'Africa/Lagos')::date <= $${idx}::date`);
+      sicFilters.push(`sr.date <= $${idx}::date`);
+      stockFilters.push(`(sm.created_at AT TIME ZONE 'Africa/Lagos')::date <= $${idx}::date`);
       values.push(end_date);
       idx++;
     }
@@ -82,20 +82,20 @@ exports.getRawMaterialVariance = async (req, res) => {
       const systemActual = Number(row.system_actual_usage || 0);
 
       // Use the SIC Actual usage (from physical count) as the primary source of truth
-      const actual = sicActual; 
+      const actual = sicActual;
 
       // Formula: variance = expected - actual (Matching doc)
       // Negative = over usage (missing), Positive = under usage
-      const varianceQty = expected - actual; 
+      const varianceQty = expected - actual;
       const unitCost = Number(row.average_cost || 0);
 
       let remark = "Good";
-      if (varianceQty < 0) remark = "Over usage / Missing";       
-      else if (varianceQty > 0) remark = "Under usage";           
+      if (varianceQty < 0) remark = "Over usage / Missing";
+      else if (varianceQty > 0) remark = "Under usage";
 
       // Suspicious threshold: e.g., more than 10% difference
       if (Math.abs(varianceQty) > (expected * 0.1) && expected > 0) {
-          remark = "Suspicious variance";
+        remark = "Suspicious variance";
       }
 
       return {
