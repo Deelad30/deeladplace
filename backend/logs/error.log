@@ -1557,3 +1557,11 @@
 {"error":"Authentication timed out","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":27,"timestamp":"2026-06-18 13:02:06"}
 {"error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":27,"timestamp":"2026-06-18 13:02:07"}
 {"error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":27,"timestamp":"2026-06-18 13:02:07"}
+{"email":"demo@deesoftwork.com.ng","error":"","level":"error","message":"Login failed","service":"deelad-place-api","timestamp":"2026-07-03 11:25:23"}
+{"email":"demo@deesoftwork.com.ng","error":"","level":"error","message":"Login failed","service":"deelad-place-api","timestamp":"2026-07-03 11:37:37"}
+{"email":"demo@deesoftwork.com.ng","error":"","level":"error","message":"Login failed","service":"deelad-place-api","timestamp":"2026-07-03 11:43:42"}
+{"email":"demo@deesoftwork.com.ng","error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Login failed","service":"deelad-place-api","timestamp":"2026-07-03 12:34:19"}
+{"error":"","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":27,"timestamp":"2026-07-03 13:51:38"}
+{"error":"Connection terminated unexpectedly","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":27,"timestamp":"2026-07-03 13:53:43"}
+{"error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":27,"timestamp":"2026-07-03 13:53:49"}
+{"error":"getaddrinfo ENOTFOUND ep-dawn-art-ad851kgt-pooler.c-2.us-east-1.aws.neon.tech","level":"error","message":"Failed to fetch stock balance","service":"deelad-place-api","tenantId":27,"timestamp":"2026-07-03 13:55:17"}

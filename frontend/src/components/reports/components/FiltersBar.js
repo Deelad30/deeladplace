@@ -85,8 +85,9 @@ const FiltersBar = ({ onApply, vendors = [], users = [], current = {} }) => {
       >
         <option value="">All payments</option>
         <option value="cash">Cash</option>
-        <option value="pos">POS</option>
+        <option value="card">Card (POS)</option>
         <option value="transfer">Transfer</option>
+        <option value="multiple">Multiple</option>
       </select>
 
       <div className="filter-actions">

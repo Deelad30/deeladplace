@@ -59,8 +59,13 @@ function buildSalesFilters(tenantId, options = {}) {
 
   // Payment method filter
   if (payment_type) {
-    params.push(payment_type);
-    filters.push(`${tableAlias}.payment_method = $${paramIndex++}`);
+    // Normalize: 'card' should also match legacy 'pos' records
+    if (payment_type === 'card') {
+      filters.push(`${tableAlias}.payment_method IN ('card', 'pos')`);
+    } else {
+      params.push(payment_type);
+      filters.push(`${tableAlias}.payment_method = $${paramIndex++}`);
+    }
   }
 
   // User/Staff filter
@@ -94,7 +99,7 @@ function validateDateRange(start, end) {
   if (start && end) {
     const startDate = new Date(start);
     const endDate = new Date(end);
-    
+
     if (startDate > endDate) {
       return {
         isValid: false,
